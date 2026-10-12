@@ -168,24 +168,23 @@
 
 % ------------------------------------------------------------ title page
 \begin{titlepage}
+% Cover: generative artwork (figures/cover/make_cover.py, from generar.py)
 \begin{tikzpicture}[remember picture,overlay]
-  \fill[edmnavy] (current page.south west) rectangle (current page.north east);
-  \fill[edmgold] (current page.south west) -- ++(0,0.30\paperheight)
-       -- ++(0.62\paperwidth,-0.30\paperheight) -- cycle;
-  \fill[black!18] (current page.south east) -- ++(-0.42\paperwidth,0)
-       -- ++(0.42\paperwidth,0.16\paperheight) -- cycle;
-  \node[anchor=north west,text width=0.78\paperwidth,align=left,inner sep=0pt]
-    at ([xshift=24mm,yshift=-52mm]current page.north west)
-    {\color{white}\fontsize{32}{40}\selectfont\bfseries Evaluation, Deployment\\
-     and Monitoring of Models\par\vspace{9mm}
-     \color{edmgold}\Large\mdseries Course book\,\textperiodcentered\,Degree in Data Science (GCD)\par
-     \vspace{3mm}\color{white}\large Universitat Polit\`ecnica de Val\`encia\par};
-  \node[anchor=north west,text width=0.7\paperwidth,align=left,inner sep=0pt]
-    at ([xshift=24mm,yshift=-150mm]current page.north west)
-    {\color{white}\Large C\`esar Ferri\quad\textperiodcentered\quad Carlos Monserrat\par
-     \vspace{3mm}\color{white!75!edmnavy}\normalsize Draft --- Units 1--7, \today\par};
+  \node[inner sep=0pt] at (current page.center)
+       {\includegraphics[width=\paperwidth,height=\paperheight]{figures/cover/cover.pdf}};
 \end{tikzpicture}
 \end{titlepage}
+
+% Verso of the cover
+\thispagestyle{empty}
+\null\vfill
+{\small\color{edmnavy}
+\textbf{Evaluation, Deployment and Monitoring of Models}\par\smallskip
+Course book of the Degree in Data Science (GCD), Universitat Polit\`ecnica de Val\`encia\par
+C\`esar Ferri and Carlos Monserrat\par\smallskip
+Draft --- Units 1--7, \today\par\medskip
+{\footnotesize Cover: generative artwork drawn by code, streamlines integrated through a smooth vector field.\\
+Source code: \texttt{figures/cover}.}\par}
 
 \frontmatter
 \pagestyle{plain}

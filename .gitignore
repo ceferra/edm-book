@@ -14,3 +14,5 @@
 *.pdf
 !figures/**/*.pdf
 !orig/**/*.pdf
+!figures/cover/*.pdf
+!figures/cover/cover.png
