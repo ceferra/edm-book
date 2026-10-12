@@ -1,0 +1,15 @@
+500 cases, 3016 events, 62 variants
+most frequent: acdeg (61), acdeh (59), adceh (59)
+                                 count  mean
+activity           next                     
+examine thoroughly check ticket    140  43.5
+examine casually   check ticket    181  42.3
+register request   check ticket    241  40.2
+mean throughput time: 3.7 days
+place: start -> a
+place: d -> e
+place: e -> fgh
+place: af -> d
+place: af -> bc
+place: bc -> e
+place: gh -> end

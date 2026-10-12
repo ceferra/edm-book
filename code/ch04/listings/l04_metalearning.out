@@ -1,0 +1,17 @@
+the forest wins on 74% of the 120 tasks
+meta-model picks the better algorithm on 81% of them
+it chooses the logistic regression for 16 tasks
+always logistic      mean accuracy 0.8253   mean regret 0.0393   worst regret 0.290
+always forest        mean accuracy 0.8613   mean regret 0.0034   worst regret 0.076
+meta-learned choice  mean accuracy 0.8613   mean regret 0.0033   worst regret 0.076
+oracle               mean accuracy 0.8646   mean regret 0.0000   worst regret 0.000
+|--- lm_linear <= 0.93
+|   |--- lm_linear <= 0.82
+|   |   |--- class: 1
+|   |--- lm_linear >  0.82
+|   |   |--- class: 1
+|--- lm_linear >  0.93
+|   |--- log_d <= 1.41
+|   |   |--- class: 0
+|   |--- log_d >  1.41
+|   |   |--- class: 1

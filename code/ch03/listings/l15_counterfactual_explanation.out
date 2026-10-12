@@ -1,0 +1,4 @@
+Peter:          P(repay) = 0.289
+counterfactual: P(repay) = 0.507
+decision: approved
+  debt_ratio: 0.450 -> 0.139

@@ -1,0 +1,3 @@
+plain LR    BA=0.601 F1=0.331 AP=0.432 Brier=0.0250
+weighted LR BA=0.697 F1=0.150 AP=0.377 Brier=0.1800
+SMOTE + LR  BA=0.694 F1=0.148 AP=0.373 Brier=0.1771

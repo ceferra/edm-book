@@ -1,0 +1,3 @@
+true prevalence 0.106; estimated: CC 0.284, ACC 0.099, PCC 0.352, EM 0.104
+unadjusted model  accuracy 0.771   Brier 0.1560   log loss 0.4761
+adjusted by EM    accuracy 0.906   Brier 0.0724   log loss 0.2484

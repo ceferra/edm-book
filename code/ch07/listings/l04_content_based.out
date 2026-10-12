@@ -1,0 +1,5 @@
+strongest terms of the profile: adventure, galaxy, heroes, starships, war
+  Last Signal  score +0.63   because of: space, aliens, mystery
+  Red Planet   score +0.19   because of: space
+Neither 'Last Signal' nor 'Red Planet' has a single rating: collaborative
+filtering cannot recommend them yet, a content-based recommender can.

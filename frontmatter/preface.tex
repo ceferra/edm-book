@@ -1,0 +1,105 @@
+% =====================================================================
+%  Preface -- description of the course
+% =====================================================================
+\chapter*{Preface}
+\addcontentsline{toc}{chapter}{Preface}
+\markboth{Preface}{Preface}
+
+This book accompanies the course \emph{Evaluation, Deployment and Monitoring of Models}
+(EDM), taught in the third year of the Degree in Data Science (\emph{Grado en Ciencia de
+Datos}, GCD) at the Universitat Polit\`ecnica de Val\`encia. By the time students reach
+this course they already know how to build predictive models. This course is about
+everything that happens around the model: how to know whether it is good, how to combine
+it with other models and with prior knowledge, how to make it reliable, how to put it into
+production, and how to keep it working once the world starts changing.
+
+\section*{What the course is about}
+
+The course addresses the evaluation, deployment and maintenance of predictive models and
+recommender systems, exploiting jointly the knowledge induced from data and the prior
+knowledge of the domain (constraints, costs, manual models). Its main topics are:
+\begin{itemize}
+  \item evaluation procedures and metrics, and the calibration of probabilistic models;
+  \item automated machine learning (AutoML) and the fusion and combination of models;
+  \item reliable models: fairness, causality, explainability and security;
+  \item the deployment of models and their monitoring and review in production.
+\end{itemize}
+
+\section*{Organisation}
+
+The book follows the seven units of the syllabus (\cref{tab:units}). Each unit is a chapter
+that can be read on its own, although later units frequently rely on the evaluation tools
+introduced in \cref{ch:evaluation}.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Units of the course.}\label{tab:units}
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}p{3.6cm}X@{}}
+\toprule
+& Unit & Main contents\\
+\midrule
+1 & Model evaluation & Evaluation protocols; metrics for crisp, scoring and probabilistic
+classifiers; ROC analysis; calibration; imbalanced problems; cost-based evaluation;
+regression; specialised tasks; unsupervised learning; statistical comparison.\\
+2 & Hybrid models & Wisdom of crowds; combining models; ensembles; hybrid approaches;
+cautious models and delegating classifiers; performance evaluation and drawbacks.\\
+3 & Reliable models & Fairness in machine learning; causality; interpretable models,
+model-agnostic and example-based explanations; machine learning and security, adversarial
+learning and robustness.\\
+4 & Learning to learn & Automating data science (AutoML); inductive and genetic
+programming; process mining and robotic process automation (RPA).\\
+5 & Deployment of models & Choosing a deployment option; development infrastructure;
+ModelOps; building the technology stack.\\
+6 & Monitoring and updating models & What to monitor; CI/CD for machine learning; A/B testing
+and experimentation (groups, duration, estimating the better variant); infrastructure.\\
+7 & Applications & Recommender systems (content-based, collaborative and hybrid); customer
+relationship management (campaign design, mailings, rankings).\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The practical part of the course consists of ten laboratory sessions: model evaluation
+(three sessions), hybrid models (one), reliable models (three), learning to learn (one),
+deployment of models (one) and applications (one).
+
+\section*{How to use this book}
+
+Definitions, worked examples and code are interleaved with the explanations. Several kinds of
+boxes highlight special content:
+\begin{description}[font=\sffamily\bfseries\small]
+  \item[Key idea] a principle worth remembering after the details are forgotten;
+  \item[Example] a worked example, usually with all the numbers so that it can be checked
+        by hand;
+  \item[Pitfall] a frequent mistake, often one that produces optimistic estimates;
+  \item[Going further] material that goes beyond the core of the course.
+\end{description}
+
+All the code is written in Python using \textsf{scikit-learn} \citep{pedregosa2011scikit},
+\textsf{NumPy}, \textsf{pandas}, \textsf{SciPy}, \textsf{matplotlib} and
+\textsf{imbalanced-learn} \citep{lemaitre2017imbalanced}. Every listing has been executed and
+the output printed below it is the real output (it was produced with Python~3.12, \textsf{scikit-learn}~1.8.0,
+\textsf{NumPy}~2.4.4, \textsf{SciPy}~1.17.1, \textsf{pandas}~3.0.2 and \textsf{imbalanced-learn}~0.14.2;
+other versions or platforms may differ in the last decimals). The
+companion folder \code{code/} contains the listings and the script that generates every figure
+of the book; all random seeds are fixed, so the figures and the numbers quoted in the text
+can be reproduced in that environment, up to small numerical differences across platforms. Each unit ends with a summary, bibliographic notes and exercises,
+with solutions to most of them.
+
+\section*{Recommended reading}
+
+The following books cover, between them, the whole course. For the foundations of
+statistical learning, \citet{hastie2009elements} is the standard reference, and
+\citet{flach2012machine} offers a modern view of machine learning with special emphasis on
+evaluation and ROC analysis; \citet{sammut2010encyclopedia} provides short, authoritative
+entries on most topics. \citet{japkowicz2011evaluating} is entirely devoted to the evaluation
+of classifiers. \citet{provost2013data} connects data science with business decisions and
+\citet{segaran2007programming} introduces collective intelligence and recommender systems.
+Reliable models are covered by \citet{molnar2022interpretable} (interpretability),
+\citet{barocas2023fairness} (fairness) and \citet{chio2018machine} (security).
+\citet{kyriakides2019hands} is a practical introduction to ensembles, and
+\citet{ameisen2020building}, \citet{kelleher2019machine} and \citet{burkov2020machine} deal
+with building, deploying and maintaining machine learning systems.
+
+\bigskip
+\noindent\emph{This is a draft of the complete book: all seven units, with their code, figures, exercises and
+solutions. Comments and corrections are welcome.}

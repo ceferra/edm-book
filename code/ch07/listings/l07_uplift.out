@@ -1,0 +1,4 @@
+top 20% by             true effect   estimated [95% CI]      + segment  - segment
+random                    +8.2     +13.9 [  -8.1,  +35.9]       11%        7%
+response model            -9.2     -12.5 [ -41.1,  +16.0]        1%       23%
+uplift (two models)      +32.8     +43.8 [ +21.0,  +66.5]       38%        1%

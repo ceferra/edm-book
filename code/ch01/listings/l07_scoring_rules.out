@@ -1,0 +1,2 @@
+p3=0.60  AUC=0.667  Acc=0.80  Brier=0.2105  LogLoss=0.6093
+p3=0.68  AUC=0.667  Acc=0.80  Brier=0.1990  LogLoss=0.5843

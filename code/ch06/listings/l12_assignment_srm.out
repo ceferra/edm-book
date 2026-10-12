@@ -1,0 +1,4 @@
+same user, same variant every time: True
+share in B in both experiments: 0.248 (independent: 0.250)
+logged users A 50,423, B 49,577: p-value 0.0075, no alarm
+with 2% of B's logs lost: B 48,586, p-value 5.3e-09, SRM alarm

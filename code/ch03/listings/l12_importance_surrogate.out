@@ -1,0 +1,9 @@
+x4  permutation=0.714 +/- 0.032   impurity=0.367
+x1  permutation=0.437 +/- 0.021   impurity=0.208
+x2  permutation=0.386 +/- 0.036   impurity=0.216
+x5  permutation=0.138 +/- 0.012   impurity=0.097
+x3  permutation=0.077 +/- 0.005   impurity=0.057
+x7  permutation=0.000 +/- 0.000   impurity=0.012
+surrogate tree of depth 2: R^2 with respect to the forest = 0.510
+surrogate tree of depth 3: R^2 with respect to the forest = 0.747
+surrogate tree of depth 5: R^2 with respect to the forest = 0.877

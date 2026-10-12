@@ -1,0 +1,5 @@
+group a: base=0.70 accept=0.41 TPR=0.53 FPR=0.14 score-base=-0.002
+         PPV=0.90 NPV=0.44  (predictive values of the decision)
+group b: base=0.50 accept=0.13 TPR=0.23 FPR=0.04 score-base=-0.001
+         PPV=0.86 NPV=0.55  (predictive values of the decision)
+demographic parity ratio b/a = 0.32

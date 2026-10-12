@@ -1,0 +1,9 @@
+TP=4 FN=2 FP=1 TN=3
+accuracy          0.7000
+sensitivity (TPR) 0.6667
+specificity (TNR) 0.7500
+precision (PPV)   0.8000
+F1 score          0.7273
+balanced accuracy 0.7083
+MCC               0.4082
+Cohen's kappa     0.4000

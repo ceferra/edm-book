@@ -1,0 +1,5 @@
+clicks A 1557, B 1678 of 31,234 users each
+P(CTR of B > CTR of A) = 0.986
+relative lift: +7.8%, 95% credible interval [+0.8%, +15.2%]
+expected loss if we choose A: 0.00388 clicks per user
+expected loss if we choose B: 0.00001 clicks per user

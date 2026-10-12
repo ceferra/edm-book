@@ -1,0 +1,6 @@
+model                        all digits   each user's own data
+centralised (data pooled)       0.965          0.969
+local models only               0.562          0.874
+federated averaging             0.952          0.935
+federated + fine-tuning         0.854          0.969
+each round: 10 clients x 650 parameters each way; no data leaves a device

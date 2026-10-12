@@ -1,0 +1,5 @@
+income        beta=  0.078   odds ratio exp(beta)= 1.081
+debt_ratio    beta= -2.976   odds ratio exp(beta)= 0.051
+years_job     beta=  0.031   odds ratio exp(beta)= 1.032
+prev_default  beta= -0.998   odds ratio exp(beta)= 0.369
+an applicant with P(repay)=0.30 earning 10k EUR more: P(repay)=0.48

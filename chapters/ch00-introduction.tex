@@ -1,0 +1,170 @@
+% =====================================================================
+%  Introduction to the book
+%  (this file is assembled from src/ch00/*.tex by build_chapter.py)
+% =====================================================================
+\chapter*{Introduction}\label{ch:intro}
+\markboth{Introduction}{Introduction}
+\addcontentsline{toc}{chapter}{Introduction}
+
+In the spring of 2020, as COVID-19 spread around the world, hundreds of research groups turned to machine
+learning. Within months they had published models that diagnosed the disease from chest radiographs and CT
+scans, predicted which patients would deteriorate, and forecast the course of the pandemic. Two systematic
+reviews examined them afterwards. One of them screened more than two thousand studies on imaging and kept
+the 62 of highest quality; it concluded that none of them was of potential clinical use, because of
+methodological flaws and biases \citep{roberts2021common}. In some of the data sets, for instance, the
+examples without COVID-19 were radiographs of children, so a model could look accurate by recognising
+children. The other review found that almost all the published prediction models were at high risk of bias:
+small or unrepresentative data, and evaluations that could not be trusted \citep{wynants2020prediction}.
+
+None of these failures came from the learning algorithms, which were the same ones that work well
+elsewhere. They came from everything around them: how the models were evaluated, on which data they were
+tested, whether they treated all patients alike, and whether anyone checked that they would work where
+they were going to be used. This book is about everything around the algorithm.
+
+\section*{The life of a model}
+
+A model has a life that starts long before it is trained and continues long after it is deployed
+(\cref{fig:lifecycle}). Before it is used, we must know how good it is, and for what purpose
+(Unit~\ref{ch:evaluation}); decide whether a combination of models would serve better than any single one
+(Unit~\ref{ch:hybrid}); make sure that it is fair, that its decisions can be explained and that it resists
+those who want to fool it (Unit~\ref{ch:reliable}); and build it with as much automation as is wise
+(Unit~\ref{ch:learning}). Then it must be put in the hands of its users, reliably and repeatably
+(Unit~\ref{ch:deployment}), and watched, because the world that produced its training data keeps changing,
+until it has to be updated or replaced (Unit~\ref{ch:monitoring}). Recommender systems, customer
+relationship management and interactive applications show the whole cycle at work in business
+(Unit~\ref{ch:applications}).
+
+\begin{figure}[htbp]
+\centering
+\begin{tikzpicture}[font=\scriptsize\sffamily,
+  st/.style={draw=edmnavy,fill=edmnavy!7,rounded corners=3pt,minimum width=30mm,minimum height=10mm,align=center},
+  arr/.style={-{Stealth[length=1.8mm]},edmnavy,thick}]
+  \node[st] (u1) at (90:2.6)  {Unit 1\\evaluate};
+  \node[st] (u2) at (30:2.9)  {Unit 2\\combine};
+  \node[st] (u3) at (-30:2.9) {Unit 3\\make reliable};
+  \node[st] (u4) at (-90:2.6) {Unit 4\\automate};
+  \node[st] (u5) at (-150:2.9) {Unit 5\\deploy};
+  \node[st] (u6) at (150:2.9) {Unit 6\\monitor and update};
+  \node[draw=edmbronze,fill=edmgold!20,rounded corners=3pt,minimum width=30mm,minimum height=10mm,align=center]
+       (u7) at (0,0) {Unit 7\\applications};
+  \draw[arr] (u1) to[bend left=18] (u2);
+  \draw[arr] (u2) to[bend left=18] (u3);
+  \draw[arr] (u3) to[bend left=18] (u4);
+  \draw[arr] (u4) to[bend left=18] (u5);
+  \draw[arr] (u5) to[bend left=18] (u6);
+  \draw[arr] (u6) to[bend left=18] node[left,font=\tiny\sffamily,align=right] {retrain,\\re-evaluate} (u1);
+\end{tikzpicture}
+\caption{The life of a model, and the units of this book.}
+\label{fig:lifecycle}
+\end{figure}
+
+\section*{A first look}
+
+\Cref{lst:firstlook} gives a taste of what is to come with a real data set: the German credit data, 1000
+applicants for loans at a German bank, 30\% of whom turned out to be bad credit risks
+\citep{hofmann1994statlog}. It trains a logistic regression, the kind of model that takes two lines of code,
+and asks it four questions that its accuracy cannot answer.
+
+\begin{pylisting}[label={lst:firstlook}]{Four questions that accuracy does not answer, on real credit data}
+import numpy as np
+import pandas as pd
+from sklearn.compose import make_column_transformer
+from sklearn.linear_model import LogisticRegression
+from sklearn.model_selection import train_test_split
+from sklearn.pipeline import make_pipeline
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+
+URL = "https://raw.githubusercontent.com/jbrownlee/Datasets/master/german.csv"
+data = pd.read_csv(URL, header=None)        # Statlog German credit: 1000 applicants
+y = (data[20] == 2).astype(int)             # 1 = the applicant turned out to be bad
+X = data.drop(columns=20)
+categorical = X.select_dtypes(exclude="number").columns     # coded as A11, A12...
+model = make_pipeline(
+    make_column_transformer((OneHotEncoder(handle_unknown="ignore"), categorical),
+                            remainder=StandardScaler()),
+    LogisticRegression(max_iter=1000))
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.4, stratify=y,
+                                          random_state=1)
+p_bad = model.fit(X_tr, y_tr).predict_proba(X_te)[:, 1]
+
+# 1. Is it good? (Unit 1)
+print(f"accuracy {np.mean((p_bad >= 0.5) == y_te):.3f}; "
+      f"approving everybody: {1 - y_te.mean():.3f}")
+
+# 2. Good for what? Approving a bad applicant costs 5, rejecting a good one 1 (Unit 1)
+def cost(threshold):
+    reject = p_bad >= threshold
+    return (5 * np.sum(~reject & (y_te == 1)) + np.sum(reject & (y_te == 0))) / len(y_te)
+print(f"cost per applicant: {cost(0.5):.3f} with threshold 0.5, "
+      f"{cost(1 / 6):.3f} with threshold 1/6")
+
+# 3. Good for whom? (Unit 3)
+young = (X_te[12] < 25).to_numpy()          # column 12 is the age
+approved = p_bad < 1 / 6
+print(f"approved: {approved[young].mean():.0%} of the applicants under 25, "
+      f"{approved[~young].mean():.0%} of the others")
+
+# 4. Good for how long? If bad applicants become more frequent (Unit 6)
+bad_ok = np.mean(p_bad[y_te == 1] < 1 / 6)          # share of bad applicants approved
+good_ok = np.mean(p_bad[y_te == 0] < 1 / 6)         # share of good applicants approved
+for share in (0.30, 0.50):
+    defaults = share * bad_ok / (share * bad_ok + (1 - share) * good_ok)
+    print(f"if {share:.0%} of the applicants are bad, {defaults:.1%} of the approved "
+          f"loans default")
+\end{pylisting}
+\begin{pyoutput}
+accuracy 0.752; approving everybody: 0.700
+cost per applicant: 0.868 with threshold 0.5, 0.530 with threshold 1/6
+approved: 29% of the applicants under 25, 43% of the others
+if 30% of the applicants are bad, 9.8% of the approved loans default
+if 50% of the applicants are bad, 20.1% of the approved loans default
+\end{pyoutput}
+
+\begin{itemize}
+  \item \emph{Is it good?} Its accuracy is 0.752, which sounds respectable until we notice that approving every
+        applicant would score 0.700. Accuracy alone says little (Unit~\ref{ch:evaluation}).
+  \item \emph{Good for what?} The data set comes with its own costs: approving a bad applicant costs five times
+        more than rejecting a good one. With the default threshold of 0.5 the model costs 0.868 per applicant;
+        rejecting every applicant whose probability of being bad exceeds $1/6$, the threshold that these costs
+        imply, brings the cost down to 0.530, a reduction of almost 40\% with the \emph{same} model
+        (Unit~\ref{ch:evaluation}).
+  \item \emph{Good for whom?} The model approves 29\% of the applicants under 25 and 43\% of the others. Is the
+        difference justified by their risk, or is the model penalising youth? Answering requires the tools of
+        Unit~\ref{ch:reliable}, and in the European Union credit scoring is a \emph{high-risk} application whose
+        fairness, documentation and oversight are regulated by law (\cref{sec:aiact}).
+  \item \emph{Good for how long?} If an economic crisis raised the share of bad applicants from 30\% to 50\%, the
+        same model would approve loans of which 20.1\% default, twice the 9.8\% of today, and the bank would only
+        notice months later, when the loans failed to be repaid. Detecting such changes early is the subject of
+        Unit~\ref{ch:monitoring}.
+\end{itemize}
+None of the four answers is visible in the accuracy, and none of them depends on the learning algorithm.
+
+\section*{Why now}
+
+Three trends make these questions more pressing than ever. First, models now take or prepare decisions about
+credit, jobs, health, prices and what we read, watch and buy, often for millions of people at once, so their
+mistakes are multiplied. Second, large language models have made it possible for almost anyone to build a
+model or an application in an afternoon, and they are themselves models that must be evaluated, deployed and
+monitored; we discuss them as tools for automating data science (\cref{sec:llmds}), as components to deploy
+(\cref{sec:llmapps}) and as systems to monitor (\cref{sec:llmmonitor}). Third, what used to be good practice is
+becoming law: the European Union's AI Act requires those who build high-risk systems to manage their risks,
+govern their data, document them, log their operation, keep a human in charge, ensure their accuracy and
+robustness, and monitor them once they are on the market (\cref{sec:aiact}). Almost every one of those
+obligations corresponds to a unit of this book.
+
+\section*{How to read this book}
+
+Each unit starts with its learning objectives and ends with a summary, bibliographic notes, exercises and
+solutions to selected exercises. Boxes highlight key ideas and common pitfalls. The code is in Python, with
+scikit-learn and the usual scientific libraries; every listing has been executed, and the output printed below
+it is the output it produced. Most examples use synthetic data, generated by the listings themselves, because
+synthetic data let us know the truth and change one thing at a time; real data sets appear where they make a
+point that synthetic data cannot, as in the listing above. The figures are generated by scripts that import the
+same code, so the numbers in the text, in the listings and in the figures agree. All of it is available in the
+companion repository of the book.
+
+The units can be read in order, as a course, or separately; Unit~\ref{ch:evaluation} is the foundation of the
+others, and cross-references point to the sections each unit builds on. The reader is expected to know basic
+Python, the elementary concepts of machine learning (training and test data, classification and regression)
+and introductory statistics.
+

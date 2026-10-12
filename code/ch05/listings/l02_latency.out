@@ -1,0 +1,6 @@
+single requests: p50 9.9 ms, p95 10.5 ms, p99 11.2 ms
+batches of     1:       101 predictions per second
+batches of    10:       969 predictions per second
+batches of   100:     7,305 predictions per second
+batches of  1000:    31,478 predictions per second
+batches of 10000:    57,923 predictions per second

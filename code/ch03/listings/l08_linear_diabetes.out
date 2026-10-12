@@ -1,0 +1,7 @@
+R2 = 0.518   adjusted R2 = 0.507
+s1   weight= -37.72   95% CI=[ -76.61,    1.17]
+s5   weight=  35.77   95% CI=[  19.73,   51.82]
+bmi  weight=  24.75   95% CI=[  18.54,   30.96]
+s2   weight=  22.70   95% CI=[  -8.94,   54.34]
+bp   weight=  15.45   95% CI=[   9.34,   21.55]
+correlation between s1 and s2: 0.90

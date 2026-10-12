@@ -1,0 +1,4 @@
+programs with 0..4 functions: [3, 18, 216, 3240, 54432]
+14 consistent programs with 2 functions (237 programs evaluated)
+e.g. (x + (x + 2)), (x + (2 + x)), (2 + (x + x))
+for input 4 they output 10

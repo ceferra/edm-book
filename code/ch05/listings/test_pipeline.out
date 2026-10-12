@@ -1,0 +1,13 @@
+============================= test session starts ==============================
+collecting ... collected 8 items
+
+test_pipeline.py::test_clip_age PASSED                                   [ 12%]
+test_pipeline.py::test_imputation_learned_once PASSED                    [ 25%]
+test_pipeline.py::test_predictions_are_probabilities PASSED              [ 37%]
+test_pipeline.py::test_validate_detects_bad_data PASSED                  [ 50%]
+test_pipeline.py::test_model_beats_baseline PASSED                       [ 62%]
+test_pipeline.py::test_invariance_to_identifiers PASSED                  [ 75%]
+test_pipeline.py::test_more_income_never_hurts PASSED                    [ 87%]
+test_pipeline.py::test_pipeline_end_to_end PASSED                        [100%]
+
+============================== 8 passed in 2.06s ===============================

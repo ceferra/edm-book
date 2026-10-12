@@ -1,0 +1,3 @@
+NB             Brier=0.1050  LogLoss=1.1476  ECE=0.1009
+NB + Platt     Brier=0.0960  LogLoss=0.3342  ECE=0.0171
+NB + isotonic  Brier=0.0849  LogLoss=0.2809  ECE=0.0068

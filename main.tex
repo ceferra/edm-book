@@ -1,0 +1,207 @@
+% !TEX program = pdflatex
+% =====================================================================
+%  Evaluation, Deployment and Monitoring of Models
+%  Course book -- Degree in Data Science (GCD), Universitat Politecnica de Valencia
+%
+%  Build:   latexmk -pdf main.tex
+%     or:   pdflatex main && bibtex main && pdflatex main && pdflatex main
+%  Overleaf: upload the whole folder (compiler: pdfLaTeX).
+% =====================================================================
+\documentclass[11pt,a4paper,twoside,openright]{book}
+
+% ----------------------------------------------------------------- layout
+\usepackage[a4paper,inner=28mm,outer=24mm,top=27mm,bottom=30mm,
+            headheight=14pt,headsep=8mm,footskip=12mm]{geometry}
+
+% ------------------------------------------------------ fonts & language
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[english]{babel}
+\usepackage[sc]{mathpazo}                       % Palatino-like mathematics
+\IfFileExists{tgpagella.sty}{\usepackage{tgpagella}}{}      % TeX Gyre Pagella text
+\IfFileExists{tgheros.sty}{\usepackage[scale=0.88]{tgheros}}{}
+\IfFileExists{t1lmtt.fd}{\renewcommand{\ttdefault}{lmtt}}{} % Latin Modern Mono code
+\linespread{1.05}
+\usepackage{microtype}
+\setlength{\emergencystretch}{1.5em}
+\usepackage{csquotes}
+\usepackage{textcomp}
+
+% ------------------------------------------------------------ mathematics
+\usepackage{amsmath,amssymb,mathtools,bm}
+
+% ---------------------------------------------- graphics, tables, colours
+\usepackage{graphicx}
+\graphicspath{{figures/}}
+\usepackage[table]{xcolor}
+\definecolor{edmnavy}{HTML}{233A44}
+\definecolor{edmbronze}{HTML}{AF7B51}
+\definecolor{edmteal}{HTML}{00796B}
+\definecolor{edmcoral}{HTML}{D9563F}
+\definecolor{edmgold}{HTML}{C4A15A}
+\definecolor{edmindigo}{HTML}{3D4594}
+\usepackage{booktabs,tabularx,multirow,makecell,array}
+\renewcommand{\arraystretch}{1.12}
+\usepackage{siunitx}
+\sisetup{group-separator={,},group-minimum-digits=4}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,calc,fit,backgrounds,patterns,
+                decorations.pathreplacing,shapes.geometric}
+\usepackage[font=small,labelfont={bf,color=edmnavy},format=hang]{caption}
+\usepackage{subcaption}
+\usepackage[section]{placeins}
+\usepackage{enumitem}
+\setlist{itemsep=2pt,topsep=4pt}
+\usepackage[chapter]{algorithm}
+\usepackage{algpseudocode}
+\usepackage[most]{tcolorbox}
+\usepackage{listings}
+\usepackage{fancyhdr}
+\usepackage{titlesec}
+\usepackage{emptypage}
+\usepackage[round,sort]{natbib}
+\usepackage[colorlinks=true,linkcolor=edmnavy,citecolor=edmteal,urlcolor=edmcoral,
+            pdftitle={Evaluation, Deployment and Monitoring of Models},
+            pdfauthor={Cesar Ferri and Carlos Monserrat}]{hyperref}
+\usepackage[nameinlink,capitalise,noabbrev]{cleveref}
+
+% --------------------------------------------- chapters are called Units
+\addto\captionsenglish{\renewcommand{\chaptername}{Unit}}
+\crefname{chapter}{Unit}{Units}
+\Crefname{chapter}{Unit}{Units}
+\crefname{algorithm}{Algorithm}{Algorithms}
+
+% ------------------------------------------------------- heading styles
+\titleformat{\chapter}[display]
+  {\normalfont\bfseries\color{edmnavy}}
+  {\filleft{\Large\scshape\mdseries\color{edmbronze}\chaptertitlename}\hspace{8pt}%
+   {\fontsize{58}{58}\selectfont\color{edmbronze}\thechapter}}
+  {10pt}
+  {\filleft\fontsize{30}{36}\selectfont}
+\titleformat{name=\chapter,numberless}[display]
+  {\normalfont\bfseries\color{edmnavy}}{}{0pt}{\fontsize{28}{34}\selectfont}
+\titlespacing*{\chapter}{0pt}{0pt}{34pt}
+\titleformat{\section}{\normalfont\Large\bfseries\color{edmnavy}}{\thesection}{0.8em}{}
+\titleformat{\subsection}{\normalfont\large\bfseries\color{edmnavy}}{\thesubsection}{0.8em}{}
+\titleformat{\subsubsection}{\normalfont\normalsize\bfseries\color{edmnavy}}{\thesubsubsection}{0.8em}{}
+\titleformat{\paragraph}[runin]{\normalfont\normalsize\bfseries\color{edmnavy}}{}{0pt}{}[.]
+\setcounter{secnumdepth}{2}
+\setcounter{tocdepth}{1}
+
+% ------------------------------------------------------- running headers
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[LE]{\small\thepage\hspace{1em}\textcolor{edmbronze}{\nouppercase{\leftmark}}}
+\fancyhead[RO]{\small\textcolor{edmbronze}{\nouppercase{\rightmark}}\hspace{1em}\thepage}
+\renewcommand{\headrulewidth}{0pt}
+\renewcommand{\chaptermark}[1]{\markboth{\chaptername~\thechapter.~#1}{}}
+\renewcommand{\sectionmark}[1]{\markright{\thesection~~#1}}
+\fancypagestyle{plain}{\fancyhf{}\fancyfoot[C]{\small\thepage}\renewcommand{\headrulewidth}{0pt}}
+
+% ------------------------------------------------------------- boxes
+\tcbset{edmbox/.style={enhanced,breakable,boxrule=0.6pt,arc=2pt,
+  left=6pt,right=6pt,top=4pt,bottom=4pt,fonttitle=\sffamily\bfseries\small,
+  before skip=10pt plus 2pt,after skip=10pt plus 2pt}}
+\newtcolorbox{keyidea}[1][]{edmbox,colback=edmnavy!4,colframe=edmnavy,title={Key idea},#1}
+\newtcolorbox{pitfall}[1][]{edmbox,colback=edmcoral!5,colframe=edmcoral,title={Pitfall},#1}
+\newtcolorbox{further}[1][]{edmbox,colback=edmteal!5,colframe=edmteal,title={Going further},#1}
+\newtcolorbox{objectives}[1][]{edmbox,colback=edmbronze!6,colframe=edmbronze,
+  title={Learning objectives},#1}
+\newtcbtheorem[number within=chapter,crefname={Example}{Examples}]{example}{Example}%
+  {edmbox,colback=edmbronze!5,colframe=edmbronze,separator sign={.},
+   description font=\mdseries}{ex}
+\newtcbtheorem[number within=chapter,crefname={Definition}{Definitions}]{definition}{Definition}%
+  {edmbox,colback=white,colframe=edmnavy!75,separator sign={.},
+   description font=\mdseries}{def}
+
+% ---------------------------------------------------------- code listings
+\lstdefinestyle{pystyle}{language=Python,basicstyle=\ttfamily\footnotesize,
+  keywordstyle=\color{edmindigo},commentstyle=\color{edmteal}\itshape,
+  stringstyle=\color{edmcoral},showstringspaces=false,columns=fullflexible,
+  keepspaces=true,breaklines=true,upquote=true,tabsize=4,
+  morekeywords={True,False,None,lambda,as,with}}
+\lstdefinestyle{outstyle}{basicstyle=\ttfamily\footnotesize,columns=fullflexible,
+  keepspaces=true,breaklines=true,upquote=true}
+\newtcblisting[auto counter,number within=chapter,crefname={Listing}{Listings}]{pylisting}[2][]{%
+  enhanced,breakable,listing only,listing engine=listings,listing options={style=pystyle},
+  colback=edmnavy!3,colframe=edmnavy!70,boxrule=0.5pt,arc=2pt,
+  left=5pt,right=5pt,top=2pt,bottom=2pt,
+  fonttitle=\sffamily\bfseries\footnotesize,title={Listing~\thetcbcounter\quad #2},
+  before skip=10pt,after skip=4pt,#1}
+\newtcblisting{pyoutput}{enhanced,breakable,listing only,listing engine=listings,
+  listing options={style=outstyle},colback=black!4,colframe=black!25,boxrule=0.4pt,
+  arc=2pt,left=5pt,right=5pt,top=1pt,bottom=1pt,fonttitle=\sffamily\footnotesize,
+  coltitle=black!75,colbacktitle=black!8,title={Output},before skip=2pt,after skip=10pt}
+
+% ------------------------------------------------------------- macros
+\newcommand{\E}{\mathbb{E}}
+\newcommand{\Ind}{\mathbb{I}}
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\Var}{\operatorname{Var}}
+\DeclareMathOperator*{\argmin}{arg\,min}
+\DeclareMathOperator*{\argmax}{arg\,max}
+\newcommand{\TP}{\mathrm{TP}}
+\newcommand{\FP}{\mathrm{FP}}
+\newcommand{\TN}{\mathrm{TN}}
+\newcommand{\FN}{\mathrm{FN}}
+\newcommand{\TPR}{\mathrm{TPR}}
+\newcommand{\FPR}{\mathrm{FPR}}
+\newcommand{\TNR}{\mathrm{TNR}}
+\newcommand{\FNR}{\mathrm{FNR}}
+\newcommand{\PPV}{\mathrm{PPV}}
+\newcommand{\NPV}{\mathrm{NPV}}
+\newcommand{\code}[1]{\texttt{\detokenize{#1}}}
+\newcommand{\EUR}{\,\texteuro}
+
+% ====================================================================
+% On Overleaf's free plan the whole book exceeds the compile timeout. To work on one chapter,
+% compile the whole book once with a premium account (or locally), then uncomment, e.g.:
+% \includeonly{chapters/ch01-model-evaluation}
+\begin{document}
+
+% ------------------------------------------------------------ title page
+\begin{titlepage}
+\begin{tikzpicture}[remember picture,overlay]
+  \fill[edmnavy] (current page.south west) rectangle (current page.north east);
+  \fill[edmgold] (current page.south west) -- ++(0,0.30\paperheight)
+       -- ++(0.62\paperwidth,-0.30\paperheight) -- cycle;
+  \fill[black!18] (current page.south east) -- ++(-0.42\paperwidth,0)
+       -- ++(0.42\paperwidth,0.16\paperheight) -- cycle;
+  \node[anchor=north west,text width=0.78\paperwidth,align=left,inner sep=0pt]
+    at ([xshift=24mm,yshift=-52mm]current page.north west)
+    {\color{white}\fontsize{32}{40}\selectfont\bfseries Evaluation, Deployment\\
+     and Monitoring of Models\par\vspace{9mm}
+     \color{edmgold}\Large\mdseries Course book\,\textperiodcentered\,Degree in Data Science (GCD)\par
+     \vspace{3mm}\color{white}\large Universitat Polit\`ecnica de Val\`encia\par};
+  \node[anchor=north west,text width=0.7\paperwidth,align=left,inner sep=0pt]
+    at ([xshift=24mm,yshift=-150mm]current page.north west)
+    {\color{white}\Large C\`esar Ferri\quad\textperiodcentered\quad Carlos Monserrat\par
+     \vspace{3mm}\color{white!75!edmnavy}\normalsize Draft --- Units 1--7, \today\par};
+\end{tikzpicture}
+\end{titlepage}
+
+\frontmatter
+\pagestyle{plain}
+\tableofcontents
+\cleardoublepage
+\pagestyle{fancy}
+\input{frontmatter/preface}
+
+\mainmatter
+\include{chapters/ch00-introduction}
+\include{chapters/ch01-model-evaluation}
+\include{chapters/ch02-hybrid-models}
+\include{chapters/ch03-reliable-models}
+\include{chapters/ch04-learning-to-learn}
+\include{chapters/ch05-deployment}
+\include{chapters/ch06-monitoring}
+\include{chapters/ch07-applications}
+
+\backmatter
+\cleardoublepage
+\phantomsection
+\addcontentsline{toc}{chapter}{Bibliography}
+\bibliographystyle{plainnat}
+\bibliography{references}
+
+\end{document}

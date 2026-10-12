@@ -1,0 +1,7 @@
+similarity of Ivo to      Ana     Ben   Carla   David   Elena    Fran
+Euclidean-based         0.54    0.41    0.24    0.22    0.45    1.00
+Pearson                 0.91    0.76   -1.00   -1.00    0.94    1.00
+film            total   sim. sum   predicted rating
+Heist Night     10.53     2.66       3.95
+Silent Forest    8.98     2.85       3.15
+Paris Love       5.78     2.61       2.22

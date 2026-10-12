@@ -1,0 +1,6 @@
+                 model                                   params     cv   test
+    LogisticRegression                               {"C": 0.1} 0.8514 0.8617
+    LogisticRegression                              {"C": 10.0} 0.8529 0.8600
+RandomForestClassifier {"n_estimators": 200, "random_state": 0} 0.9200 0.9267
+code version 887dcf3, training data d83a2cc41c
+after changing one value: training data ddb8b87ecb

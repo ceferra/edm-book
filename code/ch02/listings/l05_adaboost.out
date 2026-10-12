@@ -1,0 +1,7 @@
+round 1: weighted error=0.219  alpha=0.636
+round 2: weighted error=0.264  alpha=0.512
+round 3: weighted error=0.281  alpha=0.470
+our AdaBoost (100 stumps):  test accuracy=0.915
+scikit-learn's AdaBoost:    test accuracy=0.915
+the first stump:            test accuracy=0.781
+mean of the 100 stumps:      test accuracy=0.557

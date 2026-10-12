@@ -1,0 +1,11 @@
+============================= test session starts ==============================
+collecting ... collected 3 items
+
+test_crm_app.py::test_profit_curve PASSED
+test_crm_app.py::test_page_has_the_controls PASSED
+test_crm_app.py::test_costs_do_not_retrain_but_the_model_does 
+  1.50 EUR per brochure: Mail the top 71% of 90,000 customers: profit 69,515 EUR
+  0.50 EUR per brochure: Mail the top 84% of 90,000 customers: profit 135,368 EUR
+PASSED
+
+============================== 3 passed in 3.01s ===============================

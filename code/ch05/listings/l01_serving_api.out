@@ -1,0 +1,8 @@
+200 {'decision': 'reject', 'probability': 0.2614178950022486, 'version': '1.3.0'}
+400 {'error': 'f1 and f2 must be numbers'}
+400 {'error': 'f1 and f2 must be finite and in [-10, 10]'}
+400 {'error': 'a JSON object is required'}
+404 {'error': 'unknown customer'}
+400 {'error': 'f1 and f2 must be finite and in [-10, 10]'}
+401 {'error': 'not authorised'}
+mean latency: 0.5 ms per request

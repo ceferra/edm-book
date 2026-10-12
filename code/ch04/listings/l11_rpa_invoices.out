@@ -1,0 +1,7 @@
+invoice,date,supplier,amount,status
+INV-2041,2026-03-12,Ferreteria Sol,1234.50,ready for booking
+F-778,2026-03-15,Papeleria Mar,89.90,ready for booking
+5531,2026-03-15,Tech Supplies Ltd,12480.00,to human: needs approval
+?,2026-03-18,Limpiezas Turia,640.00,to human: no invoice number
+F-2026-31,2026-03-20,Imprenta Rapida,312.75,ready for booking
+INV-77,?,"Acme, SL",45.00,to human: missing or invalid date

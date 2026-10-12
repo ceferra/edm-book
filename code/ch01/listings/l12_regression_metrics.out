@@ -1,0 +1,9 @@
+MAE  = 7.000
+MSE  = 74.400
+RMSE = 8.626
+MedAE= 6.000
+MAPE = 0.0903
+RAE  = 0.2867
+R2   = 0.9599
+EV   = 0.9647
+bias = 3.000   (mean of yhat - y)

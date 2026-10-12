@@ -1,0 +1,6 @@
+scenario                  max KS (min p)    max PSI   domain AUC
+no drift                  0.020 (2.5e-01)   0.005     0.493
+mean of x1 +0.1 sd        0.051 (4.0e-06)   0.013     0.515
+mean of x1 +0.5 sd        0.203 (2.4e-90)   0.241     0.700
+sd of x3 x1.5             0.107 (1.6e-25)   0.201     0.604
+correlation 0.8 -> -0.8   0.025 (9.7e-02)   0.006     0.892

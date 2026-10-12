@@ -1,0 +1,5 @@
+generation  0: best error    8.3611, median      31.7
+generation 10: best error    4.0000, median      17.8
+generation 11: best error    0.0000, median      17.8
+program:    ((((y * 2) + (x - y)) * x) - 3)
+simplified: x**2 + x*y - 3

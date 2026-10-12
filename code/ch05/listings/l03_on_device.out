@@ -1,0 +1,7 @@
+random forest, 300 trees        11897.6 KiB   accuracy 0.971
+random forest, 30 trees          1203.2 KiB   accuracy 0.967
+decision tree, depth 10            26.9 KiB   accuracy 0.839
+neural network, float32            19.0 KiB   accuracy 0.974
+neural network, float16             9.8 KiB   accuracy 0.974
+neural network, int8                5.3 KiB   accuracy 0.975
+logistic, 16 pixels, float16        0.7 KiB   accuracy 0.928

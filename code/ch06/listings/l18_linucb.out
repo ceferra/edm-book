@@ -1,0 +1,3 @@
+oracle                 CTR 0.2019   expected clicks lost     0.0
+Thompson (no context)  CTR 0.1289   expected clicks lost  1312.6
+LinUCB                 CTR 0.1892   expected clicks lost    92.1

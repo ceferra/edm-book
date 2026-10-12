@@ -1,0 +1,4 @@
+good model     passed every stage, 171,000 requests served during the rollout
+crashes more   rolled back at 1% (errors), 1,000 requests served
+converts less  rolled back at 5% (conversion), 6,000 requests served
+an identical model is rolled back in 6.7% of 2000 rollouts (10 tests at the 1% level)

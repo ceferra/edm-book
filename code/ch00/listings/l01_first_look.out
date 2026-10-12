@@ -1,0 +1,5 @@
+accuracy 0.752; approving everybody: 0.700
+cost per applicant: 0.868 with threshold 0.5, 0.530 with threshold 1/6
+approved: 29% of the applicants under 25, 43% of the others
+if 30% of the applicants are bad, 9.8% of the approved loans default
+if 50% of the applicants are bad, 20.1% of the approved loans default

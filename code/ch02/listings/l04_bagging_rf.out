@@ -1,0 +1,4 @@
+single tree    test accuracy=0.819
+bagging        test accuracy=0.895   OOB=0.910
+random forest  test accuracy=0.917   OOB=0.929
+extra trees    test accuracy=0.929   OOB=0.937

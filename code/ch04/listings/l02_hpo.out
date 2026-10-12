@@ -1,0 +1,3 @@
+grid search            best accuracy 0.852 (evaluation 13) at C=10^0.50, gamma=10^-1.50
+random search          best accuracy 0.845 (evaluation 16) at C=10^1.44, gamma=10^-2.06
+Bayesian optimisation  best accuracy 0.855 (evaluation 25) at C=10^0.35, gamma=10^-1.42

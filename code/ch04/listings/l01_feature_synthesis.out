@@ -1,0 +1,3 @@
+13 synthesized features, e.g. MEAN(tx.amount), MIN(tx.days_ago)
+customer table only        AUC = 0.480
+with synthesized features  AUC = 0.783

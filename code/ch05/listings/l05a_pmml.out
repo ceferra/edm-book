@@ -1,0 +1,10 @@
+PMML 4.4, 5,064 bytes
+fields: repays (categorical), income (continuous), debt_ratio (continuous)
+  root
+    debt_ratio lessOrEqual 0.275
+      income lessOrEqual 27.4 -> 0
+      otherwise -> 1
+    income lessOrEqual 39.2 -> 0
+    otherwise -> 1
+elements: ['MiningSchema', 'Output', 'Node', 'ModelVerification']
+JPMML on 2000 applicants: same decisions True, largest difference 0.0e+00

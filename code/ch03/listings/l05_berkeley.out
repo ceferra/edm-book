@@ -1,0 +1,9 @@
+dept  men  men_rate  women  women_rate
+   A  825      0.62    108        0.82
+   B  560      0.63     25        0.68
+   C  325      0.37    593        0.34
+   D  417      0.33    375        0.35
+   E  191      0.28    393        0.24
+   F  373      0.06    341        0.07
+aggregate:   men 0.445   women 0.304
+adjusted:    men 0.387   women 0.430

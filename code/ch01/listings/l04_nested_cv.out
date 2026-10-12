@@ -1,0 +1,3 @@
+Selected: {'svc__C': 1, 'svc__gamma': 0.01}
+Inner-CV AUC of the selected model (optimistic): 0.7822
+Nested CV AUC (honest): 0.7458 +/- 0.0257

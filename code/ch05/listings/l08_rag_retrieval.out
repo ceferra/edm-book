@@ -1,0 +1,9 @@
+retriever            recall@1  recall@3  mean reciprocal rank
+words                    0.58      0.67        0.66
+character n-grams        0.67      0.92        0.78
+both (average)           0.67      0.92        0.78
+best score: in-scope questions 0.09 to 0.42, out of scope 0.05 to 0.07
+  top-1 miss: 'I forgot the secret number of my card' -> card-lost
+  top-1 miss: 'how much money can I send per day from my phone' -> phishing
+  top-1 miss: 'what does it cost to send money to the United States' -> login
+  top-1 miss: 'can I pay back my loan before the end' -> overdraft

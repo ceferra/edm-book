@@ -1,0 +1,5 @@
+unweighted                       slope +0.46   MSE on deployment data 0.285
+weighted (estimated w)           slope -0.57   MSE on deployment data 0.091
+weighted (true w)                slope -0.59   MSE on deployment data 0.091
+deployment fit (resubstitution)  slope -0.73   MSE on deployment data 0.089
+effective sample size: 76 (estimated w), 79 (true w) of 200

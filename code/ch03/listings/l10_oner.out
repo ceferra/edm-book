@@ -1,0 +1,5 @@
+OneR uses 'debt_ratio': accuracy 0.653 (predicting the majority: 0.619)
+  IF debt_ratio is in quartile 1 THEN repays
+  IF debt_ratio is in quartile 2 THEN defaults
+  IF debt_ratio is in quartile 3 THEN defaults
+  IF debt_ratio is in quartile 4 THEN defaults

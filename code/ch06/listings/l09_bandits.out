@@ -1,0 +1,4 @@
+A/B test, then winner  clicks lost   97.0   traffic to the best variant 0.71
+epsilon-greedy         clicks lost   84.5   traffic to the best variant 0.77
+Thompson sampling      clicks lost   47.7   traffic to the best variant 0.85
+UCB1                   clicks lost  206.7   traffic to the best variant 0.42

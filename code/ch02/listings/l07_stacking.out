@@ -1,0 +1,7 @@
+logistic     accuracy=0.840  AUC=0.907
+naive Bayes  accuracy=0.845  AUC=0.908
+15-NN        accuracy=0.862  AUC=0.935
+tree         accuracy=0.846  AUC=0.871
+hard voting  accuracy=0.863  AUC=  -  
+soft voting  accuracy=0.871  AUC=0.935
+stacking     accuracy=0.882  AUC=0.942

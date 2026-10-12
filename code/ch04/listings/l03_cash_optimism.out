@@ -1,0 +1,8 @@
+budget  best CV accuracy  test accuracy of that configuration
+    1       0.839              0.837
+    5       0.914              0.904
+   20       0.930              0.911
+   50       0.938              0.917
+  100       0.945              0.922
+  200       0.950              0.925
+best test accuracy of any configuration: 0.928

@@ -1,0 +1,13 @@
+first name: 2 consistent programs
+    best: token(word,0)
+    Pau Torres -> Pau   (all consistent programs: ['Pau'])
+    Maria Jose Ramirez -> Maria   (all consistent programs: ['Jose', 'Maria'])
+US date: 4 consistent programs
+    best: token(number,1) + "-" + token(number,0) + "-" + token(number,2)
+    05/01/2022 -> 01-05-2022   (all consistent programs: ['01-05-2022'])
+initials: 4 consistent programs
+    best: initial(word,0) + "." + initial(word,1) + "."
+    Juan Garcia -> J.G.   (all consistent programs: ['J.G.'])
+domain: 2 consistent programs
+    best: token(word,2) + "." + token(word,-1)
+    cferri@dsic.upv.es -> upv.es   (all consistent programs: ['upv.es'])

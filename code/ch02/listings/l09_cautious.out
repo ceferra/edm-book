@@ -1,0 +1,4 @@
+coverage=0.91  abstention=0.09  accuracy=0.956  error=0.04
+logistic       acc=0.766  acc@20%abst=0.814  AURC=0.129  AUC(conf)=0.700
+naive Bayes    acc=0.792  acc@20%abst=0.843  AURC=0.101  AUC(conf)=0.724
+tree (depth 6) acc=0.824  acc@20%abst=0.874  AURC=0.147  AUC(conf)=0.648

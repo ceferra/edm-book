@@ -1,0 +1,4 @@
+ensemble error        E     = 0.1021
+average member error  E_bar = 0.1267
+average ambiguity     A_bar = 0.0247
+E_bar - A_bar               = 0.1021

@@ -1,0 +1,4 @@
+father(X,Y) :- parent(X,Y), male(X)
+mother(X,Y) :- parent(X,Y), female(X)
+grandparent(X,Y) :- parent(X,Z), parent(Z,Y)
+12 literals: 78 bodies of size <= 2

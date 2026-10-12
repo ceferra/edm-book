@@ -1,0 +1,6 @@
+600 users, 400 items, 11192 training ratings (4.7% of the matrix), 2486 test ratings
+global mean            RMSE 1.064
+user and item biases   RMSE 0.983
+user-based neighbours  RMSE 0.962
+item-based neighbours  RMSE 0.946
+matrix factorisation   RMSE 0.952

@@ -1,0 +1,5 @@
+deviation rate 0%: fitness 1.000, 0 of 500 cases do not fit
+deviation rate 10%: fitness 0.987, 53 of 500 cases do not fit
+deviation rate 30%: fitness 0.961, 155 of 500 cases do not fit
+case abeg: produced 6, consumed 6, missing 1, remaining 1
+case abedg: produced 7, consumed 7, missing 1, remaining 1

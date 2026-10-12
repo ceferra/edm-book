@@ -1,0 +1,6 @@
+inputs: ['income', 'debt_ratio', 'contract', 'region']
+opsets: {'ai.onnx': 21, 'ai.onnx.ml': 1}
+operators: Concat, Identity, OneHotEncoder, Reshape, Scaler, TreeEnsembleClassifier
+same labels: True, largest probability difference: 1.9e-07
+one request: scikit-learn 2.57 ms, ONNX Runtime 0.014 ms
+5000 rows:   scikit-learn 12.0 ms, ONNX Runtime 12.2 ms

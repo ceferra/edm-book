@@ -1,0 +1,4 @@
+no adaptation             0.618
+standardise each domain   0.615
+CORAL                     0.724
+with target labels (CV)   0.841
