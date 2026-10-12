@@ -84,6 +84,13 @@
 \titleformat{\section}{\normalfont\Large\bfseries\color{edmnavy}}{\thesection}{0.8em}{}
 \titleformat{\subsection}{\normalfont\large\bfseries\color{edmnavy}}{\thesubsection}{0.8em}{}
 \titleformat{\subsubsection}{\normalfont\normalsize\bfseries\color{edmnavy}}{\thesubsubsection}{0.8em}{}
+% keep every heading and its hyperlink anchor on the same page (bookmarks, TOC links)
+\usepackage{needspace}
+\let\edmoldsection\section
+\renewcommand{\section}{\needspace{3.5\baselineskip}\edmoldsection}
+\let\edmoldsubsection\subsection
+\renewcommand{\subsection}{\needspace{3\baselineskip}\edmoldsubsection}
+\newcommand{\edmcompanion}{repository address and release tag to be added on publication}
 \titleformat{\paragraph}[runin]{\normalfont\normalsize\bfseries\color{edmnavy}}{}{0pt}{}[.]
 \setcounter{secnumdepth}{2}
 \setcounter{tocdepth}{1}

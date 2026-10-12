@@ -38,22 +38,56 @@ introduced in \cref{ch:evaluation}.
 \toprule
 & Unit & Main contents\\
 \midrule
-1 & Model evaluation & Evaluation protocols; metrics for crisp, scoring and probabilistic
-classifiers; ROC analysis; calibration; imbalanced problems; cost-based evaluation;
-regression; specialised tasks; unsupervised learning; statistical comparison.\\
-2 & Hybrid models & Wisdom of crowds; combining models; ensembles; hybrid approaches;
-cautious models and delegating classifiers; performance evaluation and drawbacks.\\
-3 & Reliable models & Fairness in machine learning; causality; interpretable models,
-model-agnostic and example-based explanations; machine learning and security, adversarial
-learning and robustness.\\
-4 & Learning to learn & Automating data science (AutoML); inductive and genetic
-programming; process mining and robotic process automation (RPA).\\
-5 & Deployment of models & Choosing a deployment option; development infrastructure;
-ModelOps; building the technology stack.\\
-6 & Monitoring and updating models & What to monitor; CI/CD for machine learning; A/B testing
-and experimentation (groups, duration, estimating the better variant); infrastructure.\\
-7 & Applications & Recommender systems (content-based, collaborative and hybrid); customer
-relationship management (campaign design, mailings, rankings).\\
+1 & Model evaluation & Generalisation and bias--variance; evaluation protocols and data leakage;
+metrics for crisp, scoring and probabilistic classifiers; ROC and precision--recall analysis; calibration;
+imbalanced problems; costs; regression; conformal prediction, open-set, vision and language models;
+unsupervised learning; statistical comparison.\\
+2 & Hybrid models & Wisdom of crowds and diversity; fusion rules; bagging, boosting, gradient boosting and
+random forests; voting, stacking, cascading and mixtures of experts; abstention and delegation; mimetic
+classifiers and distillation.\\
+3 & Reliable models & Fairness; causality (graphs, interventions, counterfactuals, mediation); interpretable
+models; model-agnostic and example-based explanations; security and robustness; the European AI Act.\\
+4 & Learning to learn & Automating data science; AutoML, hyperparameter optimisation and metalearning;
+inductive and genetic programming; language models and agents for data science; process mining and robotic
+process automation.\\
+5 & Deployment of models & Deployment options (server, batch, device, federated learning); exchange
+formats (PMML, ONNX); web applications; ModelOps: versioning, pipelines, tracking, testing and continuous
+training; applications of language models and retrieval-augmented generation.\\
+6 & Monitoring and updating models & What to monitor; dataset shift and its detection; adaptation
+(retraining, quantification, importance weighting, transfer); safe deployment; A/B testing and
+experimentation; bandits; monitoring applications of language models.\\
+7 & Applications & Recommender systems and their evaluation; customer relationship management, campaign
+design and uplift modelling; interactive applications with Shiny for Python.\\
+\bottomrule
+\end{tabularx}
+\end{table}
+
+The units combine material that every project needs with topics that matter only for some tasks.
+\Cref{tab:routes} suggests a core path and its extensions; the syllabus and the hours available decide which
+parts are assessed.
+
+\begin{table}[htbp]
+\centering\small
+\caption{Reading routes: a core path through each unit, and its extensions.}\label{tab:routes}
+\begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
+\toprule
+& Core path & Extensions\\
+\midrule
+1 & Protocols and leakage, metrics, ROC and precision--recall, probabilities, calibration, costs and
+uncertainty & Task-specific metrics, comparisons of many algorithms, details of conformal prediction and
+of generative models\\
+2 & Diversity, bagging and boosting, stacking, abstention and delegation & Multi-trees, Bayesian model
+averaging, details of pruning and distillation\\
+3 & Fairness, observing versus intervening, faithful interpretation, threat models & Mediation and
+path-specific effects, MMD-critic, influence functions\\
+4 & AutoML with external evaluation, assistants and data checks & Inductive programming, genetic
+programming and Petri nets in detail\\
+5 & Serving, the complete pipeline, tests, versioning and formats & PMML with Java, CI infrastructure,
+distribution alternatives\\
+6 & What to monitor, types of shift, retraining, rollout and A/B testing & Quantification, adaptation,
+sequential tests and bandits\\
+7 & Evaluation of recommenders, a profitable campaign, uplift and the application & Latent factors, and
+the full design of a policy with its uncertainty\\
 \bottomrule
 \end{tabularx}
 \end{table}
@@ -74,15 +108,19 @@ boxes highlight special content:
   \item[Going further] material that goes beyond the core of the course.
 \end{description}
 
-All the code is written in Python using \textsf{scikit-learn} \citep{pedregosa2011scikit},
+The executable examples are written in Python using \textsf{scikit-learn} \citep{pedregosa2011scikit},
 \textsf{NumPy}, \textsf{pandas}, \textsf{SciPy}, \textsf{matplotlib} and
 \textsf{imbalanced-learn} \citep{lemaitre2017imbalanced}. Every listing has been executed and
-the output printed below it is the real output (it was produced with Python~3.12, \textsf{scikit-learn}~1.8.0,
-\textsf{NumPy}~2.4.4, \textsf{SciPy}~1.17.1, \textsf{pandas}~3.0.2 and \textsf{imbalanced-learn}~0.14.2;
-other versions or platforms may differ in the last decimals). The
-companion folder \code{code/} contains the listings and the script that generates every figure
-of the book; all random seeds are fixed, so the figures and the numbers quoted in the text
-can be reproduced in that environment, up to small numerical differences across platforms. Each unit ends with a summary, bibliographic notes and exercises,
+the output printed below it is the real output. It was produced on Linux with Python~3.12, \textsf{scikit-learn}~1.8.0,
+\textsf{NumPy}~2.4.4, \textsf{SciPy}~1.17.1, \textsf{pandas}~3.0.2 and \textsf{imbalanced-learn}~0.14.2; the serving,
+testing and exchange examples add \textsf{Flask}~3.1.3, \textsf{Shiny}~1.8.0 with \textsf{Starlette}~1.7.0,
+\textsf{pytest}~9.1.1, \textsf{Hypothesis}~6.169.0, \textsf{ONNX}~1.23.2 with \textsf{ONNX Runtime}~1.24.4 and
+\textsf{skl2onnx}~1.20.0, and \textsf{sklearn2pmml}~0.133.1, which needs Java~17 or later. Configuration examples also use
+YAML and Dockerfiles. The companion release of the book (\edmcompanion) contains the listings, the scripts that generate
+every figure, a \code{requirements.txt} with these versions, the references and checksums of the external data, and an
+execution guide for each lab. All random seeds are fixed: deterministic results are reproduced in that environment within
+small numerical tolerances, while timings depend on the hardware and the load, and some examples have explicit platform
+requirements. Each unit ends with a summary, bibliographic notes and exercises,
 with solutions to most of them.
 
 \section*{Recommended reading}

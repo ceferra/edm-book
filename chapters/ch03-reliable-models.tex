@@ -889,8 +889,10 @@ value it would have had \emph{without} treatment; this needs counterfactuals and
   \mathrm{NDE}=\E\bigl[Y_{X:=1,\,Z:=Z_{X:=0}}\bigr]-\E[Y_{X:=0}],\qquad
   \mathrm{NIE}=\E\bigl[Y_{X:=0,\,Z:=Z_{X:=1}}\bigr]-\E[Y_{X:=0}].
 \end{equation}
-Both effects above set the mediator to the value it takes without treatment: they are the
-\emph{pure} natural direct and indirect effects. They add up to the total effect in the linear,
+The \emph{pure} natural direct effect (PNDE) holds the mediator at its untreated value and changes
+the treatment from zero to one, $\E[Y_{1,Z_0}]-\E[Y_{0,Z_0}]$; the \emph{pure} natural indirect effect (PNIE)
+holds the treatment at zero and changes the mediator from its untreated to its treated value,
+$\E[Y_{0,Z_1}]-\E[Y_{0,Z_0}]$. They add up to the total effect in the linear,
 additive example of this section, but not in general: with $Z:=X$ and $Y:=XZ$ the total effect is 1 and
 both pure effects are 0, because the effect is an interaction. A general additive decomposition pairs
 the pure natural direct effect with the \emph{total} natural indirect effect,
@@ -916,9 +918,12 @@ only features that are not descendants of $A$ in the causal graph.
 A common shortcut is \emph{attribute flipping}: change the sensitive attribute of a record, leave
 everything else unchanged, and compare the predictions. In the lawsuit over admissions at Harvard
 College, an expert report estimated the effect of race by changing it in a statistical model of
-admissions while keeping the other characteristics of the applicants fixed. Flipping is a valid
-counterfactual only if the attribute has no descendants in the causal graph, an implausible
-assumption for race or gender, which influence many of the other features. We cannot meaningfully
+admissions while keeping the other characteristics of the applicants fixed. Flipping the sensitive
+attribute while holding the other model inputs fixed generally fails to represent its total counterfactual effect
+when those inputs are affected descendants of the attribute, which is plausible for race or gender, since they
+influence many other features. It can be valid under additional structural assumptions: the absence of affected
+descendants among the inputs of the model is a sufficient condition. Otherwise, the intervention being estimated
+must be stated explicitly. We cannot meaningfully
 talk about counterfactuals without being clear about how the variables interact.
 
 \subsection{The validity of causal models}
@@ -1014,7 +1019,8 @@ expect from one \citep{miller2019explanation}:
   \item explanations focus on the \emph{abnormal}: rare causes that changed the outcome a lot are
         preferred, and must be included;
   \item explanations should be \emph{truthful} (faithful to the model), \emph{coherent with the
-        prior beliefs} of the receiver (people tend to ignore information that contradicts them),
+        prior beliefs} of the receiver, a psychological expectation (people tend to ignore information
+        that contradicts them) that must never override fidelity to the model and to the evidence,
         and \emph{general and probable} (a cause that explains many events is a good explanation,
         which contradicts the preference for abnormal causes).
 \end{itemize}
@@ -1054,11 +1060,11 @@ A linear model predicts the target as a weighted sum of the features,
 $\hat y=\beta_0+\beta_1x_1+\dots+\beta_px_p$. Its understandability is why linear models are so
 widespread in medicine, sociology, psychology and many other quantitative fields. Their usual
 interpretation relies on assumptions that are often not satisfied: \emph{linearity} (non-linear
-effects and interactions must be added by hand), \emph{normality} of the errors (otherwise the
-confidence intervals of the weights are not valid), \emph{homoscedasticity} (constant error
-variance), \emph{independence} of the examples, \emph{fixed} features measured without error, and
-absence of \emph{multicollinearity} (strongly correlated features make the individual weights
-indeterminate).
+effects and interactions must be added by hand), \emph{homoscedasticity} (constant error variance),
+\emph{independence} of the examples, \emph{fixed} features measured without error, and no perfect
+\emph{collinearity}. Exact classical confidence intervals also require Gaussian errors; asymptotic, robust or
+bootstrap inference may be appropriate in other settings. Perfect collinearity prevents a unique identification
+of the coefficients, while strongly correlated features make the individual weights very uncertain.
 
 The weights are interpreted with simple templates:
 \begin{itemize}
@@ -1076,8 +1082,11 @@ features even if they are useless, the \emph{adjusted} version is preferred,
 \begin{equation}
   \bar R^2=1-(1-R^2)\,\frac{n-1}{n-p-1},
 \end{equation}
-with $n$ examples and $p$ features. Interpreting the weights of a model with a very low $R^2$ is
-pointless.
+with $n$ examples and $p$ features. Training $R^2$ cannot decrease when nested
+least-squares models add features on the same data, which guarantees nothing on test data. A low $R^2$ limits the
+predictive explanatory power of a model, but does not by itself invalidate the interpretation of its coefficients:
+with $y=0.1x$ plus noise of unit variance, $R^2$ is about 0.01, yet the slope can be estimated precisely with
+enough data.
 
 The weights are best displayed in a \emph{weight plot}, with their confidence intervals, after
 standardising the features so that the weights are comparable. An \emph{effect plot} shows, for
@@ -1129,8 +1138,9 @@ effects for the instance with the highest prediction.}
 
 Do linear models produce good explanations? They are contrastive, but the reference is an instance
 with all features at zero, which is meaningless unless the features are centred; they are
-selective only if they are sparse (for instance, fitted with a Lasso penalty); and they are truthful
-only as long as the relationship really is linear. Their great advantages are simplicity and
+selective only if they are sparse (for instance, fitted with a Lasso penalty); and they are exactly faithful to
+the linear model, while the scientific or causal validity of their interpretation depends on whether the
+relationship really is linear. Their great advantages are simplicity and
 generality. Their disadvantages: every non-linearity or interaction must be hand-crafted, their
 predictive performance is often not the best, and the interpretation of a weight depends on all
 the other features in the model, which can make it counter-intuitive.
@@ -2314,8 +2324,9 @@ harder for the attacker to obtain information about the gradients of the decisio
         \citep{carlini2017towards}. More generally, defences that merely mask the gradients give a false
         sense of security \citep{athalye2018obfuscated}.
 \end{itemize}
-Everything a designer can do can, so far, be overcome by an attacker with more time or computational
-resources; defences raise the cost of attacks.
+Many practical defences fail against adaptive attacks, so robustness must be evaluated under an explicit threat
+model and attack budget. A defence may raise the cost of attacks or provide guarantees within stated constraints;
+neither establishes security against every possible adversary.
 
 \begin{example}{A good-word attack on a spam filter}{goodword}
 A spammer cannot see the filter but can test messages against it. \citet{lowd2005good} showed that adding
@@ -2408,9 +2419,12 @@ intelligence \citep{eu2024aiact}. It does not regulate techniques but \emph{uses
 unregulated when it filters spam and heavily regulated when it decides who gets a loan. It complements earlier
 rules, such as the General Data Protection Regulation, which already gives people the right not to be subject
 to decisions based solely on automated processing that significantly affect them, with safeguards such as
-human intervention \citep{gdpr2016,wachter2017right}. For decisions taken with the high-risk systems of Annex~III that
-produce legal or similarly significant effects, the AI Act adds a right to obtain clear and meaningful
-explanations of the role of the system in the decision (Article~86).
+human intervention \citep{gdpr2016,wachter2017right}. For decisions based on the output of the high-risk systems of Annex~III
+(except those of its point~2, critical infrastructure) that produce legal effects, or similarly significantly affect a
+person in a way that they consider adverse to their health, safety or fundamental rights, the AI Act adds a right to
+obtain clear and meaningful explanations of the role of the system in the decision procedure and of the main elements
+of the decision (Article~86), subject to the exceptions and restrictions of other laws. It is not a general obligation
+to produce actionable or counterfactual explanations for every decision.
 
 \subsection{A risk-based approach}
 
@@ -2433,7 +2447,8 @@ The AI Act sorts AI systems into four levels of risk:
         interacting with a chatbot, and content generated or manipulated by AI, such as deepfakes, must be
         labelled as such;
   \item \emph{minimal risk}: everything else, such as spam filters or film recommenders, with no specific
-        obligations beyond ensuring that the staff who use AI have sufficient \emph{AI literacy}.
+        obligations beyond the duty to take measures that support the \emph{AI literacy} of the staff who use
+        AI (as amended in 2026, Article~4 does not require guaranteeing a specific individual level).
 \end{itemize}
 \emph{General-purpose AI models}, such as large language models, have their own obligations: technical documentation,
 information for the providers that build systems on them, a policy to respect copyright and a summary of the
@@ -2478,17 +2493,18 @@ serious incidents & \cref{ch:monitoring}\\
 
 \subsection{Timeline and enforcement}
 
-The obligations apply in stages. The prohibitions and the duty of AI literacy apply since 2 February 2025, and the
+The obligations apply in stages. The prohibitions and the duty to support AI literacy apply since 2 February 2025, and the
 obligations for general-purpose models since 2 August 2025. The obligations for high-risk systems were due to apply from
-August 2026, but an amendment adopted in 2026, the \emph{Digital Omnibus on AI}, postponed them until technical standards are
-available: those for the systems of Annex~III, such as credit scoring, apply from 2 December 2027, and those for systems
+August 2026, but an amendment adopted in 2026, the \emph{Digital Omnibus on AI} (Regulation (EU) 2026/1744, in force since 27 July 2026),
+postponed them to fixed dates: those for the systems of Annex~III, such as credit scoring, apply from 2 December 2027, and those for systems
 embedded in regulated products from 2 August 2028 \citep{eu2026omnibus}. The amendment also widened the possibility of
 processing personal data when strictly necessary to detect and correct biases, which matters because, as we saw in
 \cref{sec:fairness}, measuring discrimination usually requires the very attributes that one would like to leave out. Fines
 reach 35 million euros or 7\% of a company's worldwide annual turnover for prohibited practices, and 15 million euros or 3\% for
 other infringements. Each member state designates authorities to supervise the market; Spain created the first national
 agency, the Spanish Agency for the Supervision of Artificial Intelligence (AESIA), while the European Commission's AI Office
-supervises general-purpose models.
+supervises general-purpose models. This section describes the AI Act as amended in 2026, as checked on 12 October 2026;
+its obligations and dates must be rechecked for each edition.
 
 \subsection{A credit-scoring model under the AI Act}
 
@@ -2496,11 +2512,13 @@ Consider the credit model of \cref{sec:fairness} in a European bank. It is a hig
 its provider, must document its data and their representativeness, its performance overall and for the relevant groups of
 applicants (\cref{lst:credit}), its known limitations and the conditions under which it should not be used. Its decisions must be
 logged, and a person must be able to review and override them: the cautious classifiers of \cref{sec:cautious}, which
-delegate uncertain cases to an analyst, are a natural design. Applicants who are rejected should receive explanations they can
-act on, such as the counterfactual explanations of \cref{sec:examplebased} (``with a debt ratio below 35\%, the loan would have been
-approved''). Once in use, the model must be monitored for drift and for changes in its performance across groups, and serious
+delegate uncertain cases to an analyst, are a natural design. Rejected applicants may have the right to a clear and meaningful
+explanation of the role of the system in the decision (Article~86); offering an explanation they can act on, such as the
+counterfactual explanations of \cref{sec:examplebased} (``with a debt ratio below 35\%, the loan would have been approved''),
+is a design choice that goes beyond that right. Once in use, the model must be monitored for drift and for changes in its performance across groups, and serious
 incidents must be reported (\cref{ch:monitoring}). None of these obligations requires a new technique; all of them require using the
-techniques of this book systematically, and documenting that they were used.
+techniques of this book systematically, and documenting that they were used. The techniques help to meet the
+obligations, but they do not replace conformity assessment, legal documentation and the procedures the law requires.
 
 \begin{keyidea}
 The AI Act regulates what a system is used for, not how it is built. For high-risk uses it turns evaluation, data governance,
@@ -2536,7 +2554,7 @@ documentation, human oversight, robustness and monitoring from good practice int
 \end{itemize}
 
 \section*{Bibliographic notes}
-\addcontentsline{toc}{section}{Bibliographic notes}
+\phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
 The fairness and causality sections follow the approach of \citet{barocas2023fairness}, whose book is the
 best introduction to the field; \citet{mehrabi2021survey} survey the sources of bias and the mitigation
@@ -2548,7 +2566,7 @@ methods; \citet{miller2019explanation} reviews what the social sciences say abou
 learning for security, and \citet{biggio2018wild} review ten years of adversarial machine learning.
 
 \section*{Exercises}
-\addcontentsline{toc}{section}{Exercises}
+\phantomsection\addcontentsline{toc}{section}{Exercises}
 
 \begin{enumerate}[label=\textbf{3.\arabic*},ref=3.\arabic*,leftmargin=*,itemsep=6pt]
   \item\label{exr3:groups} A hiring model is applied to 600 candidates of group $a$ (400 qualified) and 400
@@ -2607,7 +2625,7 @@ learning for security, and \citet{biggio2018wild} review ten years of adversaria
 \end{enumerate}
 
 \section*{Solutions to selected exercises}
-\addcontentsline{toc}{section}{Solutions to selected exercises}
+\phantomsection\addcontentsline{toc}{section}{Solutions to selected exercises}
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
   \item[\ref{exr3:groups}] Group $a$: selection $340/600=0.57$, $\TPR=300/400=0.75$, $\FPR=40/200=0.20$,

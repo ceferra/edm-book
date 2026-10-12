@@ -1,3 +1,4 @@
+from concurrent.futures import ThreadPoolExecutor
 import json
 import pytest
 from starlette.testclient import TestClient
@@ -14,13 +15,17 @@ def client(app_module):
     with TestClient(app_module.app) as c:
         yield c
 
-def read_output(ws, name="answer"):
-    """Read messages from the server until the value of an output arrives."""
-    for _ in range(20):
-        message = json.loads(ws.receive_text())
+_POOL = ThreadPoolExecutor(max_workers=1)
+
+def read_output(ws, name="answer", seconds=30, max_messages=20):
+    """Read server messages until the value of an output arrives. The blocking read runs
+    in a worker thread, so the time limit works on any platform and in any thread."""
+    for _ in range(max_messages):
+        message = json.loads(_POOL.submit(ws.receive_text).result(timeout=seconds))
         if name in message.get("values", {}):
             return message["values"][name]
     raise AssertionError(f"output {name} never arrived")
+
 
 def test_answer_text(app_module):                    # unit test of the model wrapper
     low, high = (loan_model.answer_text(app_module.model, income, 0.3)

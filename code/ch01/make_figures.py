@@ -110,7 +110,7 @@ def fig_bias_variance():
     ax.text(9.5, sigma ** 2 - 0.014, r"noise $\sigma^2$", fontsize=6.8, color=GRAY)
     ax.set_ylim(0, 0.25)
     ax.text(0.4, 0.232, "degree 0: 0.59 (off scale)", fontsize=6.3, color=GRAY)
-    ax.set_xlabel("model complexity (polynomial degree)")
+    ax.set_xlabel("polynomial degree")
     ax.set_ylabel("mean squared error")
     ax.set_title("(a) Training vs. test error")
     ax.legend(loc="center right")
@@ -122,7 +122,7 @@ def fig_bias_variance():
     best = degrees[np.argmin(total)]
     ax.axvline(best, color=CORAL, ls="--", lw=0.8)
     ax.set_ylim(0, 0.25)
-    ax.set_xlabel("model complexity (polynomial degree)")
+    ax.set_xlabel("polynomial degree")
     ax.set_title("(b) Bias--variance decomposition")
     ax.legend(loc="upper right", fontsize=6.6)
     print(f"  best degree (min expected error) = {best}; bias2={np.round(bias2, 4)}; var={np.round(var, 4)}")

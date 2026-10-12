@@ -4,13 +4,13 @@
 % =====================================================================
 \chapter{Model Evaluation}\label{ch:evaluation}
 
-In 2021, a team at the University of Michigan evaluated a sepsis prediction model that was already in use in
-hundreds of hospitals in the United States. Its developer reported an area under the ROC curve between 0.76 and
-0.83. On the 38,455 hospitalisations of their own hospital, the researchers measured 0.63: the model missed two
-thirds of the hospitalisations with sepsis, while raising alerts for almost one in five of all of them
-\citep{wong2021external}. Nothing was wrong with its code. What had failed was the evaluation: the model had not been
-tested in the conditions in which it was used, and the numbers that had been reported did not measure what mattered
-to the doctors who received its alerts.
+In 2021, a team at the University of Michigan published a retrospective external validation of the then-current
+version of a sepsis prediction model that was already in use in hundreds of hospitals in the United States. Its
+developer reported an area under the ROC curve between 0.76 and 0.83; on the 38,455 hospitalisations of their own
+hospital, the researchers measured 0.63. At the threshold they studied, simulated alerts would have flagged about 18\%
+of all hospitalisations while missing about two thirds of those with sepsis \citep{wong2021external}. The case shows
+why external evaluation under the intended conditions of use is essential: the numbers that had been reported did not
+measure what mattered where the model was used.
 
 Training a model is usually the easy part of a machine learning project: modern libraries
 fit a random forest or a neural network in a couple of lines of code. Deciding whether that
@@ -745,9 +745,11 @@ A few remarks help to choose among them:
 \begin{itemize}
   \item $\TPR$, $\TNR$, $\FPR$ and $\FNR$ are computed within a single column of the matrix,
         that is, within one actual class. They, and their combinations (balanced accuracy,
-        G-mean), \emph{do not depend on the class distribution} of the test set. Precision,
+        G-mean), \emph{do not depend on the class distribution} of the test set, as long as the
+        class-conditional distributions stay the same (label shift; \cref{ch:monitoring} discusses other shifts). Precision,
         NPV, accuracy, $F_1$, MCC and kappa mix both columns and \emph{do} depend on it:
-        comparing them across test sets with different class proportions is meaningless;
+        comparisons across different class mixtures confound model behaviour with prevalence
+        unless the operating context is accounted for;
   \item sensitivity and specificity, or precision and recall, always come in pairs: a model
         can trivially maximise one at the expense of the other. Balanced accuracy, the
         G-mean and $F_\beta$ summarise each pair; $\beta>1$ weighs recall more than
@@ -1013,11 +1015,12 @@ context.}
 \subsection{Scoring classifiers and ROC curves}
 
 Most classifiers can output a \emph{score} rather than a label: a scoring classifier assigns
-to each example scores $s(x,+)$ and $s(x,-)$ for the two classes (estimated probabilities,
-class-conditional likelihoods such as $P(x\mid+)$ and $P(x\mid-)$, distances to a separating
-hyperplane\dots). The scores need not be normalised; their ratio
-$s(x)=s(x,+)/s(x,-)$, or any monotone function of it, ranks the examples from the most to the
-least likely positive. A scoring classifier is therefore a \emph{ranker}, and it becomes a
+to each example a real-valued score $s(x)$, with larger values indicating stronger evidence for the positive class,
+such as a predicted positive-class probability or a signed decision margin. Ratios are useful in specific cases, such
+as posterior odds or a likelihood ratio $P(x\mid+)/P(x\mid-)$ with a positive denominator; arbitrary class scores need
+not admit such an interpretation (with scores $g(x)$ and $-g(x)$ for the two classes, the ratio is always $-1$). Any
+strictly increasing transformation of $s(x)$ ranks the examples in the same order; a merely non-decreasing one can
+create ties. A scoring classifier is therefore a \emph{ranker}, and it becomes a
 crisp classifier by fixing a threshold $t$: predict positive if $s(x)\geq t$. Each threshold
 gives a point in ROC space, and moving the threshold from $+\infty$ to $-\infty$ traces the
 \emph{ROC curve} of the ranker. \Cref{alg:roc} builds it from a test set
@@ -1382,7 +1385,8 @@ a predicted probability $p$, the proportion of positives is approximately $p$:
 \end{equation}
 A calibrated weather forecaster is one for whom it rains on about 70\% of the days with a 70\%
 forecast. Calibration is different from discrimination (ranking quality). A model that always
-predicts the prevalence is perfectly calibrated and useless; a model that ranks perfectly can
+predicts the prevalence is perfectly calibrated but without discrimination (it can still be a useful
+reference); a model that ranks perfectly can
 be badly calibrated, since any increasing transformation of its scores keeps its AUC. Good
 probabilistic models need both properties, and proper scoring rules reward both: the Brier
 score decomposes into a calibration term and a refinement term
@@ -2282,10 +2286,14 @@ exchangeable (for instance, independent and identically distributed). The simple
 \Require training set; calibration set $\{(x_i,y_i)\}_{i=1}^{n_{\text{cal}}}$; miscoverage level $\alpha$
 \State fit a model $\hat h$ on the training set
 \State compute the \emph{nonconformity scores} $s_i=|y_i-\hat h(x_i)|$ on the calibration set
-\State $\hat q\gets$ the $\lceil(n_{\text{cal}}+1)(1-\alpha)\rceil$-th smallest score
+\State $k\gets\lceil(n_{\text{cal}}+1)(1-\alpha)\rceil$; $\hat q\gets$ the $k$-th smallest score, or $\hat q\gets\infty$ if $k>n_{\text{cal}}$
 \State \Return for each new $x$, the interval $\mathcal C(x)=\bigl[\hat h(x)-\hat q,\ \hat h(x)+\hat q\bigr]$
 \end{algorithmic}
 \end{algorithm}
+
+If the required order is $n_{\text{cal}}+1$ (with 10 calibration scores and $\alpha=0.01$, for instance), the threshold is
+infinite: the calibration sample cannot support a finite interval at the requested coverage without additional
+assumptions.
 
 \begin{pylisting}[label={lst:conformal}]{Split conformal prediction with a 90\% coverage target}
 import numpy as np
@@ -2300,8 +2308,9 @@ tr, cal, te = idx[:2000], idx[2000:4000], idx[4000:]   # train / calibration / t
 alpha = 0.1                                           # target coverage 90%
 model = GradientBoostingRegressor(random_state=0).fit(X[tr], y[tr])
 scores = np.abs(y[cal] - model.predict(X[cal]))       # nonconformity scores
+assert 0 < alpha < 1 and len(scores) > 0
 k = int(np.ceil((len(cal) + 1) * (1 - alpha)))
-q = np.sort(scores)[k - 1]                            # conformal quantile
+q = np.inf if k > len(scores) else np.sort(scores)[k - 1]   # conformal quantile
 pred = model.predict(X[te])
 covered = (y[te] >= pred - q) & (y[te] <= pred + q)
 print(f"q = {q:.3f};  interval width = {2 * q:.2f}")
@@ -3163,7 +3172,7 @@ Clustering & internal indices plus stability and domain validation; ARI/AMI with
 \end{itemize}
 
 \section*{Bibliographic notes}
-\addcontentsline{toc}{section}{Bibliographic notes}
+\phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
 \citet{japkowicz2011evaluating} is the most complete textbook on the evaluation of classifiers,
 and \citet{flach2012machine} offers an excellent treatment of ROC analysis and scoring
@@ -3177,7 +3186,7 @@ over multiple data sets. \citet{silvafilho2023classifier} survey classifier cali
 conformal prediction, and \citet{maierhein2024metrics} the metrics for image analysis.
 
 \section*{Exercises}
-\addcontentsline{toc}{section}{Exercises}
+\phantomsection\addcontentsline{toc}{section}{Exercises}
 
 \begin{enumerate}[label=\textbf{1.\arabic*},ref=1.\arabic*,leftmargin=*,itemsep=6pt]
   \item\label{exr:confusion} A test for a disease is applied to 200 patients, 40 of whom are
@@ -3229,7 +3238,7 @@ conformal prediction, and \citet{maierhein2024metrics} the metrics for image ana
 \end{enumerate}
 
 \section*{Solutions to selected exercises}
-\addcontentsline{toc}{section}{Solutions to selected exercises}
+\phantomsection\addcontentsline{toc}{section}{Solutions to selected exercises}
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
   \item[\ref{exr:confusion}] $\TP=30$, $\FP=16$, $\FN=10$, $\TN=144$. $\TPR=0.75$,

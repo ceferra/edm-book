@@ -1,3 +1,7 @@
+import hashlib
+import io
+from urllib.request import urlopen
+
 import numpy as np
 import pandas as pd
 from sklearn.compose import make_column_transformer
@@ -6,8 +10,13 @@ from sklearn.model_selection import train_test_split
 from sklearn.pipeline import make_pipeline
 from sklearn.preprocessing import OneHotEncoder, StandardScaler
 
-URL = "https://raw.githubusercontent.com/jbrownlee/Datasets/master/german.csv"
-data = pd.read_csv(URL, header=None)        # Statlog German credit: 1000 applicants
+# Statlog German credit (UCI), from a mirror pinned to a commit and checked by its hash
+URL = ("https://raw.githubusercontent.com/jbrownlee/Datasets/"
+       "d20fcb6402ae34e653d4513b00f39257bb37ed7f/german.csv")
+SHA256 = "ec12a88b9fc14d74ba646ea0410cf7ff4533bec2eb61652f8ad76796bbfec017"
+raw = urlopen(URL).read()
+assert hashlib.sha256(raw).hexdigest() == SHA256, "the data file has changed"
+data = pd.read_csv(io.BytesIO(raw), header=None)    # 1000 applicants
 y = (data[20] == 2).astype(int)             # 1 = the applicant turned out to be bad
 X = data.drop(columns=20)
 categorical = X.select_dtypes(exclude="number").columns     # coded as A11, A12...

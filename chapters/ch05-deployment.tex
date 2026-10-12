@@ -217,13 +217,14 @@ returned without rounding, so that a client can reproduce the decision from it.
 The endpoint approach is quick to implement, but the infrastructure has to grow with the number of
 users: if the traffic exceeds the capacity of the servers, requests are delayed or fail. A useful tool
 for sizing it is \emph{Little's law} \citep{little1961proof}: in a stable system, the mean number of
-requests being served, $L$, equals the arrival rate $\lambda$ times the mean time each request spends
-in the system, $W$,
+requests in the system, $L$, including those waiting, equals the arrival rate $\lambda$ times their mean total
+residence time, $W$,
 \begin{equation}\label{eq:little}
   L=\lambda\,W .
 \end{equation}
-At 200 requests per second and 50 milliseconds per request, 10 requests are in progress on average,
-so a server that can handle four at a time is not enough. Means are not the whole story: users
+Worker capacity depends instead on the \emph{service time} $S$ during which a request occupies a worker: if each request
+occupies a worker for 50 milliseconds, 200 requests per second keep $\lambda S=10$ workers busy on average, before adding
+headroom for variability and failures, so a server with four workers is not enough. Means are not the whole story: users
 experience the \emph{tail} of the latency distribution, and in systems that call many services a few
 slow responses dominate the user experience, which is why latency objectives are stated as high
 percentiles such as p95 or p99 \citep{dean2013tail}.
@@ -886,6 +887,7 @@ the model gives. Tests that drive a real browser, for instance with Playwright, 
 the rendering as well.
 
 \begin{pylisting}[label={lst:shinytest}]{Testing the application: unit, page and reactivity tests}
+from concurrent.futures import ThreadPoolExecutor
 import json
 import pytest
 from starlette.testclient import TestClient
@@ -902,13 +904,17 @@ def client(app_module):
     with TestClient(app_module.app) as c:
         yield c
 
-def read_output(ws, name="answer"):
-    """Read messages from the server until the value of an output arrives."""
-    for _ in range(20):
-        message = json.loads(ws.receive_text())
+_POOL = ThreadPoolExecutor(max_workers=1)
+
+def read_output(ws, name="answer", seconds=30, max_messages=20):
+    """Read server messages until the value of an output arrives. The blocking read runs
+    in a worker thread, so the time limit works on any platform and in any thread."""
+    for _ in range(max_messages):
+        message = json.loads(_POOL.submit(ws.receive_text).result(timeout=seconds))
         if name in message.get("values", {}):
             return message["values"][name]
     raise AssertionError(f"output {name} never arrived")
+
 
 def test_answer_text(app_module):                    # unit test of the model wrapper
     low, high = (loan_model.answer_text(app_module.model, income, 0.3)
@@ -938,7 +944,7 @@ test_shiny_app.py::test_answer_text PASSED                               [ 33%]
 test_shiny_app.py::test_page_has_the_controls PASSED                     [ 66%]
 test_shiny_app.py::test_output_follows_the_sliders PASSED                [100%]
 
-============================== 3 passed in 1.25s ===============================
+============================== 3 passed in 1.65s ===============================
 \end{pyoutput}
 
 Such applications are ideal for demonstrations, internal tools and prototypes; products with many users need
@@ -955,13 +961,15 @@ what it returns, and the infrastructure that serves it.
 
 \subsection{Where the model runs}
 
-There are three main options. The simplest is an \emph{external API}: no infrastructure, access to the most capable
-models, and a price per token processed; but the data leave the organisation, and the provider can change or retire
-the model. The second is to \emph{host an open-weight model}, which gives control over the data, the version and the
+Two decisions are separate: where the inference runs, and how the model is adapted. The simplest place is an
+\emph{external API}: no infrastructure, access to the most capable models, and a price per token processed; but the data leave the organisation, and the provider can change or retire
+the model. The alternative is to \emph{host an open-weight model}, which gives control over the data, the version and the
 cost per request, at the price of running GPUs; serving engines batch the requests of many users and manage the memory
 of the model carefully to make this efficient \citep{kwon2023efficient}, and the quantisation of
-\cref{sec:deployoptions} reduces the hardware needed. The third is to fine-tune a \emph{small model} for one narrow task,
-which can be cheaper and faster than a large general one when the task is well defined. The choice involves the same
+\cref{sec:deployoptions} reduces the hardware needed. Independently of where it runs, the model can be
+used as it is, guided by prompts and retrieval, or \emph{fine-tuned}: a small model fine-tuned for one narrow task can be
+cheaper and faster than a large general one when the task is well defined, and fine-tuning can be combined with an API
+or with self-hosting. The choice involves the same
 trade-offs as the options of \cref{sec:deployoptions}, plus one more: whether the data may leave the organisation at all.
 
 \subsection{Prompts are code}
@@ -1863,7 +1871,7 @@ Packaging and deployment & Docker, Kubernetes, Ansible\\
 \end{itemize}
 
 \section*{Bibliographic notes}
-\addcontentsline{toc}{section}{Bibliographic notes}
+\phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
 \citet{ameisen2020building} covers the path from idea to deployed product, and \citet{huyen2022designing} the
 design of production machine learning systems. \citet{dubovikov2019managing} describes ModelOps in the context
@@ -1872,7 +1880,7 @@ of managing data science teams, and \citet{kreuzberger2023mlops} survey MLOps. \
 review federated learning, and \citet{humble2010continuous} is the classical reference on continuous delivery.
 
 \section*{Exercises}
-\addcontentsline{toc}{section}{Exercises}
+\phantomsection\addcontentsline{toc}{section}{Exercises}
 
 \begin{enumerate}[label=\textbf{5.\arabic*},ref=5.\arabic*,leftmargin=*,itemsep=6pt]
   \item\label{exr5:choose} Choose a deployment option for each application and justify it: (a) the price of a
@@ -1923,7 +1931,7 @@ review federated learning, and \citet{humble2010continuous} is the classical ref
 \end{enumerate}
 
 \section*{Solutions to selected exercises}
-\addcontentsline{toc}{section}{Solutions to selected exercises}
+\phantomsection\addcontentsline{toc}{section}{Solutions to selected exercises}
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
   \item[\ref{exr5:choose}] (a) Server-side streaming: the location and the available drivers exist only at request

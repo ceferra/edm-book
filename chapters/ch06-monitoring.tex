@@ -49,7 +49,7 @@ After studying this unit you should be able to:
 
 Once a model is deployed, its performance must be monitored like that of any other software system;
 but a model can fail in ways that ordinary software cannot. When monitoring a model we must answer three
-questions: why we monitor it, how, and what actions the monitoring should drive. There are three main
+questions: why we monitor it, how, and what actions the monitoring should drive. There are four main
 reasons:
 \begin{itemize}
   \item \emph{to keep the model fresh}: most models need to be updated regularly to maintain their
@@ -1389,8 +1389,8 @@ CUPED             effect +0.097 +/- 0.039   (95% CI)
 correlation before/during 0.82: variance and sample size reduced by 67%
 \end{pyoutput}
 
-In \cref{lst:cuped} the correlation between the sessions of each user before and during the experiment is 0.82, so CUPED removes 67\% of
-the variance: the 95\% confidence interval of the effect shrinks from $\pm0.068$ to $\pm0.039$ sessions per user, and an experiment would
+In \cref{lst:cuped} the correlation between the activity scores of each user before and during the experiment is 0.82, so CUPED removes 67\% of
+the variance: the 95\% confidence interval of the effect shrinks from $\pm0.068$ to $\pm0.039$ score units per user, and an experiment would
 need a third of the users for the same power.
 
 \subsection{Peeking and sequential tests}
@@ -1838,7 +1838,7 @@ optimisation services for organisations without a dedicated team.
 \end{itemize}
 
 \section*{Bibliographic notes}
-\addcontentsline{toc}{section}{Bibliographic notes}
+\phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
 \citet{quinonero2009dataset} and \citet{morenotorres2012unifying} define and classify dataset shift. \citet{gama2014survey} and
 \citet{lu2019learning} survey concept drift detection and adaptation, and \citet{rabanser2019failing} compare methods for detecting
@@ -1850,7 +1850,7 @@ depth, and \citet{russo2018tutorial} Thompson sampling. \citet{huyen2022designin
 systems.
 
 \section*{Exercises}
-\addcontentsline{toc}{section}{Exercises}
+\phantomsection\addcontentsline{toc}{section}{Exercises}
 
 \begin{enumerate}[label=\textbf{6.\arabic*},ref=6.\arabic*,leftmargin=*,itemsep=6pt]
   \item\label{exr6:plan} Propose one metric for each level of \cref{fig:monitorlayers} for a model that recommends products in an
@@ -1896,7 +1896,7 @@ systems.
 \end{enumerate}
 
 \section*{Solutions to selected exercises}
-\addcontentsline{toc}{section}{Solutions to selected exercises}
+\phantomsection\addcontentsline{toc}{section}{Solutions to selected exercises}
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
   \item[\ref{exr6:plan}] For example: latency p99 of the recommendation service (seconds); share of requests with missing user history

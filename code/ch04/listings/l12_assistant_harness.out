@@ -5,7 +5,9 @@ baseline cross-validated AUC: 0.805
     income, debt, age, late_payments, postcode, debt_to_income
   late_per_year    rejected: AUC +0.000
   postcode_risk    rejected: leakage: uses the target
-  log_income       rejected: rows were removed or reordered
+  log_income       rejected: row index changed
   age_squared      rejected: AUC -0.000
+  ratio            rejected: original rows or values changed
+  income_k         rejected: original rows or values changed
 final AUC 0.815 with debt_to_income
 had the leaky feature been accepted, the AUC would have been 0.909

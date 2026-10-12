@@ -8,4 +8,4 @@ test_crm_app.py::test_costs_do_not_retrain_but_the_model_does
   0.50 EUR per brochure: Mail the top 84% of 90,000 customers: profit 135,368 EUR
 PASSED
 
-============================== 3 passed in 3.01s ===============================
+============================== 3 passed in 2.76s ===============================

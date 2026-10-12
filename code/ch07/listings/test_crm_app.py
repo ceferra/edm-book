@@ -1,6 +1,5 @@
+from concurrent.futures import ThreadPoolExecutor
 import json
-import signal
-from contextlib import contextmanager
 
 import numpy as np
 import pytest
@@ -12,24 +11,17 @@ def client():
     with TestClient(crm_app.app) as c:
         yield c
 
-@contextmanager
-def time_limit(seconds):                    # fail instead of waiting forever
-    def stop(signum, frame):
-        raise TimeoutError(f"no answer from the server after {seconds} s")
-    signal.signal(signal.SIGALRM, stop)
-    signal.alarm(seconds)
-    try:
-        yield
-    finally:
-        signal.alarm(0)
+_POOL = ThreadPoolExecutor(max_workers=1)
 
-def read_output(ws, name="summary"):
-    with time_limit(30):
-        for _ in range(50):                   # at most 50 messages...
-            message = json.loads(ws.receive_text())
-            if name in message.get("values", {}):
-                return message["values"][name]
+def read_output(ws, name="summary", seconds=30, max_messages=50):
+    """Read server messages until the value of an output arrives. The blocking read runs
+    in a worker thread, so the time limit works on any platform and in any thread."""
+    for _ in range(max_messages):
+        message = json.loads(_POOL.submit(ws.receive_text).result(timeout=seconds))
+        if name in message.get("values", {}):
+            return message["values"][name]
     raise AssertionError(f"output {name} never arrived")
+
 
 def test_profit_curve():                     # unit tests, computed by hand
     p = crm_app.profit_curve(np.array([1, 0, 1, 0]), fixed=10, per_mail=1, margin=5, n=4)

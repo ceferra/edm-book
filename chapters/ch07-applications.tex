@@ -874,8 +874,8 @@ these true effects, but its randomised design allows them to be \emph{estimated}
 control customers among those selected by each ranking gives +13.9, $-12.5$ and +43.8 extra sales per 1000 contacts,
 with 95\% confidence intervals from $-8.1$ to +35.9, from $-41.1$ to +16.0 and from +21.0 to +66.5; only the effect of
 the uplift model is clearly positive. Whether it pays is another question: with a margin of 30~EUR and 1.50~EUR per
-brochure, 32.8 extra sales per 1000 contacts bring $30\cdot0.0328-1.50\approx-0.52$~EUR per contact. Even the best
-targeting would lose money at these prices, and the right decision would be not to launch, or to contact fewer customers
+brochure, 32.8 extra sales per 1000 contacts bring $30\cdot0.0328-1.50\approx-0.52$~EUR per contact. At a 20\% contact
+rate, even uplift targeting has a negative expected profit at these prices, and the right decision would be not to launch, or to contact fewer customers
 with a larger effect: customers should be ranked by their expected incremental profit, $m\,\tau(x)-c$.
 
 \begin{figure}[htbp]
@@ -1003,16 +1003,22 @@ app = App(app_ui, server)
 \end{pylisting}
 
 \begin{pylisting}[label={lst:placement}]{How often each part runs, measured with two simulated users}
+from concurrent.futures import ThreadPoolExecutor
 import json
 from starlette.testclient import TestClient
 import placement_app as pa
 
-def read_output(ws, name="total"):
-    for _ in range(50):
-        message = json.loads(ws.receive_text())
+_POOL = ThreadPoolExecutor(max_workers=1)
+
+def read_output(ws, name="total", seconds=30, max_messages=50):
+    """Read server messages until the value of an output arrives. The blocking read runs
+    in a worker thread, so the time limit works on any platform and in any thread."""
+    for _ in range(max_messages):
+        message = json.loads(_POOL.submit(ws.receive_text).result(timeout=seconds))
         if name in message.get("values", {}):
             return message["values"][name]
-    raise RuntimeError(f"no value for {name}")
+    raise RuntimeError(f"output {name} never arrived")
+
 
 def start(ws, n=10):
     ws.send_text(json.dumps({"method": "init", "data": {
@@ -1050,8 +1056,9 @@ Training and scoring happen in the reactive expression \texttt{ranked()}, which 
 slider redraws the profit curve and updates the sentence without retraining anything. Each session has its own
 \texttt{ranked()}, which caches the current result until the model changes: returning to a model chosen before trains it
 again (a cache keyed by the model and the version of the data would avoid it), and training inside the reactive
-expression blocks the process while it runs: for slow models, train them in advance or run the training as an
-\texttt{ExtendedTask}, so that the application stays responsive \citep{shinypython2024}. Rapid movements of a slider may
+expression blocks the process while it runs: for slow synchronous training, pretrain the models, or offload the work to an
+executor (a separate process for CPU-bound Python code) or to a training service, coordinated by an \texttt{ExtendedTask}:
+an \texttt{ExtendedTask} alone does not move CPU-bound work off the event-loop thread \citep{shinypython2024}. Rapid movements of a slider may
 also be grouped into fewer updates, and the global log of trainings is instrumentation for this demonstration, not an
 audit log. The sentence also considers not launching the campaign at all.
 
@@ -1149,14 +1156,15 @@ the top 71\% of the 90,000 customers, for a profit of 69,515~EUR; at 0.50~EUR pe
 check the arithmetic, the identifiers of the page and the reactive behaviour of the server through its WebSocket
 protocol; they do not exercise the rendering in a browser or its JavaScript, which a browser test, for instance
 with Playwright, can check, together with both plots. The helper that reads the outputs gives up after 50 messages,
-and a time limit stops a regression from blocking the test run forever. The test client speaks the internal protocol of
+and a time limit stops a regression from blocking the test run forever: the blocking read runs in a worker thread with a
+timeout, which works on any operating system and in any thread (an alarm signal works only on Unix, in the main thread,
+and replaces the handler of the whole process). The test client speaks the internal protocol of
 Shiny, which may change between versions, so the requirements file pins them (here Shiny 1.8.0, Starlette 1.7.0 and
 pytest 9.1.1).
 
 \begin{pylisting}[label={lst:crmtest}]{Testing the planner: profit, page, and reactive caching (file \texttt{test\_crm\_app.py}; run it with \texttt{pytest})}
+from concurrent.futures import ThreadPoolExecutor
 import json
-import signal
-from contextlib import contextmanager
 
 import numpy as np
 import pytest
@@ -1168,24 +1176,17 @@ def client():
     with TestClient(crm_app.app) as c:
         yield c
 
-@contextmanager
-def time_limit(seconds):                    # fail instead of waiting forever
-    def stop(signum, frame):
-        raise TimeoutError(f"no answer from the server after {seconds} s")
-    signal.signal(signal.SIGALRM, stop)
-    signal.alarm(seconds)
-    try:
-        yield
-    finally:
-        signal.alarm(0)
+_POOL = ThreadPoolExecutor(max_workers=1)
 
-def read_output(ws, name="summary"):
-    with time_limit(30):
-        for _ in range(50):                   # at most 50 messages...
-            message = json.loads(ws.receive_text())
-            if name in message.get("values", {}):
-                return message["values"][name]
+def read_output(ws, name="summary", seconds=30, max_messages=50):
+    """Read server messages until the value of an output arrives. The blocking read runs
+    in a worker thread, so the time limit works on any platform and in any thread."""
+    for _ in range(max_messages):
+        message = json.loads(_POOL.submit(ws.receive_text).result(timeout=seconds))
+        if name in message.get("values", {}):
+            return message["values"][name]
     raise AssertionError(f"output {name} never arrived")
+
 
 def test_profit_curve():                     # unit tests, computed by hand
     p = crm_app.profit_curve(np.array([1, 0, 1, 0]), fixed=10, per_mail=1, margin=5, n=4)
@@ -1227,7 +1228,7 @@ test_crm_app.py::test_costs_do_not_retrain_but_the_model_does
   0.50 EUR per brochure: Mail the top 84% of 90,000 customers: profit 135,368 EUR
 PASSED
 
-============================== 3 passed in 3.01s ===============================
+============================== 3 passed in 2.76s ===============================
 \end{pyoutput}
 
 \subsection{Sharing applications}
@@ -1270,7 +1271,7 @@ follow the current deployment documentation; or it can be packaged in a containe
 \end{itemize}
 
 \section*{Bibliographic notes}
-\addcontentsline{toc}{section}{Bibliographic notes}
+\phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
 \citet{segaran2007programming} is a practical introduction to collaborative filtering, and \citet{aggarwal2016recommender} and
 \citet{ricci2022recommender} cover recommender systems in depth. \citet{koren2009matrix} explain matrix factorisation as used in the
@@ -1280,7 +1281,7 @@ problems, and \citet{gutierrez2017causal} review uplift modelling. \citet{wickha
 model.
 
 \section*{Exercises}
-\addcontentsline{toc}{section}{Exercises}
+\phantomsection\addcontentsline{toc}{section}{Exercises}
 
 \begin{enumerate}[label=\textbf{7.\arabic*},ref=7.\arabic*,leftmargin=*,itemsep=6pt]
   \item\label{exr7:euclid} Two users rated three common films (4, 2, 5) and (5, 1, 3). Compute their Euclidean-based similarity.
@@ -1322,7 +1323,7 @@ model.
 \end{enumerate}
 
 \section*{Solutions}
-\addcontentsline{toc}{section}{Solutions}
+\phantomsection\addcontentsline{toc}{section}{Solutions}
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
   \item[\ref{exr7:euclid}] $d=\sqrt{1^2+1^2+2^2}=\sqrt6\approx2.45$, so the similarity is $1/(1+2.45)\approx0.29$.
@@ -1368,8 +1369,10 @@ model.
         them (\cref{sec:fairness}).
   \item[\ref{exr7:integrated}] (a) Only the uplift model targets incremental sales: at these prices its top 20\% brings
         $30\cdot0.0328-1.50\approx-0.52$~EUR per contact, so the best options are not launching or contacting a smaller group
-        with a larger effect; the response model loses money. (b) Split the data into training, validation and test parts,
-        select on validation, and report the test estimate with a bootstrap or normal interval: it is honest because the test
-        data took no part in the choice. (c) \Cref{lst:crmtest} does exactly this for one change of costs.
+        with a larger effect; the response model loses money. (b) Split the data into training, validation and test parts, and choose the model and the
+        share of customers on validation. On the test part, estimate the value of the chosen policy: among the selected
+        customers, the difference between treated and control customers in margin minus contact costs, per contact; its
+        interval resamples customers within the treated and the control groups (or uses the normal approximation for the
+        two proportions). It is honest because the test data took no part in the choice. (c) \Cref{lst:crmtest} does exactly this for one change of costs.
 \end{description}
 

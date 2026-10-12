@@ -1183,9 +1183,14 @@ The risks of using language models for data science go beyond ordinary programmi
 The output of an assistant should be treated like code from an unknown contributor: useful, but not trusted until checked.
 Many checks can be automated. \Cref{lst:assistant} builds a small verification harness around the most common request in
 feature engineering, ``propose a feature to predict default''. Each proposal is executed on a copy of the data \emph{without the
-target column}, so that any feature that uses the target fails; the harness checks that no rows were removed or reordered and
-that a new column was created; and it accepts the feature only if it improves the cross-validated AUC by a minimum margin, so that
-noise is not mistaken for progress. When the code fails, the error message is fed back, as an agent would do, together with the
+target column}, so that any feature that uses the target fails; the harness enforces an \emph{append-only} contract (the original feature
+columns, their values, the row order and the index must remain unchanged: checking the index alone is insufficient, because
+sorting and resetting the index can silently attach features to the wrong labels) and checks that a new column was created;
+and it accepts the feature only if it improves the cross-validated AUC by at least 0.005, a practical screening margin rather
+than evidence that the gain exceeds sampling noise. Repeated feature selection uses the same validation information, so the
+final procedure must be assessed on independent data or with an outer evaluation loop; and features that learn statistics
+from the data must be fitted inside each fold, because removing the target column prevents direct access to it, not every
+form of leakage. When the code fails, the error message is fed back, as an agent would do, together with the
 list of available columns.
 
 \begin{pylisting}[label={lst:assistant}]{Verifying the features proposed by an assistant before accepting them}
@@ -1213,17 +1218,27 @@ def cv_auc(data):
                            scoring="roc_auc").mean()
 
 def run_safely(code, data):
-    """Run proposed code on a copy of the data WITHOUT the target, and check invariants.
+    """Run proposed code on a copy of the data WITHOUT the target and enforce an
+    append-only contract: original columns, values, rows and index must not change.
     (exec is not a security sandbox: real systems use isolated containers.)"""
-    env = {"df": data.drop(columns=TARGET).copy(), "np": np, "pd": pd}
+    base = data.drop(columns=TARGET)
+    env = {"df": base.copy(deep=True), "np": np, "pd": pd}
     try:
         exec(code, env)
     except Exception as e:
         return None, f"{type(e).__name__}: {e}"
-    new = env["df"]
-    if len(new) != len(data) or not new.index.equals(data.index):
-        return None, "rows were removed or reordered"
-    added = [c for c in new.columns if c not in data.columns]
+    new = env.get("df")
+    if not isinstance(new, pd.DataFrame) or not new.columns.is_unique:
+        return None, "invalid result schema"
+    if TARGET in new.columns:
+        return None, "unexpected target column"
+    if not new.index.equals(base.index):
+        return None, "row index changed"
+    if not base.columns.isin(new.columns).all():
+        return None, "an original column was removed"
+    if not new.loc[:, base.columns].equals(base):
+        return None, "original rows or values changed"
+    added = [c for c in new.columns if c not in base.columns]
     return (new[added], "ok") if added else (None, "no new column")
 
 # What an assistant might answer to "propose a feature to predict default" (scripted
@@ -1235,6 +1250,10 @@ PROPOSALS = [
     ['df["postcode_risk"] = df.groupby("postcode")["default"].transform("mean")'],
     ['df = df[df["income"] > 15]\ndf["log_income"] = np.log(df["income"])'],
     ['df["age_squared"] = df["age"] ** 2'],
+    # two silent errors that an index check alone would miss
+    ['df = df.sort_values("income", ignore_index=True)\n'
+     'df["ratio"] = df["debt"] / df["income"]'],
+    ['df["income"] = df["income"] / 1000\ndf["income_k"] = df["income"]'],
 ]
 data = df.copy()
 print(f"baseline cross-validated AUC: {cv_auc(data):.3f}")
@@ -1250,7 +1269,7 @@ for attempts in PROPOSALS:
                 print(f"    {', '.join(c for c in data.columns if c != TARGET)}")
             continue
         gain = cv_auc(pd.concat([data, feature], axis=1)) - cv_auc(data)
-        if gain >= 0.005:                    # a minimum gain, not just noise
+        if gain >= 0.005:                    # a practical screening margin
             data = pd.concat([data, feature], axis=1)
         print(f"  {name:16s} {'accepted' if gain >= 0.005 else 'rejected'}: "
               f"AUC {gain:+.3f}")
@@ -1267,8 +1286,10 @@ baseline cross-validated AUC: 0.805
     income, debt, age, late_payments, postcode, debt_to_income
   late_per_year    rejected: AUC +0.000
   postcode_risk    rejected: leakage: uses the target
-  log_income       rejected: rows were removed or reordered
+  log_income       rejected: row index changed
   age_squared      rejected: AUC -0.000
+  ratio            rejected: original rows or values changed
+  income_k         rejected: original rows or values changed
 final AUC 0.815 with debt_to_income
 had the leaky feature been accepted, the AUC would have been 0.909
 \end{pyoutput}
@@ -1280,7 +1301,8 @@ raises the AUC from 0.805 to 0.815. It rejects a feature built on columns that d
 follows the feedback adds nothing. It rejects the average default rate of each postcode, which uses the target: had it been
 accepted, the cross-validated AUC would have jumped to 0.909, a spectacular and entirely fake improvement, since that feature
 cannot be computed for a new applicant. It rejects a proposal that quietly removed the customers with low incomes, and a feature
-with no gain. Of six proposals, one survives, which is a typical proportion.
+with no gain. Of six proposals, one survives, which is a typical proportion. The last two proposals show why the contract checks the original block of columns: one sorts the rows and resets the
+index, the other rescales an original column, and both would pass a check of the length and the index alone.
 
 \subsection{What remains human}
 
@@ -1292,7 +1314,7 @@ will act on it are not tasks that a language model can be accountable for.
 \begin{keyidea}
 Automation moves the work of the data scientist from \emph{doing} to \emph{specifying} and \emph{checking}. The more a step is
 automated, the more its output must be verified: run it in isolation, test its invariants, evaluate it on data it has not seen,
-and demand improvements larger than the noise.
+and judge every improvement on data that took no part in choosing it.
 \end{keyidea}
 
 % =====================================================================
@@ -1654,7 +1676,10 @@ above the approval limit, are delegated to a person: as with the delegating clas
 \cref{sec:cautious}, a good automation knows its limits. Each message is handled on its own, so an error in one does not stop the others; missing
 fields, impossible dates (31 February) and unsupported amounts or currencies are delegated too, and the
 output is written as proper CSV (the supplier ``Acme, SL'' contains a comma). The robot only prepares
-records for booking: registering them in the accounting system is a separate step.
+records for booking: registering them in the accounting system is a separate step. Amounts are parsed only when they
+match a declared format (European or English with two decimal places, or a plain integer): ambiguous amounts such as
+12.480 or 12,3 are sent for human review, and the approval limit is applied to the canonical amount, never to a guessed
+interpretation. The checks at the end of the listing are acceptance and rejection tests of this contract.
 
 \begin{pylisting}[label={lst:rpa}]{A software robot that books invoices received by e-mail}
 import csv
@@ -1683,18 +1708,26 @@ def parse_date(text):                              # None if impossible or unkno
         except ValueError:
             pass
 
-def parse_amount(line):                            # "1.234,50 EUR" -> (1234.50, "EUR")
-    number = re.search(r"(-?)(\d[\d.,]*\d)", line)
-    currency = re.search(r"\b(EUR|USD|GBP)\b", line)
-    if number is None or currency is None:
+FORMATS = {                                        # the only accepted amount formats
+    "european": r"-?\d{1,3}(?:\.\d{3})+,\d{2}|-?\d+,\d{2}",     # 1.234,50  89,90
+    "english": r"-?\d{1,3}(?:,\d{3})+\.\d{2}|-?\d+\.\d{2}",    # 12,480.00  89.90
+    "integer": r"-?\d+"}                                       # 5
+
+def parse_amount(line):
+    """(amount, currency) if the whole field matches a declared format, else (None, None):
+    ambiguous amounts such as 12.480 or 12,3 are never guessed."""
+    cur = r"(EUR|USD|GBP)"
+    m = re.fullmatch(rf"[^:]*:\s*(?:{cur}\s+)?(-?[\d.,]+)(?:\s+{cur})?\s*", line)
+    if m is None or bool(m.group(1)) == bool(m.group(3)):     # exactly one currency
         return None, None
-    digits = number.group(2)
-    if re.search(r",\d{2}$", digits):              # decimal comma
-        digits = digits.replace(".", "").replace(",", ".")
-    try:
-        return Decimal(number.group(1) + digits.replace(",", "")), currency.group(1)
-    except InvalidOperation:
+    number, currency = m.group(2), m.group(1) or m.group(3)
+    if re.fullmatch(FORMATS["european"], number):
+        number = number.replace(".", "").replace(",", ".")
+    elif re.fullmatch(FORMATS["english"], number):
+        number = number.replace(",", "")
+    elif not re.fullmatch(FORMATS["integer"], number):
         return None, None
+    return Decimal(number), currency
 
 out = csv.writer(sys.stdout, lineterminator="\n")  # quotes fields when needed
 out.writerow(["invoice", "date", "supplier", "amount", "status"])
@@ -1717,6 +1750,12 @@ for email in EMAILS:                               # every message is handled on
     out.writerow([number.group(1) if number else "?", date or "?",
                   supplier.group(1) if supplier else "?",
                   f"{amount:.2f}" if amount is not None else "?", status])
+
+print("\nformat checks (acceptance and rejection tests):")
+for field in ["Total: 12.480 EUR", "Total: 12,3 EUR", "Total: 5 EUR",
+              "Total: 1.234,50 EUR", "Total: 1,234.50 EUR", "Total: -1.234,50 EUR"]:
+    amount, currency = parse_amount(field)
+    print(f"  {field:22s} -> {'to human' if amount is None else f'{amount} {currency}'}")
 \end{pylisting}
 \begin{pyoutput}
 invoice,date,supplier,amount,status
@@ -1726,6 +1765,14 @@ F-778,2026-03-15,Papeleria Mar,89.90,ready for booking
 ?,2026-03-18,Limpiezas Turia,640.00,to human: no invoice number
 F-2026-31,2026-03-20,Imprenta Rapida,312.75,ready for booking
 INV-77,?,"Acme, SL",45.00,to human: missing or invalid date
+
+format checks (acceptance and rejection tests):
+  Total: 12.480 EUR      -> to human
+  Total: 12,3 EUR        -> to human
+  Total: 5 EUR           -> 5 EUR
+  Total: 1.234,50 EUR    -> 1234.50 EUR
+  Total: 1,234.50 EUR    -> 1234.50 EUR
+  Total: -1.234,50 EUR   -> -1234.50 EUR
 \end{pyoutput}
 
 % =====================================================================
@@ -1755,7 +1802,7 @@ INV-77,?,"Acme, SL",45.00,to human: missing or invalid date
 \end{itemize}
 
 \section*{Bibliographic notes}
-\addcontentsline{toc}{section}{Bibliographic notes}
+\phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
 \citet{martinezplumed2021crisp} review data science processes from CRISP-DM to data science trajectories.
 \citet{hutter2019automated} is the standard reference on AutoML, and \citet{zoller2021benchmark} survey and
@@ -1767,7 +1814,7 @@ guide to genetic programming. \citet{vanderaalst2016process} is the reference bo
 \citet{syed2020robotic} review the themes and challenges of RPA.
 
 \section*{Exercises}
-\addcontentsline{toc}{section}{Exercises}
+\phantomsection\addcontentsline{toc}{section}{Exercises}
 
 \begin{enumerate}[label=\textbf{4.\arabic*},ref=4.\arabic*,leftmargin=*,itemsep=6pt]
   \item\label{exr4:grid} A budget of nine evaluations is spent on two hyperparameters, only one of which
@@ -1820,7 +1867,7 @@ guide to genetic programming. \citet{vanderaalst2016process} is the reference bo
 \end{enumerate}
 
 \section*{Solutions to selected exercises}
-\addcontentsline{toc}{section}{Solutions to selected exercises}
+\phantomsection\addcontentsline{toc}{section}{Solutions to selected exercises}
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
   \item[\ref{exr4:grid}] The grid tries 3 values of each hyperparameter; random search tries 9 different

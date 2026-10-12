@@ -749,8 +749,9 @@ extra trees    test accuracy=0.929   OOB=0.937
 
 \Cref{fig:ensemblesize} shows the test error as members are added. All the ensembles quickly
 improve on a single unpruned tree (error 0.183), and the curves flatten after one or two hundred
-members. Adding members to a bagging-type ensemble does not cause overfitting; it only stops
-helping. Boosting methods behave differently, because each new member changes the model in a
+members. Increasing the number of independently generated bagging
+members generally stabilises the prediction, with diminishing returns; the observed test error need not decrease at
+every step. Boosting methods behave differently, because each new member changes the model in a
 directed way, and the number of rounds must be chosen with validation data.
 
 \begin{figure}[htbp]
@@ -769,9 +770,9 @@ examples (a fraction of the size of the training set) from a simple model of the
 distribution, and labels them so that they \emph{differ} from the predictions of the current
 ensemble. A new member is trained on the original data plus the artificial examples, and it is
 kept only if it does not increase the training error of the ensemble: poor models are not
-included. The members are combined by uniform voting. Decorate obtains higher accuracy than the
-base classifier and than bagging, and it is better than boosting when few training examples are
-available.
+included. The probabilities of the members are averaged. The original Decorate experiments reported higher accuracy than
+the base classifier and than bagging, and gains over boosting in several small-sample settings, which should be
+verified for the task at hand.
 
 % ---------------------------------------------------------------------
 \section{Hybrid approaches}\label{sec:hybrid}
@@ -1671,10 +1672,10 @@ Stacking & diverse, reasonably good base models; simple metamodel; cross-validat
         pairwise statistics and kappa--error diagrams.
   \item Predictions can be fused by averaging, multiplying, voting, Bayesian model averaging or a
         learned metamodel; uniform averaging is simple and hard to beat.
-  \item Bagging and random forests reduce variance and are robust to noise; boosting reduces bias
-        and is usually more accurate on clean data, but vulnerable to label noise. Recent
-        experimental works show that random forests and boosted trees are still at the top of the
-        wave on tabular data.
+  \item Bagging and random forests reduce variance and degrade gracefully with label noise; boosting
+        reduces bias and is often more accurate on clean data, but AdaBoost, with its exponential loss,
+        is sensitive to label noise (for gradient boosting it depends on the loss). Experimental
+        comparisons show that random forests and boosted trees remain strong baselines on tabular data.
   \item Hybrid models (voting, stacking, cascading, mixtures of experts) combine different
         techniques and usually improve performance, provided the combination is learned on fresh
         data.
@@ -1689,7 +1690,7 @@ Stacking & diverse, reasonably good base models; simple metamodel; cross-validat
 \end{itemize}
 
 \section*{Bibliographic notes}
-\addcontentsline{toc}{section}{Bibliographic notes}
+\phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
 \citet{kuncheva2014combining} is the reference textbook on combining classifiers, and
 \citet{zhou2012ensemble} gives a concise and modern treatment of ensemble methods with their theory;
@@ -1706,7 +1707,7 @@ Cautious and delegating classifiers are introduced in \citet{ferri2004cautious} 
 and to model cascades.
 
 \section*{Exercises}
-\addcontentsline{toc}{section}{Exercises}
+\phantomsection\addcontentsline{toc}{section}{Exercises}
 
 \begin{enumerate}[label=\textbf{2.\arabic*},ref=2.\arabic*,leftmargin=*,itemsep=6pt]
   \item\label{exr2:condorcet} Three independent classifiers are each right with probability 0.7.
@@ -1759,7 +1760,7 @@ and to model cascades.
 \end{enumerate}
 
 \section*{Solutions to selected exercises}
-\addcontentsline{toc}{section}{Solutions to selected exercises}
+\phantomsection\addcontentsline{toc}{section}{Solutions to selected exercises}
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
   \item[\ref{exr2:condorcet}] $0.7^3+3\cdot0.7^2\cdot0.3=0.343+0.441=0.784$. For five classifiers,

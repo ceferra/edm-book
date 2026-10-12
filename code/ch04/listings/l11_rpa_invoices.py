@@ -24,18 +24,26 @@ def parse_date(text):                              # None if impossible or unkno
         except ValueError:
             pass
 
-def parse_amount(line):                            # "1.234,50 EUR" -> (1234.50, "EUR")
-    number = re.search(r"(-?)(\d[\d.,]*\d)", line)
-    currency = re.search(r"\b(EUR|USD|GBP)\b", line)
-    if number is None or currency is None:
+FORMATS = {                                        # the only accepted amount formats
+    "european": r"-?\d{1,3}(?:\.\d{3})+,\d{2}|-?\d+,\d{2}",     # 1.234,50  89,90
+    "english": r"-?\d{1,3}(?:,\d{3})+\.\d{2}|-?\d+\.\d{2}",    # 12,480.00  89.90
+    "integer": r"-?\d+"}                                       # 5
+
+def parse_amount(line):
+    """(amount, currency) if the whole field matches a declared format, else (None, None):
+    ambiguous amounts such as 12.480 or 12,3 are never guessed."""
+    cur = r"(EUR|USD|GBP)"
+    m = re.fullmatch(rf"[^:]*:\s*(?:{cur}\s+)?(-?[\d.,]+)(?:\s+{cur})?\s*", line)
+    if m is None or bool(m.group(1)) == bool(m.group(3)):     # exactly one currency
         return None, None
-    digits = number.group(2)
-    if re.search(r",\d{2}$", digits):              # decimal comma
-        digits = digits.replace(".", "").replace(",", ".")
-    try:
-        return Decimal(number.group(1) + digits.replace(",", "")), currency.group(1)
-    except InvalidOperation:
+    number, currency = m.group(2), m.group(1) or m.group(3)
+    if re.fullmatch(FORMATS["european"], number):
+        number = number.replace(".", "").replace(",", ".")
+    elif re.fullmatch(FORMATS["english"], number):
+        number = number.replace(",", "")
+    elif not re.fullmatch(FORMATS["integer"], number):
         return None, None
+    return Decimal(number), currency
 
 out = csv.writer(sys.stdout, lineterminator="\n")  # quotes fields when needed
 out.writerow(["invoice", "date", "supplier", "amount", "status"])
@@ -58,3 +66,9 @@ for email in EMAILS:                               # every message is handled on
     out.writerow([number.group(1) if number else "?", date or "?",
                   supplier.group(1) if supplier else "?",
                   f"{amount:.2f}" if amount is not None else "?", status])
+
+print("\nformat checks (acceptance and rejection tests):")
+for field in ["Total: 12.480 EUR", "Total: 12,3 EUR", "Total: 5 EUR",
+              "Total: 1.234,50 EUR", "Total: 1,234.50 EUR", "Total: -1.234,50 EUR"]:
+    amount, currency = parse_amount(field)
+    print(f"  {field:22s} -> {'to human' if amount is None else f'{amount} {currency}'}")

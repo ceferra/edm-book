@@ -1,13 +1,19 @@
+from concurrent.futures import ThreadPoolExecutor
 import json
 from starlette.testclient import TestClient
 import placement_app as pa
 
-def read_output(ws, name="total"):
-    for _ in range(50):
-        message = json.loads(ws.receive_text())
+_POOL = ThreadPoolExecutor(max_workers=1)
+
+def read_output(ws, name="total", seconds=30, max_messages=50):
+    """Read server messages until the value of an output arrives. The blocking read runs
+    in a worker thread, so the time limit works on any platform and in any thread."""
+    for _ in range(max_messages):
+        message = json.loads(_POOL.submit(ws.receive_text).result(timeout=seconds))
         if name in message.get("values", {}):
             return message["values"][name]
-    raise RuntimeError(f"no value for {name}")
+    raise RuntimeError(f"output {name} never arrived")
+
 
 def start(ws, n=10):
     ws.send_text(json.dumps({"method": "init", "data": {

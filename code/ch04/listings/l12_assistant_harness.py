@@ -22,17 +22,27 @@ def cv_auc(data):
                            scoring="roc_auc").mean()
 
 def run_safely(code, data):
-    """Run proposed code on a copy of the data WITHOUT the target, and check invariants.
+    """Run proposed code on a copy of the data WITHOUT the target and enforce an
+    append-only contract: original columns, values, rows and index must not change.
     (exec is not a security sandbox: real systems use isolated containers.)"""
-    env = {"df": data.drop(columns=TARGET).copy(), "np": np, "pd": pd}
+    base = data.drop(columns=TARGET)
+    env = {"df": base.copy(deep=True), "np": np, "pd": pd}
     try:
         exec(code, env)
     except Exception as e:
         return None, f"{type(e).__name__}: {e}"
-    new = env["df"]
-    if len(new) != len(data) or not new.index.equals(data.index):
-        return None, "rows were removed or reordered"
-    added = [c for c in new.columns if c not in data.columns]
+    new = env.get("df")
+    if not isinstance(new, pd.DataFrame) or not new.columns.is_unique:
+        return None, "invalid result schema"
+    if TARGET in new.columns:
+        return None, "unexpected target column"
+    if not new.index.equals(base.index):
+        return None, "row index changed"
+    if not base.columns.isin(new.columns).all():
+        return None, "an original column was removed"
+    if not new.loc[:, base.columns].equals(base):
+        return None, "original rows or values changed"
+    added = [c for c in new.columns if c not in base.columns]
     return (new[added], "ok") if added else (None, "no new column")
 
 # What an assistant might answer to "propose a feature to predict default" (scripted
@@ -44,6 +54,10 @@ PROPOSALS = [
     ['df["postcode_risk"] = df.groupby("postcode")["default"].transform("mean")'],
     ['df = df[df["income"] > 15]\ndf["log_income"] = np.log(df["income"])'],
     ['df["age_squared"] = df["age"] ** 2'],
+    # two silent errors that an index check alone would miss
+    ['df = df.sort_values("income", ignore_index=True)\n'
+     'df["ratio"] = df["debt"] / df["income"]'],
+    ['df["income"] = df["income"] / 1000\ndf["income_k"] = df["income"]'],
 ]
 data = df.copy()
 print(f"baseline cross-validated AUC: {cv_auc(data):.3f}")
@@ -59,7 +73,7 @@ for attempts in PROPOSALS:
                 print(f"    {', '.join(c for c in data.columns if c != TARGET)}")
             continue
         gain = cv_auc(pd.concat([data, feature], axis=1)) - cv_auc(data)
-        if gain >= 0.005:                    # a minimum gain, not just noise
+        if gain >= 0.005:                    # a practical screening margin
             data = pd.concat([data, feature], axis=1)
         print(f"  {name:16s} {'accepted' if gain >= 0.005 else 'rejected'}: "
               f"AUC {gain:+.3f}")

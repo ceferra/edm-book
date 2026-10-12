@@ -5,4 +5,4 @@ test_shiny_app.py::test_answer_text PASSED                               [ 33%]
 test_shiny_app.py::test_page_has_the_controls PASSED                     [ 66%]
 test_shiny_app.py::test_output_follows_the_sliders PASSED                [100%]
 
-============================== 3 passed in 1.25s ===============================
+============================== 3 passed in 1.65s ===============================
