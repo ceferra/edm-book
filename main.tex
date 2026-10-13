@@ -1,11 +1,11 @@
-% !TEX program = pdflatex
+% !TEX program = xelatex
 % =====================================================================
 %  Evaluation, Deployment and Monitoring of Models
 %  Course book -- Degree in Data Science (GCD), Universitat Politecnica de Valencia
 %
-%  Build:   latexmk -pdf main.tex
-%     or:   pdflatex main && bibtex main && pdflatex main && pdflatex main
-%  Overleaf: upload the whole folder (compiler: pdfLaTeX).
+%  Build:   latexmk -xelatex main.tex
+%     or:   xelatex main && bibtex main && xelatex main && xelatex main
+%  Overleaf: upload the whole folder (compiler: XeLaTeX, set by latexmkrc).
 % =====================================================================
 \documentclass[11pt,a4paper,twoside,openright]{book}
 
@@ -14,21 +14,27 @@
             headheight=14pt,headsep=8mm,footskip=12mm]{geometry}
 
 % ------------------------------------------------------ fonts & language
-\usepackage[T1]{fontenc}
-\usepackage[utf8]{inputenc}
 \usepackage[english]{babel}
-\usepackage[sc]{mathpazo}                       % Palatino-like mathematics
-\IfFileExists{tgpagella.sty}{\usepackage{tgpagella}}{}      % TeX Gyre Pagella text
-\IfFileExists{tgheros.sty}{\usepackage[scale=0.88]{tgheros}}{}
-\IfFileExists{t1lmtt.fd}{\renewcommand{\ttdefault}{lmtt}}{} % Latin Modern Mono code
+
+% ------------------------------------------------------------ mathematics
+\usepackage{amsmath,mathtools}
+
+% ------------------------------------------------------ fonts (XeLaTeX)
+% Libertinus (SIL Open Font License, fonts/OFL.txt) for text, headings and mathematics;
+% Latin Modern Mono for code, with the same metrics as before so that listings keep their width.
+\usepackage{fontspec}
+\usepackage{unicode-math}
+\setmainfont{LibertinusSerif}[Path=fonts/,Extension=.otf,UprightFont=*-Regular,ItalicFont=*-Italic,
+  BoldFont=*-Semibold,BoldItalicFont=*-SemiboldItalic]
+\setsansfont{LibertinusSans}[Path=fonts/,Extension=.otf,UprightFont=*-Regular,ItalicFont=*-Italic,
+  BoldFont=*-Bold,BoldItalicFont=*-Bold]
+\setmonofont{lmmono10}[Extension=.otf,UprightFont=*-regular,ItalicFont=*-italic,
+  BoldFont=lmmonolt10-bold,BoldItalicFont=lmmonolt10-boldoblique]
+\setmathfont{LibertinusMath-Regular}[Path=fonts/,Extension=.otf]
 \linespread{1.05}
 \usepackage{microtype}
 \setlength{\emergencystretch}{1.5em}
 \usepackage{csquotes}
-\usepackage{textcomp}
-
-% ------------------------------------------------------------ mathematics
-\usepackage{amsmath,amssymb,mathtools,bm}
 
 % ---------------------------------------------- graphics, tables, colours
 \usepackage{graphicx}
@@ -62,7 +68,7 @@
 \usepackage[round,sort]{natbib}
 \usepackage[colorlinks=true,linkcolor=edmnavy,citecolor=edmteal,urlcolor=edmcoral,
             pdftitle={Evaluation, Deployment and Monitoring of Models},
-            pdfauthor={Cesar Ferri and Carlos Monserrat}]{hyperref}
+            pdfauthor={Cèsar Ferri, Carlos Monserrat, Yael Moros, Félix Martí and Fernando Martínez-Plumed}]{hyperref}
 \usepackage[nameinlink,capitalise,noabbrev]{cleveref}
 
 % --------------------------------------------- chapters are called Units
@@ -90,6 +96,7 @@
 \renewcommand{\section}{\needspace{3.5\baselineskip}\edmoldsection}
 \let\edmoldsubsection\subsection
 \renewcommand{\subsection}{\needspace{3\baselineskip}\edmoldsubsection}
+\input{figures/cover/coverlines}
 \newcommand{\edmcompanion}{repository address and release tag to be added on publication}
 \titleformat{\paragraph}[runin]{\normalfont\normalsize\bfseries\color{edmnavy}}{}{0pt}{}[.]
 \setcounter{secnumdepth}{2}
@@ -168,10 +175,11 @@
 
 % ------------------------------------------------------------ title page
 \begin{titlepage}
-% Cover: generative artwork (figures/cover/make_cover.py, from generar.py)
+% Cover: generative artwork (figures/cover/make_cover.py, from generar.py), text set in Libertinus Sans
 \begin{tikzpicture}[remember picture,overlay]
   \node[inner sep=0pt] at (current page.center)
-       {\includegraphics[width=\paperwidth,height=\paperheight]{figures/cover/cover.pdf}};
+       {\includegraphics[width=\paperwidth,height=\paperheight]{figures/cover/cover-art.pdf}};
+  \coverlines
 \end{tikzpicture}
 \end{titlepage}
 
@@ -181,7 +189,7 @@
 {\small\color{edmnavy}
 \textbf{Evaluation, Deployment and Monitoring of Models}\par\smallskip
 Course book of the Degree in Data Science (GCD), Universitat Polit\`ecnica de Val\`encia\par
-C\`esar Ferri and Carlos Monserrat\par\smallskip
+C\`esar Ferri, Carlos Monserrat, Yael Moros, F\'elix Mart\'i and Fernando Mart\'inez-Plumed\par\smallskip
 Draft --- Units 1--7, \today\par\medskip
 {\footnotesize Cover: generative artwork drawn by code, streamlines integrated through a smooth vector field.\\
 Source code: \texttt{figures/cover}.}\par}

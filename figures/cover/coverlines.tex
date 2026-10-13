@@ -1,0 +1,12 @@
+% Title and authors of the cover, set in the book's fonts (used by main.tex and cover.tex)
+\definecolor{covertitle}{HTML}{F5F2E9}
+\definecolor{coverauthors}{HTML}{85B3BC}
+\newcommand{\coverlines}{%   positions measured on the original design (A4, from the top-left corner)
+  \node[anchor=base west,inner sep=0pt,text=covertitle,font=\sffamily\bfseries\fontsize{30}{36}\selectfont]
+       at ([xshift=16.9mm,yshift=-20.1mm]current page.north west) {Evaluation, Deployment};
+  \node[anchor=base west,inner sep=0pt,text=covertitle,font=\sffamily\bfseries\fontsize{30}{36}\selectfont]
+       at ([xshift=16.9mm,yshift=-33.1mm]current page.north west) {and Monitoring of Models};
+  \node[anchor=base west,inner sep=0pt,text=coverauthors,font=\sffamily\fontsize{13}{16}\selectfont]
+       at ([xshift=16.9mm,yshift=-47.8mm]current page.north west) {C\`esar Ferri, Carlos Monserrat, Yael Moros,};
+  \node[anchor=base west,inner sep=0pt,text=coverauthors,font=\sffamily\fontsize{13}{16}\selectfont]
+       at ([xshift=16.9mm,yshift=-54.4mm]current page.north west) {F\'elix Mart\'i and Fernando Mart\'inez-Plumed};}

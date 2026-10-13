@@ -3,8 +3,8 @@
 Course book for *Evaluation, Deployment and Monitoring of Models* (3rd year, Degree in Data Science, UPV).
 
 ## Compile
-- **Overleaf**: upload this zip as a new project; compiler pdfLaTeX; main document `main.tex`.
-- **Local**: `latexmk -pdf main.tex` (or `pdflatex main && bibtex main && pdflatex main && pdflatex main`).
+- **Overleaf**: upload this zip as a new project; compiler XeLaTeX; main document `main.tex`.
+- **Local**: `latexmk -xelatex main.tex` (or `pdflatex main && bibtex main && pdflatex main && pdflatex main`).
 
 ## Structure
 - `main.tex` -- preamble (layout, colours from the course slides, boxes, listing styles), title page, document skeleton.
@@ -25,3 +25,8 @@ Python packages: numpy, scipy, pandas, matplotlib, scikit-learn (1.8), imbalance
   (`\begin{example}{Title}{label}` -> `\cref{ex:label}`).
 - Code: `\begin{pylisting}[label={lst:x}]{Title} ... \end{pylisting}` followed by `\begin{pyoutput} ... \end{pyoutput}`.
 - Confusion matrices: rows = predicted class, columns = actual class (scikit-learn uses the transpose).
+
+
+## Fonts
+
+The book is set in Libertinus (SIL Open Font License, `fonts/OFL.txt`) with Latin Modern Mono for code, and is compiled with XeLaTeX (`latexmkrc` selects it, also on Overleaf).

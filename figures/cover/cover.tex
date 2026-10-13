@@ -1,0 +1,13 @@
+% Front cover alone (A4), with the same artwork and text as the book: xelatex cover.tex
+\documentclass{article}
+\usepackage[paperwidth=210mm,paperheight=297mm,margin=0mm]{geometry}
+\usepackage{fontspec,xcolor,graphicx,tikz}
+\setsansfont{LibertinusSans}[Path=../../fonts/,Extension=.otf,UprightFont=*-Regular,BoldFont=*-Bold]
+\pagestyle{empty}
+\input{coverlines}
+\begin{document}
+\begin{tikzpicture}[remember picture,overlay]
+  \node[inner sep=0pt] at (current page.center) {\includegraphics[width=\paperwidth,height=\paperheight]{cover-art.pdf}};
+  \coverlines
+\end{tikzpicture}
+\end{document}
