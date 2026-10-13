@@ -14,7 +14,7 @@ import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-from scipy.stats import norm, rankdata, friedmanchisquare
+from scipy.stats import norm, rankdata, friedmanchisquare, wilcoxon
 from sklearn.calibration import calibration_curve, CalibratedClassifierCV
 from sklearn.cluster import KMeans
 from sklearn.datasets import (make_classification, make_moons, make_circles,
@@ -911,6 +911,15 @@ def fig_cd_diagram():
             fh.write(dn + " " + " ".join(f"{v:.3f}" for v in row) + "\n")
         fh.write("avg_rank " + " ".join(f"{v:.2f}" for v in avg) + "\n")
         fh.write(f"friedman_chi2 {chi2:.3f} p {p:.2e} CD {cd:.3f}\n")
+        ctrl = int(np.argmin(avg))                       # control: the best average rank
+        others = [j for j in range(k) if j != ctrl]
+        raw = [wilcoxon(A[:, ctrl], A[:, j]).pvalue for j in others]
+        order, adj, run = np.argsort(raw), np.empty(len(raw)), 0.0
+        for r, j in enumerate(order):                    # Holm's step-down adjustment
+            run = max(run, min(1.0, (len(raw) - r) * raw[j])); adj[j] = run
+        for j, pr, pa in zip(others, raw, adj):
+            fh.write(f"wilcoxon {names[ctrl]}-{names[j]} p {pr:.4f} holm {pa:.4f}\n")
+            print(f"  Wilcoxon {names[ctrl]} vs {names[j]}: p={pr:.4f}, Holm-adjusted {pa:.4f}")
     print("  AUC table:")
     for (dn, _, _), row in zip(data, A):
         print("   ", dn, np.round(row, 3))

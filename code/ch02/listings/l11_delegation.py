@@ -1,7 +1,7 @@
 import numpy as np
 from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_predict, train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
 class DelegatingClassifier:
@@ -14,12 +14,20 @@ class DelegatingClassifier:
         self.specialise, self.rebound = specialise, rebound
 
     def fit(self, X, y):
-        conf = self.first.fit(X, y).predict_proba(X).max(axis=1)
+        # thresholds from out-of-fold confidences: on its own training data a model
+        # is overconfident, so training quantiles would delegate too few new examples
+        oof = lambda m, A, b: cross_val_predict(m, A, b, cv=5, method="predict_proba")
+        conf = oof(self.first, X, y).max(axis=1)
+        self.first.fit(X, y)
         self.t1_ = np.quantile(conf, self.delegate)
         hard = conf <= self.t1_                               # delegated examples
         Xs, ys = (X[hard], y[hard]) if self.specialise else (X, y)
-        conf2 = self.second.fit(Xs, ys).predict_proba(X[hard]).max(axis=1)
-        self.t2_ = np.quantile(conf2, self.rebound) if self.rebound else -np.inf
+        self.second.fit(Xs, ys)
+        if self.rebound:
+            conf2 = oof(self.second, Xs, ys).max(axis=1)
+            self.t2_ = np.quantile(conf2 if self.specialise else conf2[hard], self.rebound)
+        else:
+            self.t2_ = -np.inf
         return self
 
     def predict(self, X):

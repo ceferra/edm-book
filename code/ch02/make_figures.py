@@ -19,7 +19,7 @@ from sklearn.ensemble import (BaggingClassifier, RandomForestClassifier, ExtraTr
                               AdaBoostClassifier, GradientBoostingClassifier,
                               HistGradientBoostingClassifier, StackingClassifier)
 from sklearn.linear_model import LogisticRegression
-from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score
+from sklearn.model_selection import train_test_split, StratifiedKFold, cross_val_score, cross_val_predict
 from sklearn.naive_bayes import GaussianNB
 from sklearn.neighbors import KNeighborsClassifier
 from sklearn.pipeline import make_pipeline
@@ -271,7 +271,9 @@ def fig_delegation():
     X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=0)
     first = DecisionTreeClassifier(max_depth=4, random_state=0).fit(X_tr, y_tr)
     forest = RandomForestClassifier(200, random_state=0).fit(X_tr, y_tr)
-    c_tr, c_te = first.predict_proba(X_tr).max(axis=1), first.predict_proba(X_te).max(axis=1)
+    oof = lambda m, A, b: cross_val_predict(m, A, b, cv=5, method="predict_proba").max(axis=1)
+    c_tr = oof(DecisionTreeClassifier(max_depth=4, random_state=0), X_tr, y_tr)   # out of fold
+    c_te = first.predict_proba(X_te).max(axis=1)
     p1, pf = first.predict(X_te), forest.predict(X_te)
     res = {"cascade": [], "specialist": [], "rebound": []}
     for th in np.r_[-np.inf, np.unique(c_tr)]:
@@ -282,7 +284,8 @@ def fig_delegation():
             spec = DecisionTreeClassifier(max_depth=4, random_state=0).fit(X_tr[hard_tr], y_tr[hard_tr])
             ps = spec.predict(X_te)
             res["specialist"].append((frac, np.mean(np.where(hard_te, ps, p1) == y_te)))
-            t2 = np.quantile(spec.predict_proba(X_tr[hard_tr]).max(axis=1), 0.3)
+            t2 = np.quantile(oof(DecisionTreeClassifier(max_depth=4, random_state=0),
+                                 X_tr[hard_tr], y_tr[hard_tr]), 0.3)
             back = spec.predict_proba(X_te).max(axis=1) <= t2
             res["rebound"].append((frac, np.mean(np.where(hard_te & ~back, ps, p1) == y_te)))
     fig, ax = plt.subplots(figsize=(HALF + 1.2, 2.9))

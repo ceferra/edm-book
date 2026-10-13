@@ -443,8 +443,18 @@ and group $b$ now receives loans that are more likely to default (its false posi
 0.04 to 0.13). Equality of opportunity gives true positive rates of 0.42 and 0.47 on the test data and
 costs 18\% of the profit. It constrains only the true positive rates: full separation would also
 equalise the false positive rates (0.10 and 0.13 here), which may require randomised decisions
-\citep{hardt2016equality}. In a real bank, moreover, repayment is observed only for the loans that
-were granted, while the simulation knows the outcome of every applicant.
+\citep{hardt2016equality}.
+
+\begin{pitfall}
+\textbf{Selective labels.} In a real bank, repayment is observed only for the loans that were granted, while the
+simulation knows the outcome of every applicant. A model trained and evaluated on approved loans learns from a
+sample selected by the previous policy, and the error rates\index{error rate} of the rejected applicants, and with them the true and
+false positive rates or the calibration by group, cannot be computed directly: this is the \emph{selective labels}
+problem \citep{lakkaraju2017selective}. Imputing the missing outcomes (\emph{reject inference}) relies on
+untestable assumptions about the rejected applicants; more reliable remedies are a small randomised exploration
+(\cref{sec:whatmonitor}), outcomes from other sources, or bounds that state what cannot be known. The same
+selection appears in fraud detection and in medical triage, and it is a form of dataset shift\index{dataset shift} (\cref{ch:monitoring}).
+\end{pitfall}
 
 \begin{figure}[htbp]
 \centering
@@ -845,7 +855,7 @@ the counterfactual $Y_{X:=x}(E)$ is computed in three steps \citep{pearl2009caus
 The result is the value $Y$ would have taken had $X$ been set to $x$, in the circumstances
 described by $E$.
 
-\subsection{Potential outcomes}
+\subsection{Potential outcomes}\label{sec:potentialoutcomes}
 
 A second framework for causal inference\index{causality}, popular in statistics, economics and medicine, is that of
 \emph{potential outcomes} \citep{rubin1974estimating,imbens2015causal}. It assumes that every unit
@@ -855,7 +865,9 @@ treatment; for a binary treatment, $Y_0(u)$ and $Y_1(u)$. Only one of them is ob
   Y(u)=Y_0(u)\,\bigl(1-T(u)\bigr)+Y_1(u)\,T(u).
 \end{equation}
 Causal inference then becomes a missing-data problem: a typical query is the average effect
-$\E[Y_1-Y_0]$, and estimating it means filling in the missing potential outcomes. This becomes
+$\E[Y_1-Y_0]$, and estimating it means filling in the missing potential outcomes. Conditioning on the
+features gives the \emph{conditional average treatment effect}, $\mathrm{CATE}(x)=\E[Y_1-Y_0\mid X=x]$, which is
+exactly what uplift\index{uplift modelling} modelling estimates to decide whom to contact in a campaign\index{mailing campaign} (\cref{sec:uplift}). This becomes
 possible under well-established conditions:
 \begin{itemize}
   \item \emph{SUTVA} (stable unit treatment value assumption): the treatment of one unit does not

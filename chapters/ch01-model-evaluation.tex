@@ -852,7 +852,7 @@ A classifier of animal pictures produces the following confusion matrix on 20 te
 \begin{center}\small
 \begin{tabular}{@{}lccc@{}}
 \toprule
-& cat & dog & rabbit\\
+{\footnotesize pred.\,\textbackslash\,actual} & cat & dog & rabbit\\
 \midrule
 cat    & 8 & 1 & 0\\
 dog    & 2 & 4 & 1\\
@@ -1471,6 +1471,14 @@ calibration error in each bin:
         makes the decomposition approximate.
 \end{itemize}
 
+\begin{pitfall}
+\textbf{Small samples flatter hulls and calibration errors.} On small or very imbalanced\index{class imbalance} validation sets, the
+convex hull of noisy ROC points, the isotonic fit behind CalLoss and the bins of the ECE all adapt to the noise:
+the area under the hull is optimistic, and the calibration errors are biased (the ECE is positive even for a
+perfectly calibrated model). Estimate them on data that took no part in fitting the hull or the calibrator, and
+report their variability, for instance with the bootstrap\index{bootstrap}.
+\end{pitfall}
+
 \subsection{Calibration methods}
 
 \emph{Calibrating} a classifier consists of fitting a regressor (the \emph{calibrator}) that
@@ -1489,9 +1497,12 @@ cross-validation. The most common calibrators are:
         calibration sets. It is equivalent to calibrating with the ROC convex hull\index{ROC convex hull}
         \citep{fawcett2007pav};
   \item \emph{temperature scaling} \citep{guo2017calibration}: for multiclass neural networks,
-        divides the logits $z$ by a single parameter $T>0$ fitted on validation data\index{validation set},
+        divides the logits $z$ by a single parameter $T>0$ fitted on validation data,
         $\hat p=\operatorname{softmax}(z/T)$. It does not change the predicted class, so the
-        accuracy is unchanged;
+        accuracy is unchanged. It mainly improves \emph{confidence} (top-label) calibration,
+        $P(Y=\hat y\mid\max_j\hat p_j=p)=p$; \emph{classwise} calibration, $P(Y=j\mid\hat p_j=p)=p$ for every
+        class $j$, is a stronger requirement that a single parameter cannot always meet, which motivates
+        vector, matrix and Dirichlet calibration \citep{kull2019beyond};
   \item \emph{beta calibration\index{calibration|textbf}} \citep{kull2017beta}: a three-parameter family that contains
         the identity map, designed for scores that are already in $[0,1]$.
 \end{itemize}
@@ -1956,7 +1967,7 @@ expected benefit (equivalently, it minimises the costs $C=-B$):
 \begin{center}\small
 \begin{tabular}{@{}lcc@{}}
 \toprule
-& fraudulent & legitimate\\
+{\footnotesize decision\,\textbackslash\,actual} & fraudulent & legitimate\\
 \midrule
 refuse  & $20$\EUR & $-20$\EUR\\
 approve & $-x$     & $0.02\,x$\\
@@ -2145,7 +2156,7 @@ $L(-200)=e^{2}-3\approx4.39$, whereas over-predicting it by 200 units costs
 $L(200)=e^{-2}+1\approx1.14$: being short is about four times worse than having a surplus. Note
 that a function such as $1-e^{ae}$ is not a valid loss, since it is negative for errors of one
 sign. With an asymmetric cost function we can select the model with the lowest average cost on
-validation data\index{validation set} or, better, train the model to minimise that cost directly.
+validation data or, better, train the model to minimise that cost directly.
 
 Another important asymmetric loss is the \emph{pinball} (or quantile) loss, with
 $\tau\in(0,1)$,
@@ -2353,7 +2364,7 @@ amount of unlabelled data, which helps to discover the structure of the input sp
 instance, by placing the decision boundary in low-density regions) \citep{vanengelen2020survey}.
 Evaluation must always use held-out \emph{labelled} data, and it is easy to get wrong.
 \citet{oliver2018realistic} recommend comparing against well-tuned supervised baselines that
-use the same model and tuning budget; using realistically small validation sets\index{validation set} (tuning
+use the same model and tuning budget; using realistically small validation sets (tuning
 hyperparameters with 5000 labelled validation examples makes no sense if only 250 labels are
 supposed to be available); reporting performance as a function of the number of labels; and
 checking what happens when the unlabelled data contain classes absent from the labelled data.
@@ -3091,10 +3102,19 @@ better than naive Bayes (difference 1.80), but $k$-NN and naive Bayes are not si
 different (1.59). These conclusions depend on the data sets chosen: logistic regression ranks
 low partly because two of the data sets (concentric circles) are not linearly separable.
 
+Post-hoc tests on mean ranks, such as Nemenyi's, have a weakness: whether two algorithms are declared different
+depends on which other algorithms take part in the comparison \citep{benavoli2016should}. When one method is the
+reference (a new proposal, or the model in production), a safer analysis compares it with each of the others
+using the Wilcoxon signed-rank test on the per-data-set differences \citep{wilcoxon1945individual}, with Holm's
+step-down correction for the multiple comparisons \citep{holm1979simple}. Against random forest, the adjusted
+$p$-values are 0.002 for LR and DT, 0.005 for NB and 0.077 for $k$-NN: the same conclusions as above, reached
+without depending on the rest of the pool.
+
 \citet{benavoli2017time} argue for \emph{Bayesian} comparisons, which give the posterior
 probabilities that one algorithm is better, practically equivalent (within a \emph{region of
 practical equivalence}) or worse than another: this is the question practitioners actually
-want answered.
+want answered. With the Bayesian signed-rank test and a region of, say, $\pm0.01$ in AUC, the result is the
+posterior probability of each of the three outcomes rather than a $p$-value.
 
 \subsection{Statistical versus practical significance}
 

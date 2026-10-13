@@ -1,5 +1,5 @@
 small tree alone               accuracy=0.803
-specialist (two small trees)   accuracy=0.841  (second model: 971 of 3000)
-specialist + round rebound     accuracy=0.815  (second model: 971 of 3000)
-cascade: small tree -> forest  accuracy=0.885  (second model: 971 of 3000)
+specialist (two small trees)   accuracy=0.842  (second model: 717 of 3000)
+specialist + round rebound     accuracy=0.842  (second model: 717 of 3000)
+cascade: small tree -> forest  accuracy=0.882  (second model: 717 of 3000)
 random forest alone            accuracy=0.908

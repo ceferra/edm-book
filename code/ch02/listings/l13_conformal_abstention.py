@@ -18,6 +18,7 @@ size = sets.sum(axis=1)
 one = size == 1                                              # predict; otherwise abstain
 covered = np.mean(sets[np.arange(len(y_te)), y_te])
 print(f"set coverage={covered:.3f} (target {1 - alpha:.2f})")
-print(f"single-label sets={one.mean():.3f}  two labels (abstain)={np.mean(size == 2):.3f}")
+print(f"single-label sets={one.mean():.3f}  abstain: two labels={np.mean(size == 2):.3f}  "
+      f"empty={np.mean(size == 0):.3f}")
 acc_one = np.mean(sets[one].argmax(axis=1) == y_te[one])
 print(f"accuracy on single-label sets={acc_one:.3f}")

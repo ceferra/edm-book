@@ -717,6 +717,12 @@ thresholds of the splits at random as well. \Cref{lst:bagging} compares a single
 random forests and extra trees: each additional source of randomness improves the ensemble, and
 the OOB\index{out-of-bag estimate} estimates are close to the test accuracies.
 
+\begin{pitfall}
+\textbf{A random forest that is not one.} In \textsf{scikit-learn}, \code{RandomForestRegressor()} with its default
+parameters considers every attribute at every split (\code{max\_features=1.0}): it is bagging of regression trees,
+not a random forest. Set \code{max\_features}, for instance to $1/3$ or \code{"sqrt"}, to decorrelate the trees.
+\end{pitfall}
+
 \begin{pylisting}[label={lst:bagging}]{A single tree versus three bagging-type ensembles, with out-of-bag estimates}
 from sklearn.datasets import make_classification
 from sklearn.ensemble import (BaggingClassifier, ExtraTreesClassifier,
@@ -752,7 +758,7 @@ improve on a single unpruned tree (error 0.183), and the curves flatten after on
 members. Increasing the number of independently generated bagging
 members generally stabilises the prediction, with diminishing returns; the observed test error need not decrease at
 every step. Boosting methods behave differently, because each new member changes the model in a
-directed way, and the number of rounds must be chosen with validation data\index{validation set}.
+directed way, and the number of rounds must be chosen with validation data.
 
 \begin{figure}[htbp]
 \centering
@@ -803,7 +809,7 @@ predictions of the base models.
 The key to stacking is to avoid overfitting: if the metamodel were trained on predictions that
 the base models make on their own training data, it would learn to trust the models that overfit
 most. The metamodel must be trained with \emph{fresh} data, that is, with predictions on
-examples the base models have not seen. With enough data a separate validation set\index{validation set} can be used;
+examples the base models have not seen. With enough data a separate validation set can be used;
 more efficiently, the base models produce \emph{out-of-fold} predictions by cross-validation\index{cross-validation},
 and are finally refitted on all the data (\cref{alg:stacking}). \citet{ting1999issues} showed
 that stacking works best when the base models provide class probabilities (rather than crisp
@@ -983,7 +989,7 @@ values are benefits). Abstaining costs nothing.
 \begin{center}\small
 \begin{tabular}{@{}lrrr@{}}
 \toprule
-& $a$ & $b$ & $c$\\
+{\footnotesize decision\,\textbackslash\,actual} & $a$ & $b$ & $c$\\
 \midrule
 $a$ & $-2.5$ & $4$ & $2$\\
 $b$ & $2.1$ & $-3.5$ & $0$\\
@@ -1023,7 +1029,7 @@ examples (rows: predicted; columns: actual):
 \begin{center}\small
 \begin{tabular}{@{}lccc@{}}
 \toprule
-& $a$ & $b$ & $c$\\
+{\footnotesize pred.\,\textbackslash\,actual} & $a$ & $b$ & $c$\\
 \midrule
 $a$ & 19 & 1 & 2\\
 $b$ & 0 & 30 & 0\\
@@ -1059,6 +1065,14 @@ Bayes has the best AURC (0.101) and becomes the most accurate model above 50\% a
 produces only a few distinct confidences, so the order of the examples within ties changes its curve
 and its AURC: a tie policy must be stated, for instance averaging over random orders. Which
 model is best depends on how much abstention the application can tolerate.
+
+Naive Bayes deserves a second look, because \cref{sec:calibration} showed that its probabilities are badly
+calibrated. There is no contradiction: abstaining on a fixed share of the least confident cases, as AURC and
+delegation\index{delegation} do, only needs a confidence that \emph{ranks} the errors well (any strictly increasing transformation of
+it gives the same curve), whereas abstaining with cost-based thresholds, as the window rule\index{window rule} below does, needs
+probabilities that are \emph{calibrated\index{calibration|textbf}}. Part~(c) of \cref{lst:costcautious} applies the cost-matched window rule
+to naive Bayes on the same data: uncalibrated, it abstains on 22.8\% of the test cases at a mean cost of 0.326;
+after isotonic\index{calibration!isotonic regression} calibration it abstains on 36.3\% at a mean cost of 0.312.
 
 \begin{pylisting}[label={lst:cautious}]{Evaluation of a cautious classifier, and how well three models rank their own errors}
 import numpy as np
@@ -1166,6 +1180,10 @@ grows; the star is the optimal reject rule.}
 
 \begin{pylisting}[label={lst:costcautious}]{Expected costs with an abstention option, and the window rule as the optimal reject rule}
 import numpy as np
+from sklearn.calibration import CalibratedClassifierCV
+from sklearn.datasets import make_classification
+from sklearn.model_selection import train_test_split
+from sklearn.naive_bayes import GaussianNB
 
 # (a) Costs: rows = decision (a, b, c, unknown), columns = actual class (a, b, c)
 C = np.array([[-2.5,  4.0,  2.0],
@@ -1194,19 +1212,35 @@ cost = np.c_[p * c_fn, (1 - p) * c_fp, np.full_like(p, c_r)]   # predict 0, 1, a
 bayes = np.array([0, 1, -1])[cost.argmin(axis=1)]
 print(f"t*={t:.2f}  w={w:.3f}  identical decisions: {np.mean(window == bayes):.3f}")
 print(f"abstains for p in [{p[window == -1].min():.4f}, {p[window == -1].max():.4f}]")
+
+# (c) Data of Listing 2.9: ranking errors well is not enough, the window needs calibration
+X, y = make_classification(n_samples=4000, n_features=20, n_informative=6, n_redundant=4,
+                           flip_y=0.05, class_sep=0.8, random_state=5)
+X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.5, random_state=0)
+for name, m in [("naive Bayes", GaussianNB()),
+                ("naive Bayes + isotonic",
+                 CalibratedClassifierCV(GaussianNB(), method="isotonic"))]:
+    p1 = m.fit(X_tr, y_tr).predict_proba(X_te)[:, 1]
+    d = cautious_predict(np.c_[1 - p1, p1], K=(1 - t, t), w=w)
+    loss = np.where(d == -1, c_r, np.where(d == 1, (y_te == 0) * c_fp, (y_te == 1) * c_fn))
+    print(f"{name:23s} abstains {np.mean(d == -1):.3f}  mean cost {loss.mean():.3f}")
 \end{pylisting}
 \begin{pyoutput}
 p=[0.4, 0.35, 0.25]  expected costs=[ 0.9   -0.385 -0.065  0.   ]  ->  b
 p=[0.5, 0.28, 0.22]  expected costs=[0.31  0.07  0.084 0.   ]  ->  unknown
 t*=0.20  w=0.375  identical decisions: 1.000
 abstains for p in [0.1255, 0.4995]
+naive Bayes             abstains 0.228  mean cost 0.326
+naive Bayes + isotonic  abstains 0.363  mean cost 0.312
 \end{pyoutput}
 
 Conformal prediction\index{conformal prediction} (\cref{sec:other}) offers another way of deciding when to abstain, with a
 different guarantee: compute prediction sets with coverage\index{coverage} $1-\alpha$ and abstain whenever the
-set contains more than one label. In \cref{lst:conformalabst}, 90\% prediction sets cover 90.1\%
-of the test examples; 67.0\% of them contain a single label, with an accuracy of 0.853, and the
-rest contain both labels and lead to abstention. The guarantee concerns the coverage of the sets,
+set does not contain exactly one label: two or more labels signal ambiguity\index{ambiguity decomposition}, and an empty set signals that
+no label is plausible, as for an input unlike the calibration data. In \cref{lst:conformalabst}, 90\% prediction sets cover 90.1\%
+of the test examples; 67.0\% of them contain a single label, with an accuracy of 0.853; the other
+33.0\% contain both labels, and no set is empty with this $\alpha$, although empty sets become possible as $\alpha$
+grows. The guarantee concerns the coverage of the sets,
 not the accuracy of the single-label predictions.
 
 \begin{pylisting}[label={lst:conformalabst}]{Abstaining when a conformal prediction set is not a single label}
@@ -1230,13 +1264,14 @@ size = sets.sum(axis=1)
 one = size == 1                                              # predict; otherwise abstain
 covered = np.mean(sets[np.arange(len(y_te)), y_te])
 print(f"set coverage={covered:.3f} (target {1 - alpha:.2f})")
-print(f"single-label sets={one.mean():.3f}  two labels (abstain)={np.mean(size == 2):.3f}")
+print(f"single-label sets={one.mean():.3f}  abstain: two labels={np.mean(size == 2):.3f}  "
+      f"empty={np.mean(size == 0):.3f}")
 acc_one = np.mean(sets[one].argmax(axis=1) == y_te[one])
 print(f"accuracy on single-label sets={acc_one:.3f}")
 \end{pylisting}
 \begin{pyoutput}
 set coverage=0.901 (target 0.90)
-single-label sets=0.670  two labels (abstain)=0.330
+single-label sets=0.670  abstain: two labels=0.330  empty=0.000
 accuracy on single-label sets=0.853
 \end{pyoutput}
 
@@ -1299,22 +1334,20 @@ Delegation serves two different purposes, depending on the second level:
 \end{itemize}
 
 \Cref{fig:graphdelegation} and \cref{lst:delegation} compare the variants, with a decision tree of
-16 leaves as first level. Delegating 32\% of the test examples to a random forest raises the
-accuracy from 0.803 (the tree alone) to 0.885, closing almost 80\% of the gap with the forest
-(0.908) while calling it for only a third of the examples, and every prediction that is not
-delegated can be explained by the small tree. A specialist tree trained on the delegated examples
-reaches 0.841 with the same delegation rate (and 0.849 at best); its curve is irregular because
-each delegation threshold produces a different training set for the specialist. Round rebound
-\emph{lowers} the accuracy at this rate (0.815): the cases that bounce back are, by construction,
-those the first tree had already found difficult, so it is no better than the specialist on them.
-Rebound pays off only when the first level remains competent on part of the region it delegates;
-in this example that happens when it delegates generously (around 40\% of the examples, accuracy
-0.848). As with every design choice in this book, the variant must be validated on data
-(Exercise~\ref{exr2:rebound}). At prediction time the first model sees every example and the second only the delegated
-ones: 971 of the 3000 test examples in the cascade. The delegation rate is measured on the test data,
-because a quantile of the training confidences does not guarantee the same rate in deployment\index{deployment}, and
-the time actually saved must be measured as well, since the cost of the second level depends on the
-hardware and on batching.
+16 leaves as first level. The delegation thresholds are taken from \emph{out-of-fold} confidences
+(\cref{sec:protocols}): on its own training data a model is overconfident, so a quantile of those confidences would
+delegate fewer new examples than intended. Delegating to a random forest raises the accuracy from 0.803 (the tree
+alone) to 0.882, closing three quarters of the gap with the forest (0.908) while calling it for only 717 of the 3000
+test examples (24\%, not the nominal 30\%: the tree produces only 16 distinct confidences, so the quantile is
+coarse), and every prediction that is not delegated can be explained by the small tree. A specialist tree trained on
+the delegated examples reaches 0.842 (and 0.850 at best); its curve is irregular because each delegation threshold
+produces a different training set for the specialist. Round rebound returns 227 of the 717 delegated cases to the
+first tree and leaves the accuracy unchanged here (0.842): the cases that bounce back are, by construction, those the
+first tree had already found difficult, so it is no better than the specialist on them. Rebound pays off only when
+the first level remains competent on part of the region it delegates. As with every design choice in this book, the
+variant must be validated on data (Exercise~\ref{exr2:rebound}). The delegation rate is measured on the test data,
+because no quantile estimated during training guarantees the same rate in deployment\index{deployment}, and the time actually saved
+must be measured as well, since the cost of the second level depends on the hardware and on batching.
 
 \begin{figure}[htbp]
 \centering
@@ -1329,7 +1362,7 @@ a random forest of 200 trees trained on all the data.}
 import numpy as np
 from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_predict, train_test_split
 from sklearn.tree import DecisionTreeClassifier
 
 class DelegatingClassifier:
@@ -1342,12 +1375,20 @@ class DelegatingClassifier:
         self.specialise, self.rebound = specialise, rebound
 
     def fit(self, X, y):
-        conf = self.first.fit(X, y).predict_proba(X).max(axis=1)
+        # thresholds from out-of-fold confidences: on its own training data a model
+        # is overconfident, so training quantiles would delegate too few new examples
+        oof = lambda m, A, b: cross_val_predict(m, A, b, cv=5, method="predict_proba")
+        conf = oof(self.first, X, y).max(axis=1)
+        self.first.fit(X, y)
         self.t1_ = np.quantile(conf, self.delegate)
         hard = conf <= self.t1_                               # delegated examples
         Xs, ys = (X[hard], y[hard]) if self.specialise else (X, y)
-        conf2 = self.second.fit(Xs, ys).predict_proba(X[hard]).max(axis=1)
-        self.t2_ = np.quantile(conf2, self.rebound) if self.rebound else -np.inf
+        self.second.fit(Xs, ys)
+        if self.rebound:
+            conf2 = oof(self.second, Xs, ys).max(axis=1)
+            self.t2_ = np.quantile(conf2 if self.specialise else conf2[hard], self.rebound)
+        else:
+            self.t2_ = -np.inf
         return self
 
     def predict(self, X):
@@ -1382,9 +1423,9 @@ for name, m in systems.items():
 \end{pylisting}
 \begin{pyoutput}
 small tree alone               accuracy=0.803
-specialist (two small trees)   accuracy=0.841  (second model: 971 of 3000)
-specialist + round rebound     accuracy=0.815  (second model: 971 of 3000)
-cascade: small tree -> forest  accuracy=0.885  (second model: 971 of 3000)
+specialist (two small trees)   accuracy=0.842  (second model: 717 of 3000)
+specialist + round rebound     accuracy=0.842  (second model: 717 of 3000)
+cascade: small tree -> forest  accuracy=0.882  (second model: 717 of 3000)
 random forest alone            accuracy=0.908
 \end{pyoutput}
 
@@ -1510,7 +1551,7 @@ Ensemble methods classify new examples by a combination of predictions, and this
 Not all the members of an ensemble are necessary. \emph{Ensemble\index{ensemble|textbf} pruning\index{ensemble pruning|textbf}} selects a subset of the
 members that is as good as, or better than, the whole ensemble \citep{margineantu1997pruning}.
 \citet{zhou2002ensembling} showed that ``many could be better than all'', and ordering the members
-greedily (adding at each step the member that most improves the subensemble on validation data\index{validation set})
+greedily (adding at each step the member that most improves the subensemble on validation data)
 and keeping only the first part of the ordering often matches or even improves the full ensemble
 with a fraction of the cost \citep{martinezmunoz2009analysis}.
 
@@ -1536,33 +1577,42 @@ proportion of examples on which they agree with the oracle.
 import numpy as np
 from sklearn.datasets import make_classification
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.tree import DecisionTreeClassifier, DecisionTreeRegressor
 
 X, y = make_classification(n_samples=4600, n_features=8, n_informative=5, n_redundant=2,
                            flip_y=0.03, class_sep=1.0, random_state=7)
 X_tr, y_tr, X_te, y_te = X[:600], y[:600], X[600:], y[600:]
 oracle = RandomForestClassifier(n_estimators=300, random_state=0).fit(X_tr, y_tr)
 
-def mimic(oracle, X, n, noise=0.3, max_leaves=32, seed=0):
-    """Learn a small tree that imitates the oracle on n synthetic examples."""
+def mimic(oracle, X, n, noise=0.3, max_leaves=32, seed=0, soft=False):
+    """Learn a small tree that imitates the oracle on n synthetic examples: from its
+    labels (hard targets) or from its probabilities with a regression tree (soft)."""
     rng = np.random.default_rng(seed)
     Xs = X[rng.integers(0, len(X), n)]                          # resample the inputs
     Xs = Xs + rng.normal(0, noise, Xs.shape) * X.std(axis=0)    # and perturb them
+    if soft:
+        tree = DecisionTreeRegressor(max_leaf_nodes=max_leaves, random_state=0)
+        return tree.fit(Xs, oracle.predict_proba(Xs)[:, 1])  # the oracle's probabilities
     tree = DecisionTreeClassifier(max_leaf_nodes=max_leaves, random_state=0)
-    return tree.fit(Xs, oracle.predict(Xs))                     # labels from the oracle
+    return tree.fit(Xs, oracle.predict(Xs))                     # labels of the oracle
+
+def labels(m, X):
+    return m.predict(X) if hasattr(m, "classes_") else (m.predict(X) > 0.5).astype(int)
 
 direct = DecisionTreeClassifier(max_leaf_nodes=32, random_state=0).fit(X_tr, y_tr)
-mimetic = mimic(oracle, X_tr, n=20000)
 ref = oracle.predict(X_te)
 for name, m in [("random forest (oracle)", oracle), ("32-leaf tree, original data", direct),
-                ("32-leaf mimetic tree", mimetic)]:
-    print(f"{name:28s} accuracy={m.score(X_te, y_te):.3f}  "
-          f"fidelity={np.mean(m.predict(X_te) == ref):.3f}")
+                ("32-leaf mimetic, hard labels", mimic(oracle, X_tr, n=20000)),
+                ("32-leaf mimetic, soft targets", mimic(oracle, X_tr, n=20000, soft=True))]:
+    pred = labels(m, X_te)
+    print(f"{name:29s} accuracy={np.mean(pred == y_te):.3f}  "
+          f"fidelity={np.mean(pred == ref):.3f}")
 \end{pylisting}
 \begin{pyoutput}
-random forest (oracle)       accuracy=0.889  fidelity=1.000
-32-leaf tree, original data  accuracy=0.830  fidelity=0.896
-32-leaf mimetic tree         accuracy=0.859  fidelity=0.922
+random forest (oracle)        accuracy=0.889  fidelity=1.000
+32-leaf tree, original data   accuracy=0.830  fidelity=0.896
+32-leaf mimetic, hard labels  accuracy=0.859  fidelity=0.922
+32-leaf mimetic, soft targets accuracy=0.833  fidelity=0.908
 \end{pyoutput}
 
 In \cref{lst:mimetic}, a tree with 32 leaves learned from the original 600 examples has an
@@ -1571,6 +1621,13 @@ reaches 0.859, closer to the forest itself (0.889), and agrees with it on 92\% o
 examples. \Cref{fig:mimetic} shows that the mimetic tree beats the directly learned tree for
 every number of synthetic examples; its accuracy oscillates between 0.83 and 0.86 because the
 size of the tree, not the amount of data, becomes the limit.
+
+The last line of \cref{lst:mimetic} learns the same kind of tree from the oracle's \emph{probabilities} instead
+of its labels, with a regression tree whose prediction is thresholded at 0.5. These \emph{soft targets} do slightly
+worse here (accuracy 0.833, fidelity 0.908), and the result holds for other seeds and for trees of 64 leaves: a small
+tree spends its leaves modelling degrees of confidence inside each class rather than the boundary between them. Soft
+targets pay off when the student can represent the whole distribution, as in the knowledge distillation\index{model distillation} of neural
+networks described below.
 
 \begin{figure}[htbp]
 \centering
@@ -1583,7 +1640,7 @@ learned from the 600 original examples.}
 
 The same idea has been rediscovered several times. TREPAN \citep{craven1996extracting} extracted
 trees from neural networks; \emph{model compression} \citep{bucila2006model} trained small neural
-networks to imitate large ensembles; and \emph{knowledge distillation\index{model distillation|textbf}} \citep{hinton2015distilling}
+networks to imitate large ensembles; and \emph{knowledge distillation} \citep{hinton2015distilling}
 trains a small network on the soft probabilities of a large one, and is today a standard way of
 deploying large models, including language models, at a lower cost.
 

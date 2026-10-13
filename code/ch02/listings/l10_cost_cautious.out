@@ -2,3 +2,5 @@ p=[0.4, 0.35, 0.25]  expected costs=[ 0.9   -0.385 -0.065  0.   ]  ->  b
 p=[0.5, 0.28, 0.22]  expected costs=[0.31  0.07  0.084 0.   ]  ->  unknown
 t*=0.20  w=0.375  identical decisions: 1.000
 abstains for p in [0.1255, 0.4995]
+naive Bayes             abstains 0.228  mean cost 0.326
+naive Bayes + isotonic  abstains 0.363  mean cost 0.312

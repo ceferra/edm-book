@@ -1,3 +1,4 @@
-random forest (oracle)       accuracy=0.889  fidelity=1.000
-32-leaf tree, original data  accuracy=0.830  fidelity=0.896
-32-leaf mimetic tree         accuracy=0.859  fidelity=0.922
+random forest (oracle)        accuracy=0.889  fidelity=1.000
+32-leaf tree, original data   accuracy=0.830  fidelity=0.896
+32-leaf mimetic, hard labels  accuracy=0.859  fidelity=0.922
+32-leaf mimetic, soft targets accuracy=0.833  fidelity=0.908

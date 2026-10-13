@@ -671,7 +671,7 @@ predictions to design the campaign\index{mailing campaign} \citep{ling1998data}:
 \end{enumerate}
 The pilot must be random: only then are its responses a fair sample of how all customers would respond, the same argument
 as the holdout\index{hold-out} of \cref{lst:holdout}. Part of the pilot is kept aside to draw the curves, so that the model is not
-evaluated on its own training data\index{training set}. The same validation data\index{validation set} are then used to choose how many customers to
+evaluated on its own training data\index{training set}. The same validation data are then used to choose how many customers to
 mail, so the reported maximum is still a development estimate: the chosen model and cutoff should be assessed on
 an independent sample, or with a resampling design that repeats the whole selection. The features must describe
 the customers before the contact, and the responses must be counted over a completed response window.
@@ -790,7 +790,8 @@ not launching, and the dots mark the decisions selected on the same data.}
 
 The campaign\index{mailing campaign} above targets the customers most likely to buy \emph{after receiving the brochure}. But some of them would
 have bought anyway, and the brochure was wasted on them. What matters is the effect of the contact, the difference between
-the probability of buying if contacted and if not contacted, which is a causal quantity (\cref{sec:causality}). Customers
+the probability of buying if contacted and if not contacted, which is a causal quantity: the conditional average treatment effect
+$\mathrm{CATE}(x)=\E[Y_1-Y_0\mid X=x]$ of the contact (\cref{sec:potentialoutcomes}). Customers
 fall into four groups \citep{radcliffe2011real}:
 \begin{itemize}
   \item \emph{persuadables\index{uplift modelling!persuadables and sleeping dogs|textbf}}, who buy only if contacted: the only group in which the campaign creates sales (whether they pay for the contact
@@ -1318,7 +1319,7 @@ model.
   \item\label{exr7:integrated} (An integrated case.) Using the randomised campaign of \cref{lst:uplift}, with a margin of
         30~EUR and 1.50~EUR per contact: (a) compare not launching with contacting the top customers of the response model
         and of the uplift model, in expected \emph{incremental} profit; (b) choose the model and the share of customers to
-        contact on validation data\index{validation set}, and estimate the profit of the chosen policy on a separate test set, with an interval;
+        contact on validation data, and estimate the profit of the chosen policy on a separate test set, with an interval;
         (c) check in the planner of \cref{lst:crmapp} that changing the costs updates the decision without retraining.
 \end{enumerate}
 

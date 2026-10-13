@@ -13,3 +13,7 @@ circles-1 0.427 1.000 1.000 0.995 1.000
 circles-2 0.432 0.993 0.991 0.952 0.978
 avg_rank 3.83 3.38 1.79 4.42 1.58
 friedman_chi2 30.410 p 4.04e-06 CD 1.761
+wilcoxon RF-LR p 0.0005 holm 0.0020
+wilcoxon RF-NB p 0.0024 holm 0.0049
+wilcoxon RF-kNN p 0.0771 holm 0.0771
+wilcoxon RF-DT p 0.0005 holm 0.0020
