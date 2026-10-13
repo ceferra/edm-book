@@ -7,11 +7,22 @@
 %     or:   xelatex main && bibtex main && xelatex main && xelatex main
 %  Overleaf: upload the whole folder (compiler: XeLaTeX, set by latexmkrc).
 % =====================================================================
-\documentclass[11pt,a4paper,twoside,openright]{book}
+\providecommand{\EDMKDP}{0}            % kdp.tex sets 1: print edition for Amazon KDP (US letter, no links)
+\newif\ifkdp \ifnum\EDMKDP=1 \kdptrue\fi
+\ifkdp
+  \documentclass[11pt,letterpaper,twoside,openright]{book}
+\else
+  \documentclass[11pt,a4paper,twoside,openright]{book}
+\fi
 
 % ----------------------------------------------------------------- layout
+\ifkdp   % 8.5 x 11 in; KDP minimum margins for 301-500 pages: 0.625 in inside, 0.25 in outside
+  \usepackage[paperwidth=8.5in,paperheight=11in,inner=31mm,outer=27mm,top=22mm,bottom=25mm,
+              headheight=14pt,headsep=8mm,footskip=12mm]{geometry}
+\else
 \usepackage[a4paper,inner=28mm,outer=24mm,top=27mm,bottom=30mm,
             headheight=14pt,headsep=8mm,footskip=12mm]{geometry}
+\fi
 
 % ------------------------------------------------------ fonts & language
 \usepackage[english]{babel}
@@ -66,9 +77,15 @@
 \usepackage{titlesec}
 \usepackage{emptypage}
 \usepackage[round,sort]{natbib}
+\usepackage{imakeidx}
+\makeindex[intoc,columns=2,options={-s index.ist}]
+\ifkdp
+  \usepackage[draft]{hyperref}    % print edition: no links, annotations or bookmarks
+\else
 \usepackage[colorlinks=true,linkcolor=edmnavy,citecolor=edmteal,urlcolor=edmcoral,
             pdftitle={Evaluation, Deployment and Monitoring of Models},
             pdfauthor={Cèsar Ferri, Carlos Monserrat, Yael Moros, Félix Martí and Fernando Martínez-Plumed}]{hyperref}
+\fi
 \usepackage[nameinlink,capitalise,noabbrev]{cleveref}
 
 % --------------------------------------------- chapters are called Units
@@ -97,7 +114,8 @@
 \let\edmoldsubsection\subsection
 \renewcommand{\subsection}{\needspace{3\baselineskip}\edmoldsubsection}
 \input{figures/cover/coverlines}
-\newcommand{\edmcompanion}{repository address and release tag to be added on publication}
+\newcommand{\edmcompanionref}{}   % e.g. \renewcommand{\edmcompanionref}{ (\url{https://...}, release v1.0)}
+\def\edmisbn{}                    % e.g. \def\edmisbn{978-...}
 \titleformat{\paragraph}[runin]{\normalfont\normalsize\bfseries\color{edmnavy}}{}{0pt}{}[.]
 \setcounter{secnumdepth}{2}
 \setcounter{tocdepth}{1}
@@ -171,9 +189,47 @@
 % On Overleaf's free plan the whole book exceeds the compile timeout. To work on one chapter,
 % compile the whole book once with a premium account (or locally), then uncomment, e.g.:
 % \includeonly{chapters/ch01-model-evaluation}
+\newcommand{\edmcopyrightpage}{%
+\thispagestyle{empty}
+\null\vfill
+{\small
+\textbf{Evaluation, Deployment and Monitoring of Models}\par\smallskip
+C\`esar Ferri, Carlos Monserrat, Yael Moros, F\'elix Mart\'i and Fernando Mart\'inez-Plumed\par\medskip
+Copyright \textcopyright\ 2026 by the authors. All rights reserved. No part of this book may be reproduced in any
+form without the written permission of the authors, except for brief quotations with attribution.\par\medskip
+First edition, 2026.\par
+\ifx\edmisbn\empty\else ISBN \edmisbn\par\fi
+\medskip
+Written for the course \emph{Evaluation, Deployment and Monitoring of Models} of the Degree in Data Science,
+Universitat Polit\`ecnica de Val\`encia.\par\medskip
+Every listing was executed to produce the output printed with it. The authors have taken care in preparing this
+book, but make no warranty of any kind and assume no responsibility for errors or omissions, or for damages
+resulting from the use of the information and code it contains.\par\medskip
+Set in Libertinus with XeLaTeX. Cover: generative artwork drawn by code, streamlines integrated through a smooth
+vector field.\par}
+\clearpage}
+
 \begin{document}
 
 % ------------------------------------------------------------ title page
+\ifkdp
+\frontmatter
+% half title
+\thispagestyle{empty}
+\null\vspace{0.3\textheight}
+\begin{center}{\fontsize{24}{30}\selectfont\bfseries\color{edmnavy} Evaluation, Deployment\\ and Monitoring of Models\par}\end{center}
+\cleardoublepage
+% title page
+\thispagestyle{empty}
+\null\vspace{0.16\textheight}
+\begin{center}
+{\fontsize{30}{37}\selectfont\bfseries\color{edmnavy} Evaluation, Deployment\\[4pt] and Monitoring of Models\par}
+\vspace{2.2cm}
+{\Large C\`esar Ferri\\[5pt] Carlos Monserrat\\[5pt] Yael Moros\\[5pt] F\'elix Mart\'i\\[5pt] Fernando Mart\'inez-Plumed\par}
+\end{center}
+\clearpage
+\edmcopyrightpage
+\else
 \begin{titlepage}
 % Cover: generative artwork (figures/cover/make_cover.py, from generar.py), text set in Libertinus Sans
 \begin{tikzpicture}[remember picture,overlay]
@@ -182,19 +238,9 @@
   \coverlines
 \end{tikzpicture}
 \end{titlepage}
-
-% Verso of the cover
-\thispagestyle{empty}
-\null\vfill
-{\small\color{edmnavy}
-\textbf{Evaluation, Deployment and Monitoring of Models}\par\smallskip
-Course book of the Degree in Data Science (GCD), Universitat Polit\`ecnica de Val\`encia\par
-C\`esar Ferri, Carlos Monserrat, Yael Moros, F\'elix Mart\'i and Fernando Mart\'inez-Plumed\par\smallskip
-Draft --- Units 1--7, \today\par\medskip
-{\footnotesize Cover: generative artwork drawn by code, streamlines integrated through a smooth vector field.\\
-Source code: \texttt{figures/cover}.}\par}
-
+\edmcopyrightpage
 \frontmatter
+\fi
 \pagestyle{plain}
 \tableofcontents
 \cleardoublepage
@@ -217,5 +263,8 @@ Source code: \texttt{figures/cover}.}\par}
 \addcontentsline{toc}{chapter}{Bibliography}
 \bibliographystyle{plainnat}
 \bibliography{references}
+
+\input{chapters/index-see}
+\printindex
 
 \end{document}

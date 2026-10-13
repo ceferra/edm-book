@@ -5,15 +5,15 @@
 \chapter{Model Evaluation}\label{ch:evaluation}
 
 In 2021, a team at the University of Michigan published a retrospective external validation of the then-current
-version of a sepsis prediction model that was already in use in hundreds of hospitals in the United States. Its
-developer reported an area under the ROC curve between 0.76 and 0.83; on the 38,455 hospitalisations of their own
-hospital, the researchers measured 0.63. At the threshold they studied, simulated alerts would have flagged about 18\%
+version of a sepsis\index{sepsis prediction} prediction model that was already in use in hundreds of hospitals in the United States. Its
+developer reported an area under the ROC curve\index{area under the ROC curve (AUC)}\index{ROC curve} between 0.76 and 0.83; on the 38,455 hospitalisations of their own
+hospital, the researchers measured 0.63. At the threshold\index{threshold} they studied, simulated alerts would have flagged about 18\%
 of all hospitalisations while missing about two thirds of those with sepsis \citep{wong2021external}. The case shows
 why external evaluation under the intended conditions of use is essential: the numbers that had been reported did not
 measure what mattered where the model was used.
 
 Training a model is usually the easy part of a machine learning project: modern libraries
-fit a random forest or a neural network in a couple of lines of code. Deciding whether that
+fit a random forest\index{random forest} or a neural network in a couple of lines of code. Deciding whether that
 model is \emph{good}, whether it is \emph{better} than the alternatives, and whether it is
 \emph{good enough} for the purpose it was built for is much harder. Mistakes at this stage
 are expensive: a model that looked excellent in the laboratory may lose money, harm people
@@ -29,20 +29,20 @@ has to be updated (Units~5 and~6).
 \begin{objectives}
 After studying this unit you should be able to:
 \begin{itemize}
-  \item explain why the performance on training data is not a reliable estimate, and relate
-        underfitting and overfitting to the bias--variance decomposition;
-  \item design sound evaluation protocols (hold-out, cross-validation, bootstrap, nested
-        cross-validation, group- and time-aware splits) and recognise data leakage;
+  \item explain why the performance on training data\index{training set} is not a reliable estimate, and relate
+        underfitting\index{underfitting} and overfitting\index{overfitting} to the bias--variance\index{bias--variance trade-off} decomposition;
+  \item design sound evaluation protocols\index{evaluation protocol} (hold-out\index{hold-out}, cross-validation\index{cross-validation}, bootstrap\index{bootstrap}, nested
+        cross-validation\index{cross-validation!nested}, group- and time-aware splits) and recognise data leakage\index{data leakage};
   \item compute, interpret and select appropriate metrics to assess classification, regression and unsupervised
         models, and their strengths and weaknesses;
-  \item use graphical tools (ROC, precision--recall, lift, reliability diagrams and cost
-        curves) to assess models in different contexts;
+  \item use graphical tools (ROC, precision\index{precision}--recall\index{recall}, lift\index{lift}, reliability diagrams\index{calibration!reliability diagram} and cost
+        curves\index{cost curve}) to assess models in different contexts;
   \item distinguish crisp, scoring and probabilistic classifiers and evaluate each of them
-        appropriately, including their calibration;
-  \item measure performance in imbalanced scenarios and know techniques to address
+        appropriately, including their calibration\index{calibration};
+  \item measure performance in imbalanced\index{class imbalance} scenarios and know techniques to address
         imbalanced data sets;
   \item incorporate costs into evaluation and decision making;
-  \item evaluate models in specialised settings (conformal prediction, open-set recognition,
+  \item evaluate models in specialised settings (conformal prediction\index{conformal prediction}, open-set\index{open-set recognition} recognition,
         computer vision, natural language processing) and compare models statistically.
 \end{itemize}
 \end{objectives}
@@ -52,9 +52,9 @@ After studying this unit you should be able to:
 
 \subsection{Evaluation in the data science process}
 
-The Cross-Industry Standard Process for Data Mining, CRISP-DM \citep{chapman2000crisp},
+The Cross-Industry Standard Process for Data Mining, CRISP-DM\index{CRISP-DM} \citep{chapman2000crisp},
 describes a data mining project as a cycle of six phases (\cref{fig:crispdm}). Evaluation is
-one of them, and it appears \emph{after} modelling and \emph{before} deployment for a reason.
+one of them, and it appears \emph{after} modelling and \emph{before} deployment\index{deployment} for a reason.
 During modelling, analysts already compare models using technical criteria (``model A is
 more accurate than model B''). The evaluation phase asks broader questions: does the model
 meet the \emph{business} success criteria defined at the beginning of the project? Was any
@@ -105,8 +105,8 @@ The word ``evaluation'' hides at least three different objects:
   \item a \emph{trained model} $h$, a concrete artefact that we may deploy
         (\emph{model assessment}: how well will \emph{this} model perform?);
   \item a \emph{learning procedure} (an algorithm together with its preprocessing and
-        hyperparameter tuning), which produces models from data (\emph{algorithm comparison}:
-        is random forest a better choice than logistic regression for this kind of data?);
+        hyperparameter tuning\index{hyperparameter optimisation}), which produces models from data (\emph{algorithm comparison}:
+        is random forest a better choice than logistic regression\index{logistic regression} for this kind of data?);
   \item a \emph{decision system}, which uses the model's outputs to act in a given context:
         thresholds, costs, capacity constraints (is the system good enough to be deployed?).
 \end{enumerate}
@@ -160,7 +160,7 @@ $\pi_+$, $\pi_-$ & proportion of positive and negative examples (prevalence)\\
 Let the examples $(x,y)$ be drawn independently from an unknown distribution $\mathcal D$ and
 let $\ell(y,\hat y)$ be a loss function (for instance the 0--1 loss in classification or the
 squared error in regression). What we would like to know is the \emph{true risk} (or
-generalisation error) of a model,
+generalisation\index{generalisation} error) of a model,
 \begin{equation}
   R(h)=\E_{(x,y)\sim\mathcal D}\bigl[\ell\bigl(y,h(x)\bigr)\bigr],
 \end{equation}
@@ -182,16 +182,16 @@ a few papayas, taste them, and record the results.
 A first learner simply memorises: it predicts ``tasty'' for papayas identical to the tasty
 ones in the sample and ``not tasty'' for everything else. Its training error is zero, but it
 is useless, since almost every new papaya differs slightly from those already tasted. This
-is \emph{overfitting}: the model fits the particular sample, including its noise, instead of
+is \emph{overfitting\index{overfitting|textbf}}: the model fits the particular sample, including its noise, instead of
 the underlying regularity.
 
 A second learner assumes that tasty papayas are those whose softness and colour both lie in
 some intermediate range, so that it only has to find an axis-parallel rectangle. This
-\emph{inductive bias} prevents memorisation and lets the learner generalise. But if the
+\emph{inductive bias\index{inductive bias|textbf}} prevents memorisation and lets the learner generalise. But if the
 assumptions are too strong (say, ``a papaya is tasty if its colour exceeds a threshold'', or
 ``a papaya is tasty if it is close to the average tasty papaya''), the model cannot
 represent the real concept and errs systematically, on the training data as well as on new
-data. This is \emph{underfitting}.
+data. This is \emph{underfitting\index{underfitting|textbf}}.
 
 \subsection{The bias--variance decomposition}
 
@@ -212,14 +212,14 @@ The three terms have a clear interpretation:
   \item the \emph{noise} $\sigma^2$ is irreducible: no model can predict the random part of $y$;
   \item the \emph{bias} measures the error due to wrong or too restrictive assumptions of the
         learning algorithm. High bias means that the model pays little attention to the
-        data and oversimplifies the problem: \emph{underfitting};
+        data and oversimplifies the problem: \emph{underfitting\index{underfitting|textbf}};
   \item the \emph{variance} measures how much the model changes when the training set
         changes. High variance means that the model is sensitive to small fluctuations of the
-        sample and fits its noise: \emph{overfitting}.
+        sample and fits its noise: \emph{overfitting\index{overfitting|textbf}}.
 \end{itemize}
 
 \Cref{fig:polyfits} fits polynomials of increasing degree to 20 noisy points of
-$f(x)=\sin(2\pi x)$. The straight line underfits (training and test MSE of $0.203$ and
+$f(x)=\sin(2\pi x)$. The straight line underfits (training and test MSE\index{mean squared error (MSE)} of $0.203$ and
 $0.236$); the degree-4 polynomial captures the shape (0.069 and 0.074); the degree-15
 polynomial passes very close to every training point (training MSE 0.016) but oscillates
 wildly between them, and its test MSE explodes to about $3\times10^3$.
@@ -257,12 +257,12 @@ high variance, rigid models the opposite \citep{geman1992neural}.
 \subsection{Complexity in practice: the \texorpdfstring{$k$}{k}-nearest neighbours example}
 
 The complexity of a model is controlled by its hyperparameters: the degree of a polynomial,
-the depth of a tree, the strength of a regularisation term, the number of boosting
+the depth of a tree, the strength of a regularisation term, the number of boosting\index{boosting}
 iterations, or the number of neighbours $k$ in $k$-NN. \Cref{fig:knn} shows $k$-NN on a
-two-moons problem. With $k=1$ every training point is classified correctly (training accuracy
+two-moons problem. With $k=1$ every training point is classified correctly (training accuracy\index{accuracy}
 1.00) but the frontier is jagged and the test accuracy is only 0.88; with $k=150$ the frontier
 is almost a straight line and both accuracies are low (0.82 and 0.83); $k=15$ is a good
-compromise (0.94 and 0.92). Choosing a hyperparameter is choosing a point on the bias--variance
+compromise (0.94 and 0.92). Choosing a hyperparameter is choosing a point on the bias--variance\index{bias--variance trade-off}
 trade-off, and this choice requires data that are not used for training
 (\cref{sec:protocols}).
 
@@ -276,7 +276,7 @@ $k$ means high variance (overfitting); large $k$ means high bias (underfitting).
 
 \subsection{Learning curves}
 
-A \emph{learning curve} plots the training and validation performance as a function of the
+A \emph{learning curve\index{learning curve|textbf}} plots the training and validation performance as a function of the
 size of the training set (\cref{fig:learningcurves}). It is a simple and powerful diagnostic:
 \begin{itemize}
   \item \emph{high bias}: both curves converge quickly to a similar, unsatisfactory value
@@ -284,7 +284,7 @@ size of the training set (\cref{fig:learningcurves}). It is a simple and powerfu
         a more flexible model or better features;
   \item \emph{high variance}: there is a persistent gap between the training curve (1.00 for
         an unpruned tree) and the validation curve (0.88). More data, regularisation or
-        ensembles (Unit~2) will help;
+        ensembles\index{ensemble} (Unit~2) will help;
   \item a good compromise shows both curves close and high ($k$-NN with $k=25$: 0.92 and 0.91).
 \end{itemize}
 
@@ -310,15 +310,15 @@ reliable guide.
 
 The golden rule of evaluation is simple to state and easy to break: \emph{the performance of
 a model must be estimated on data that played no role in building it}, and ``building''
-includes preprocessing, feature selection, hyperparameter tuning and model selection.
+includes preprocessing, feature selection, hyperparameter tuning\index{hyperparameter optimisation} and model selection.
 
 \subsection{Training, validation and test data}
 
 It is useful to separate two activities \citep[Chapter~7]{hastie2009elements}:
 \emph{model selection}, which chooses among models or hyperparameters, and
 \emph{model assessment}, which estimates the performance of the final choice. With enough
-data, the cleanest approach uses three disjoint sets: a \emph{training set} to fit the
-models, a \emph{validation set} to choose among them, and a \emph{test set}, used once, to
+data, the cleanest approach uses three disjoint sets: a \emph{training set\index{training set|textbf}} to fit the
+models, a \emph{validation set\index{validation set|textbf}} to choose among them, and a \emph{test set\index{test set|textbf}}, used once, to
 assess the chosen model. If the test set is used repeatedly to take decisions, it silently
 becomes a validation set and its estimates become optimistic; leaderboards of public
 competitions show this effect regularly.
@@ -327,7 +327,7 @@ competitions show this effect regularly.
 
 The simplest protocol randomly splits the data into a training and a test set, typically
 with 20--30\% of the data for testing. In classification the split should be
-\emph{stratified}, so that both parts keep the class proportions. The hold-out estimate is
+\emph{stratified\index{cross-validation!stratified|textbf}}, so that both parts keep the class proportions. The hold-out\index{hold-out} estimate is
 cheap but has two drawbacks: the model is trained on less data than available, and the
 estimate has high variance, because it depends on a single test sample. If a classifier with
 true accuracy 0.85 is tested on 200 examples, the number of correct predictions is binomial,
@@ -337,7 +337,7 @@ models tested this way mean very little (\cref{sec:stats}).
 
 \subsection{Cross-validation}
 
-In \emph{$k$-fold cross-validation} (CV) the data are partitioned into $k$ folds
+In \emph{$k$-fold cross-validation\index{cross-validation|textbf}} (CV) the data are partitioned into $k$ folds
 $F_1,\dots,F_k$ of similar size. Each fold is used once as test set while the model is
 trained on the remaining $k-1$ folds (\cref{fig:cvschemes}a), and the estimate pools all the
 test predictions:
@@ -410,10 +410,10 @@ period, as it will be in deployment (compare with \cref{lst:timeseries}).}
 
 \subsection{The bootstrap}
 
-A bootstrap sample is obtained by drawing $n$ examples \emph{with replacement} from the data
+A bootstrap\index{bootstrap} sample is obtained by drawing $n$ examples \emph{with replacement} from the data
 set. The probability that a given example is never drawn is $(1-1/n)^n\approx e^{-1}\approx
 0.368$, so each bootstrap sample contains about 63.2\% of the distinct examples, and the
-remaining \emph{out-of-bag} (OOB) examples can be used for testing. Repeating the process $B$
+remaining \emph{out-of-bag\index{out-of-bag estimate|textbf}} (OOB) examples can be used for testing. Repeating the process $B$
 times and averaging the OOB errors gives a pessimistic estimate (each model sees only 63.2\%
 of the distinct examples); the \emph{.632 estimator} corrects it by mixing it with the
 optimistic training error,
@@ -422,7 +422,7 @@ optimistic training error,
 \end{equation}
 and the \emph{.632+} variant further corrects the case of strongly overfitting models
 \citep{efron1997improvements}. The bootstrap is also the standard tool to build confidence
-intervals for any metric (\cref{sec:stats}), and the OOB idea is used by random forests
+intervals\index{confidence interval} for any metric (\cref{sec:stats}), and the OOB idea is used by random forests
 (Unit~2).
 
 \subsection{Model selection and nested cross-validation}
@@ -431,8 +431,8 @@ Hyperparameters are usually tuned by evaluating many candidate configurations wi
 cross-validation and keeping the best one. The CV score of the winner, however, is
 optimistically biased: when many candidates are compared on the same data, the best one is
 partly the luckiest one \citep{varma2006bias,cawley2010over}. To estimate the performance of
-the whole procedure (``tune with grid search, then train''), the tuning must itself be
-evaluated inside an outer CV loop. This is \emph{nested cross-validation}
+the whole procedure (``tune with grid search\index{grid search}, then train''), the tuning must itself be
+evaluated inside an outer CV loop. This is \emph{nested cross-validation\index{cross-validation!nested|textbf}\index{cross-validation|textbf}}
 (\cref{alg:nestedcv}).
 
 \begin{algorithm}[htbp]
@@ -503,7 +503,7 @@ optimistic, because information leaks between related training and test examples
         must be evaluated the same way, training on an initial period and testing on the
         following one (\emph{forward chaining} or \emph{rolling-origin} evaluation,
         \cref{fig:cvschemes}b and \cref{lst:timeseries}). A gap between training and test
-        periods avoids leakage through autocorrelation. \citet{bergmeir2012use} discuss when
+        periods avoids leakage\index{data leakage} through autocorrelation. \citet{bergmeir2012use} discuss when
         standard CV is still acceptable for time series;
   \item \emph{spatial data}: nearby locations are similar, and blocked spatial CV is
         needed \citep{roberts2017cross}.
@@ -526,14 +526,14 @@ fold 4: train=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  test=[10, 11]
 
 \subsection{Data leakage}
 
-\emph{Data leakage} is the use, during training or evaluation, of information that would not
+\emph{Data leakage\index{data leakage|textbf}} is the use, during training or evaluation, of information that would not
 be available when the model is used in practice \citep{kaufman2012leakage}. It is the most
 common cause of results that look too good to be true. Typical forms are:
 \begin{itemize}
   \item \emph{target leakage}: features that are consequences of the target or are recorded
         after the event (the number of days in hospital to predict hospital admission, or a
         late-payment fee to predict default);
-  \item \emph{train--test contamination}: preprocessing steps (scaling, imputation, feature
+  \item \emph{train--test contamination\index{contamination of benchmarks|textbf}}: preprocessing steps (scaling, imputation, feature
         selection, resampling, target encoding) fitted on the whole data set before
         splitting it;
   \item \emph{temporal leakage}: random splits of time-ordered data, or features computed
@@ -597,7 +597,7 @@ examples,
   \qquad
   \delta(a,b)=\begin{cases}0 & \text{if } a=b,\\ 1 & \text{otherwise,}\end{cases}
 \end{equation}
-and the \emph{accuracy} is $1-\operatorname{error}_S(h)$.
+and the \emph{accuracy\index{accuracy|textbf}} is $1-\operatorname{error}_S(h)$.
 
 \begin{example}{A purchase prediction model}{purchase}
 A shop predicts whether each of ten customers will buy a product (positive class
@@ -621,7 +621,7 @@ Three predictions are wrong, so the error is $3/10=0.3$ (30\%) and the accuracy 
 
 \subsection{The confusion matrix}
 
-Accuracy hides \emph{which} errors are made. The \emph{confusion matrix} counts the examples
+Accuracy hides \emph{which} errors are made. The \emph{confusion matrix\index{confusion matrix|textbf}} counts the examples
 for every combination of predicted and actual class. In this book we follow the convention
 of \citet{fawcett2006introduction}: rows correspond to the \emph{predicted} class and columns
 to the \emph{actual} class. In binary problems, one class is called \emph{positive} (usually
@@ -664,7 +664,7 @@ Conventions differ. Many textbooks and scikit-learn's \code{confusion_matrix} pu
 \emph{actual} class in the rows and the \emph{predicted} class in the columns, and sort the
 labels, so that for 0/1 labels the negative class comes first:
 \code{tn, fp, fn, tp = confusion_matrix(y, y_pred).ravel()}. Transposing the matrix swaps
-$\FP$ and $\FN$, and therefore swaps sensitivity and precision. Always check the convention
+$\FP$ and $\FN$, and therefore swaps sensitivity\index{sensitivity} and precision. Always check the convention
 before reading a confusion matrix.
 \end{pitfall}
 
@@ -698,12 +698,12 @@ Matthews correlation coefficient & MCC, $\phi$ coefficient & see \cref{eq:mcc} &
 \end{tabularx}
 \end{table}
 
-The Matthews correlation coefficient, which needs more room than the table allows, is
+The Matthews correlation coefficient\index{Matthews correlation coefficient}, which needs more room than the table allows, is
 \begin{equation}\label{eq:mcc}
   \mathrm{MCC}=\frac{\TP\cdot\TN-\FP\cdot\FN}{\sqrt{(\TP+\FP)(\TP+\FN)(\TN+\FP)(\TN+\FN)}}
   =\frac{4\cdot3-1\cdot2}{\sqrt{5\cdot6\cdot4\cdot5}}=0.408 .
 \end{equation}
-When a row or a column of the confusion matrix is empty (for instance, a classifier that always
+When a row or a column of the confusion matrix\index{confusion matrix} is empty (for instance, a classifier that always
 predicts negative), the denominator is zero and the MCC is undefined; \textsf{scikit-learn} returns 0 by
 convention.
 
@@ -744,13 +744,13 @@ Cohen's kappa     0.4000
 A few remarks help to choose among them:
 \begin{itemize}
   \item $\TPR$, $\TNR$, $\FPR$ and $\FNR$ are computed within a single column of the matrix,
-        that is, within one actual class. They, and their combinations (balanced accuracy,
+        that is, within one actual class. They, and their combinations (balanced accuracy\index{balanced accuracy},
         G-mean), \emph{do not depend on the class distribution} of the test set, as long as the
-        class-conditional distributions stay the same (label shift; \cref{ch:monitoring} discusses other shifts). Precision,
-        NPV, accuracy, $F_1$, MCC and kappa mix both columns and \emph{do} depend on it:
-        comparisons across different class mixtures confound model behaviour with prevalence
+        class-conditional distributions stay the same (label shift\index{label shift}; \cref{ch:monitoring} discusses other shifts). Precision,
+        NPV\index{predictive value!negative}, accuracy, $F_1$, MCC and kappa mix both columns and \emph{do} depend on it:
+        comparisons across different class mixtures confound model behaviour with prevalence\index{prevalence}
         unless the operating context is accounted for;
-  \item sensitivity and specificity, or precision and recall, always come in pairs: a model
+  \item sensitivity\index{sensitivity} and specificity\index{specificity}, or precision and recall, always come in pairs: a model
         can trivially maximise one at the expense of the other. Balanced accuracy, the
         G-mean and $F_\beta$ summarise each pair; $\beta>1$ weighs recall more than
         precision \citep{vanrijsbergen1979information};
@@ -759,7 +759,7 @@ A few remarks help to choose among them:
         changes if we swap the roles of the two classes;
   \item the MCC uses the four cells, is symmetric in the classes, ranges from $-1$ to $1$ and
         is 0 for random predictions \citep{matthews1975comparison}. It is a good single-number
-        summary for imbalanced binary problems \citep{chicco2020advantages}. The G-mean
+        summary for imbalanced\index{class imbalance} binary problems \citep{chicco2020advantages}. The G-mean
         was proposed for imbalanced problems by \citet{kubat1997addressing}, and
         \citet{brodersen2010balanced} discuss balanced accuracy.
         \citet{sokolova2009systematic} analyse the properties of many more metrics.
@@ -768,7 +768,7 @@ A few remarks help to choose among them:
 \subsection{Agreement beyond chance: Cohen's kappa}
 
 Accuracy does not take into account that some agreement between predictions and actual
-classes happens by chance. \emph{Cohen's kappa} \citep{cohen1960coefficient} corrects for it:
+classes happens by chance. \emph{Cohen's kappa\index{Cohen's kappa|textbf}} \citep{cohen1960coefficient} corrects for it:
 \begin{equation}
   \kappa=\frac{p_o-p_e}{1-p_e},
   \qquad
@@ -792,17 +792,17 @@ gives an informal upper bound on the performance we can expect from the model.
 \subsection{Prevalence and predictive values}
 
 The probability that a positive prediction is correct depends not only on the classifier but
-also on the prevalence $\pi_+$ of the positive class. By Bayes' theorem,
+also on the prevalence\index{prevalence} $\pi_+$ of the positive class. By Bayes' theorem,
 \begin{equation}\label{eq:ppv}
   \PPV=\frac{\TPR\cdot\pi_+}{\TPR\cdot\pi_++\FPR\cdot(1-\pi_+)},
   \qquad
   \NPV=\frac{\TNR\cdot(1-\pi_+)}{\TNR\cdot(1-\pi_+)+\FNR\cdot\pi_+}.
 \end{equation}
-A diagnostic test with sensitivity 0.95 and specificity 0.98 sounds excellent, but if the
+A diagnostic test with sensitivity\index{sensitivity} 0.95 and specificity\index{specificity} 0.98 sounds excellent, but if the
 disease affects 1\% of the population, $\PPV=0.0095/(0.0095+0.0198)=0.324$: two out of three
 positive results are false alarms. \Cref{fig:prevalence} shows how the predictive values of two
 tests change with prevalence. Test~B, with a much lower sensitivity (0.60) but higher
-specificity (0.995), has a \emph{higher} PPV at low prevalence (0.548 at 1\%), because when
+specificity (0.995), has a \emph{higher} PPV\index{predictive value!positive} at low prevalence (0.548 at 1\%), because when
 positives are rare it is the specificity that controls the number of false alarms.
 
 \begin{figure}[htbp]
@@ -829,9 +829,9 @@ The lesson goes beyond medicine: a metric is only meaningful with respect to a r
 
 \subsection{Multiclass problems}
 
-With $c$ classes the confusion matrix $M$ is $c\times c$, with $M_{jk}$ the number of examples
+With $c$ classes the confusion matrix\index{confusion matrix} $M$ is $c\times c$, with $M_{jk}$ the number of examples
 predicted as class $j$ whose actual class is $k$. Per-class metrics are obtained by treating
-each class as positive and the rest as negative (\emph{one-versus-all}, OVA): for class $j$,
+each class as positive and the rest as negative (\emph{one-versus-all\index{one-versus-all|textbf}}, OVA): for class $j$,
 $\TP_j=M_{jj}$, $\FP_j=\sum_{k\neq j}M_{jk}$ (rest of the row) and $\FN_j=\sum_{k\neq j}M_{kj}$
 (rest of the column). The per-class results are then averaged:
 \begin{itemize}
@@ -843,7 +843,7 @@ $\TP_j=M_{jj}$, $\FP_j=\sum_{k\neq j}M_{jk}$ (rest of the row) and $\FN_j=\sum_{
         computing the metric. In single-label problems micro precision, micro recall and
         micro $F_1$ all equal the accuracy.
 \end{itemize}
-Metrics defined only for two classes can also be extended with the \emph{one-versus-one}
+Metrics defined only for two classes can also be extended with the \emph{one-versus-one\index{one-versus-one|textbf}}
 (OVO) approach, which computes $c(c-1)/2$ results, one for each pair of classes.
 
 \begin{example}{Three classes}{multiclass}
@@ -863,7 +863,7 @@ rabbit & 0 & 1 & 3\\
 For \emph{dog}: $\TP=4$, $\FP=2+1=3$ and $\FN=1+1=2$, so precision is $4/7=0.571$ and recall
 $4/6=0.667$. \Cref{lst:multiclass} computes all the per-class and averaged values (note that
 the matrix is written transposed in the code, following scikit-learn's convention). The
-accuracy is 0.75; the macro-averaged $F_1$ (0.736) is lower than the weighted one (0.756)
+accuracy is 0.75; the macro-averaged\index{macro-average} $F_1$ (0.736) is lower than the weighted one (0.756)
 because the worst class, \emph{dog}, counts as much as \emph{cat} in the macro average.
 \end{example}
 
@@ -896,11 +896,11 @@ weighted avg      0.766     0.750     0.756        20
 
 \subsection{Origins: signal detection}
 
-Receiver Operating Characteristic (ROC) analysis originated in signal detection theory,
+Receiver Operating Characteristic\index{ROC analysis} (ROC) analysis originated in signal detection theory,
 developed to analyse radar signals during the Second World War and later used extensively in
 psychophysics and medical diagnosis \citep{green1966signal}. The problem is to decide whether
 a signal is present in a noisy observation. If the observations follow one distribution when
-there is only noise and another when signal is present, any decision rule of the form ``say
+there is only noise and another when signal is present, any decision rule\index{decision rules} of the form ``say
 \emph{signal} if the observation exceeds a threshold $t$'' trades hits (true positives)
 against false alarms (false positives), and the best threshold depends on the strength of the
 signal, on the noise variance and on the hit or false alarm rate we are willing to accept
@@ -918,7 +918,7 @@ curve depends on the separation $d'$ between the two distributions.}
 
 \subsection{The ROC space}
 
-A crisp classifier is represented in the \emph{ROC space} by the point $(\FPR,\TPR)$. For
+A crisp classifier is represented in the \emph{ROC space\index{ROC space|textbf}} by the point $(\FPR,\TPR)$. For
 instance, a classifier with $\TP=3$, $\FN=1$, $\FP=3$ and $\TN=7$ has $\TPR=3/4=0.75$ and
 $\FPR=3/10=0.30$, point A in \cref{fig:rocspace}. Some points are special:
 \begin{itemize}
@@ -934,7 +934,7 @@ $\FPR=3/10=0.30$, point A in \cref{fig:rocspace}. Some points are special:
 \end{itemize}
 Since both coordinates are computed within one actual class, the position of a classifier in
 ROC space does not depend on the class distribution or on the costs. This is what makes ROC
-analysis useful when the deployment context is uncertain.
+analysis\index{ROC analysis} useful when the deployment context is uncertain.
 
 \begin{figure}[htbp]
 \centering
@@ -947,7 +947,7 @@ it can be improved by inverting its predictions.}
 \subsection{Iso-performance lines and the ROC convex hull}
 
 Assume that correct predictions cost nothing and that a false negative and a false positive
-cost $c_{\mathrm{FN}}$ and $c_{\mathrm{FP}}$. The expected cost per example of a classifier
+cost $c_{\mathrm{FN}}$ and $c_{\mathrm{FP}}$. The expected cost\index{expected cost} per example of a classifier
 at $(\FPR,\TPR)$ is
 \begin{equation}\label{eq:rocost}
   \text{Cost}=\pi_+\,(1-\TPR)\,c_{\mathrm{FN}}+\pi_-\,\FPR\,c_{\mathrm{FP}}.
@@ -958,13 +958,13 @@ $\TPR=m\cdot\FPR+b$, an \emph{iso-performance line}, with slope
   m=\frac{\pi_-\,c_{\mathrm{FP}}}{\pi_+\,c_{\mathrm{FN}}}=\frac{N}{P}\cdot\frac{c_{\mathrm{FP}}}{c_{\mathrm{FN}}}.
 \end{equation}
 For accuracy (equal costs) the slope is simply the class ratio $C=N/P$, and the lines are
-called \emph{iso-accuracy lines} \citep{flach2003geometry}. Steep lines (many negatives or
+called \emph{iso-accuracy\index{iso-accuracy line|textbf}\index{accuracy|textbf} lines} \citep{flach2003geometry}. Steep lines (many negatives or
 expensive false positives) favour conservative classifiers close to $(0,0)$; flat lines
 favour liberal classifiers close to $(1,1)$.
 
 To find the best classifier for a given slope, move a line with that slope from the
 upper-left corner towards the lower right until it touches a classifier. The classifiers that
-can be touched first lie on the \emph{ROC convex hull} (ROCCH) of the set of points, including
+can be touched first lie on the \emph{ROC convex hull\index{ROC convex hull|textbf}} (ROCCH) of the set of points, including
 the trivial classifiers $(0,0)$ and $(1,1)$ \citep{provost2001robust}. Hence:
 \begin{itemize}
   \item classifiers below the hull are never optimal, whatever the class distribution or the
@@ -982,8 +982,8 @@ Five classifiers have been evaluated on the same test set:
 \toprule
 & CN2 & Ripper & C4.5 & NB & SVM\\
 \midrule
-FPR & 0.05 & 0.10 & 0.16 & 0.28 & 0.60\\
-TPR & 0.50 & 0.60 & 0.80 & 0.70 & 0.95\\
+FPR\index{false positive rate} & 0.05 & 0.10 & 0.16 & 0.28 & 0.60\\
+TPR\index{true positive rate} & 0.50 & 0.60 & 0.80 & 0.70 & 0.95\\
 \bottomrule
 \end{tabular}
 \end{center}
@@ -1014,7 +1014,7 @@ context.}
 
 \subsection{Scoring classifiers and ROC curves}
 
-Most classifiers can output a \emph{score} rather than a label: a scoring classifier assigns
+Most classifiers can output a \emph{score} rather than a label: a scoring classifier\index{scoring classifier} assigns
 to each example a real-valued score $s(x)$, with larger values indicating stronger evidence for the positive class,
 such as a predicted positive-class probability or a signed decision margin. Ratios are useful in specific cases, such
 as posterior odds or a likelihood ratio $P(x\mid+)/P(x\mid-)$ with a positive denominator; arbitrary class scores need
@@ -1022,8 +1022,8 @@ not admit such an interpretation (with scores $g(x)$ and $-g(x)$ for the two cla
 strictly increasing transformation of $s(x)$ ranks the examples in the same order; a merely non-decreasing one can
 create ties. A scoring classifier is therefore a \emph{ranker}, and it becomes a
 crisp classifier by fixing a threshold $t$: predict positive if $s(x)\geq t$. Each threshold
-gives a point in ROC space, and moving the threshold from $+\infty$ to $-\infty$ traces the
-\emph{ROC curve} of the ranker. \Cref{alg:roc} builds it from a test set
+gives a point in ROC space\index{ROC space}, and moving the threshold from $+\infty$ to $-\infty$ traces the
+\emph{ROC curve\index{ROC curve|textbf}} of the ranker. \Cref{alg:roc} builds it from a test set
 \citep{fawcett2006introduction}.
 
 \begin{algorithm}[htbp]
@@ -1071,10 +1071,10 @@ threshold that produces it; the shaded area is the AUC.}
 
 \subsection{The area under the ROC curve}
 
-The \emph{area under the ROC curve} (AUC) summarises the whole curve in a single number
+The \emph{area under the ROC curve\index{area under the ROC curve (AUC)|textbf}\index{ROC curve|textbf}} (AUC) summarises the whole curve in a single number
 \citep{bradley1997use}. It has a very intuitive interpretation
 \citep{hanley1982meaning}: the AUC is the probability that a randomly chosen positive
-receives a higher score than a randomly chosen negative, which is the Mann--Whitney--Wilcoxon
+receives a higher score than a randomly chosen negative, which is the Mann--Whitney\index{Mann--Whitney--Wilcoxon statistic}--Wilcoxon
 statistic \citep{mann1947test}:
 \begin{equation}\label{eq:auc}
   \mathrm{AUC}=\frac{1}{P\cdot N}\sum_{i:\,y_i=+}\ \sum_{k:\,y_k=-} I\bigl(s(x_i),s(x_k)\bigr),
@@ -1125,12 +1125,12 @@ The AUC has several useful properties:
         $\mathrm{Gini}=2\,\mathrm{AUC}-1$;
   \item a crisp classifier has a ``curve'' with only three points, $(0,0)$, $(\FPR,\TPR)$
         and $(1,1)$, and its area is $(1+\TPR-\FPR)/2$, which is exactly its balanced
-        accuracy (Exercise~\ref{exr:aucba}).
+        accuracy\index{balanced accuracy} (Exercise~\ref{exr:aucba}).
 \end{itemize}
 
 \Cref{fig:rocmodels} compares four classifiers on the same synthetic problem. The random forest
 dominates the other three almost everywhere (AUC 0.902), whereas the curves of logistic
-regression (0.823) and naive Bayes (0.828) cross: which of the two is preferable depends on the
+regression (0.823) and naive Bayes\index{naive Bayes} (0.828) cross: which of the two is preferable depends on the
 region of the curve where the model will operate. ROC curves are therefore very useful to
 select the best model for a particular context of deployment, and the AUC is the right summary
 when that context is unknown. When the relevant region is known (for instance, a screening
@@ -1149,19 +1149,19 @@ show the crisp classifiers obtained with the default threshold 0.5.}
 \citet{hand2009measuring} pointed out that the AUC implicitly averages over misclassification
 costs using a distribution that depends on the classifier itself, and proposed the
 H-measure as an alternative. \citet{hernandez2012unified} gave a unifying view: accuracy, AUC,
-the Brier score and other metrics are all \emph{expected losses}, under different assumptions
+the Brier score\index{Brier score} and other metrics are all \emph{expected losses}, under different assumptions
 about how the decision threshold will be chosen when the model is deployed. Choosing a metric
 is, implicitly, choosing such an assumption.
 \end{further}
 
 \subsection{Multiclass ROC analysis}
 
-A full ROC analysis with $c$ classes would need a space of $c(c-1)$ dimensions. In practice
+A full ROC analysis\index{ROC analysis} with $c$ classes would need a space of $c(c-1)$ dimensions. In practice
 the AUC is extended by averaging binary AUCs:
 \begin{itemize}
   \item \emph{one-versus-rest}: one AUC per class against all the others, averaged either
         uniformly or weighted by the prior class distribution;
-  \item \emph{one-versus-one}: the measure $M$ of \citet{hand2001simple} averages over all
+  \item \emph{one-versus-one\index{one-versus-one|textbf}}: the measure $M$ of \citet{hand2001simple} averages over all
         pairs of classes,
         \begin{equation*}
           M=\frac{2}{c(c-1)}\sum_{j<k}\hat A(j,k),\qquad
@@ -1175,13 +1175,13 @@ In scikit-learn, these variants are selected with the arguments \code{multi_clas
 
 \subsection{Cumulative gains and lift charts}
 
-In marketing and customer relationship management (Unit~7) a model is used to rank customers,
-and only the top-ranked fraction is contacted. The \emph{cumulative gains chart} plots the
-fraction of all the positives (for instance, responders to a campaign) found among the top
-$q$ fraction of the ranking, and the \emph{lift} is the ratio between that fraction and $q$,
+In marketing and customer relationship management\index{customer relationship management (CRM)} (Unit~7) a model is used to rank customers,
+and only the top-ranked fraction is contacted. The \emph{cumulative gains\index{cumulative gains chart|textbf} chart} plots the
+fraction of all the positives (for instance, responders to a campaign\index{mailing campaign}) found among the top
+$q$ fraction of the ranking, and the \emph{lift\index{lift|textbf}} is the ratio between that fraction and $q$,
 i.e.\ how many times better than random targeting the model is. In the example of
 \cref{fig:gains}, with 5\% of responders, contacting the top 20\% of customers reaches 76\% of
-the responders, a lift of 3.78. The gains chart is closely related to the ROC curve: its
+the responders, a lift of 3.78. The gains chart is closely related to the ROC curve\index{ROC curve}: its
 horizontal axis is the fraction of examples predicted positive,
 $\pi_+\TPR+\pi_-\FPR$, which is close to the $\FPR$ when positives are rare.
 
@@ -1210,22 +1210,22 @@ below compare the predicted probabilities with the observed outcomes. In binary 
 
 \subsection{Absolute error, Brier score and logarithmic loss}
 
-The \emph{mean absolute error} measures how much the predicted probabilities deviate from the
+The \emph{mean absolute error\index{mean absolute error (MAE)|textbf}} measures how much the predicted probabilities deviate from the
 observed one-hot outcomes,
 \begin{equation}
   \mathrm{MAE}=\frac{1}{n\,c}\sum_{j=1}^{c}\sum_{i=1}^{n}\bigl|f(i,j)-p(i,j)\bigr|.
 \end{equation}
-The \emph{mean squared error} is its quadratic version, which penalises strong deviations
+The \emph{mean squared error\index{mean squared error (MSE)|textbf}} is its quadratic version, which penalises strong deviations
 much more:
 \begin{equation}
   \mathrm{MSE}=\frac{1}{n\,c}\sum_{j=1}^{c}\sum_{i=1}^{n}\bigl(f(i,j)-p(i,j)\bigr)^2.
 \end{equation}
 For binary problems the two terms of the inner sum are equal and the MSE reduces to the
-\emph{Brier score} \citep{brier1950verification},
+\emph{Brier score\index{Brier score|textbf}} \citep{brier1950verification},
 $\mathrm{BS}=\frac1n\sum_i(y_i-\hat p_i)^2$.\footnote{Brier's original multiclass definition
 sums over the classes without dividing by $c$, so it ranges from 0 to 2. Always check which
 normalisation a library uses.}
-Finally, the \emph{logarithmic loss} (or cross-entropy) measures the probability assigned to
+Finally, the \emph{logarithmic loss\index{log loss|textbf}} (or cross-entropy) measures the probability assigned to
 the actual class:
 \begin{equation}
   \mathrm{LogLoss}=-\frac1n\sum_{i=1}^{n}\sum_{j=1}^{c}f(i,j)\log p(i,j)
@@ -1248,11 +1248,11 @@ Actual class & $+$ & $-$ & $+$ & $+$ & $-$\\
 \end{tabular}
 \end{center}
 \begin{itemize}
-  \item \emph{ROC curve and AUC.} With $P=3$ and $N=2$ the curve goes
+  \item \emph{ROC curve\index{ROC curve|textbf} and AUC\index{area under the ROC curve (AUC)|textbf}.} With $P=3$ and $N=2$ the curve goes
         $(0,0)\to(0,\tfrac13)\to(\tfrac12,\tfrac13)\to(\tfrac12,\tfrac23)\to(\tfrac12,1)\to(1,1)$,
         and its area is $\tfrac12\cdot\tfrac13+\tfrac12\cdot1=\tfrac23$. Counting pairs gives the
         same result: of the $3\times2=6$ positive--negative pairs, four are correctly ordered.
-  \item \emph{Accuracy} with threshold 0.5: only the second example is misclassified, 0.80.
+  \item \emph{Accuracy\index{accuracy|textbf}} with threshold 0.5: only the second example is misclassified, 0.80.
   \item \emph{Brier score}:
         $(0.2^2+0.7^2+0.4^2+0.45^2+0.4^2)/5=1.0525/5=0.2105$.
 \end{itemize}
@@ -1284,19 +1284,19 @@ Which of these metrics actually rewards good probabilities? A \emph{scoring rule
 assigns a loss to the prediction $p$ when the outcome is $y$. It is \emph{proper} if, whenever
 the true probability of the event is $q$, the expected loss $\E_{Y\sim q}[S(p,Y)]$ is minimised
 by predicting $p=q$, and \emph{strictly proper} if $q$ is the only minimiser
-\citep{gneiting2007strictly}. In other words, a proper scoring rule never rewards a model for
+\citep{gneiting2007strictly}. In other words, a proper scoring rule\index{proper scoring rule} never rewards a model for
 reporting something different from what it believes. For a binary event:
 \begin{itemize}
-  \item Brier score: $\E[S]=q(1-p)^2+(1-q)p^2$, whose derivative $2(p-q)$ vanishes at $p=q$:
+  \item Brier score\index{Brier score}: $\E[S]=q(1-p)^2+(1-q)p^2$, whose derivative $2(p-q)$ vanishes at $p=q$:
         strictly proper;
-  \item log loss: $\E[S]=-q\log p-(1-q)\log(1-p)$, whose derivative $-q/p+(1-q)/(1-p)$ vanishes
+  \item log loss\index{log loss}: $\E[S]=-q\log p-(1-q)\log(1-p)$, whose derivative $-q/p+(1-q)/(1-p)$ vanishes
         at $p=q$: strictly proper;
   \item absolute error: $\E[S]=q(1-p)+(1-q)p=q+p(1-2q)$, which is \emph{linear} in $p$ and is
         minimised by $p=1$ if $q>1/2$ and by $p=0$ if $q<1/2$: \emph{not} proper.
 \end{itemize}
 
 \begin{keyidea}
-The MAE of probabilities rewards overconfidence: a model that rounds its probabilities to 0
+The MAE\index{mean absolute error (MAE)} of probabilities rewards overconfidence: a model that rounds its probabilities to 0
 or 1 obtains a better expected MAE than an honest one. Use the Brier score or the log loss to
 judge probabilities. Both are strictly proper and, as we will see, they reward both
 calibration and discrimination.
@@ -1332,15 +1332,15 @@ management, recommender systems, fraud detection.\\
 Consider two binary classifiers $M_1$ and $M_2$ and a test set $T$. Each of the following
 situations can happen, as \cref{lst:disagree} verifies:
 \begin{enumerate}[label=(\alph*)]
-  \item \emph{MAE prefers $M_1$, MSE prefers $M_2$.} Two positive examples. $M_1$ predicts
+  \item \emph{MAE\index{mean absolute error (MAE)|textbf} prefers $M_1$, MSE\index{mean squared error (MSE)|textbf} prefers $M_2$.} Two positive examples. $M_1$ predicts
         $(1.0, 0.2)$: one perfect and one bad prediction (MAE 0.40, MSE 0.32). $M_2$ predicts
         $(0.55,0.55)$: two mediocre predictions (MAE 0.45, MSE 0.20). The squared error
         punishes the single large error of $M_1$.
-  \item \emph{Accuracy prefers $M_1$, MAE prefers $M_2$.} Actual classes $(+,+,-,-)$. $M_1$
+  \item \emph{Accuracy\index{accuracy|textbf} prefers $M_1$, MAE prefers $M_2$.} Actual classes $(+,+,-,-)$. $M_1$
         predicts $(0.51,0.51,0.49,0.49)$: all correct at threshold 0.5, but barely (accuracy
         1, MAE 0.49). $M_2$ predicts $(0.99,0.99,0.01,0.60)$: confident and almost always
         right (accuracy 0.75, MAE 0.16).
-  \item \emph{Accuracy prefers $M_1$, AUC prefers $M_2$.} Same actual classes. $M_1$ predicts
+  \item \emph{Accuracy prefers $M_1$, AUC\index{area under the ROC curve (AUC)|textbf} prefers $M_2$.} Same actual classes. $M_1$ predicts
         $(0.90,0.40,0.30,0.45)$: accuracy 0.75, AUC 0.75. $M_2$ predicts $(0.90,0.80,0.70,0.60)$:
         a perfect ranking (AUC 1) with a bad threshold, since everything is predicted
         positive (accuracy 0.5).
@@ -1378,18 +1378,18 @@ print(f"(c) Acc: {acc(y, m1):.2f} vs {acc(y, m2):.2f} | "    # (c) accuracy vs. 
 
 \subsection{What is a calibrated model?}
 
-A binary probabilistic classifier is \emph{well calibrated} if, among the examples that receive
+A binary probabilistic classifier is \emph{well calibrated\index{calibration|textbf}} if, among the examples that receive
 a predicted probability $p$, the proportion of positives is approximately $p$:
 \begin{equation}
   P\bigl(Y=1\mid\hat p(X)=p\bigr)=p\qquad\text{for all }p.
 \end{equation}
 A calibrated weather forecaster is one for whom it rains on about 70\% of the days with a 70\%
 forecast. Calibration is different from discrimination (ranking quality). A model that always
-predicts the prevalence is perfectly calibrated but without discrimination (it can still be a useful
+predicts the prevalence\index{prevalence} is perfectly calibrated but without discrimination (it can still be a useful
 reference); a model that ranks perfectly can
 be badly calibrated, since any increasing transformation of its scores keeps its AUC. Good
-probabilistic models need both properties, and proper scoring rules reward both: the Brier
-score decomposes into a calibration term and a refinement term
+probabilistic models need both properties, and proper scoring rules\index{proper scoring rule} reward both: the Brier
+score\index{Brier score} decomposes into a calibration term and a refinement term
 \citep{degroot1983comparison}.
 
 Not all learning methods produce calibrated probabilities. Naive Bayes is a clear example: its
@@ -1401,13 +1401,13 @@ overconfident \citep{niculescu2005predicting,guo2017calibration}. As we will see
 
 \subsection{Reliability diagrams}
 
-A \emph{reliability diagram} (or calibration plot) groups the test examples into bins of
+A \emph{reliability diagram\index{calibration!reliability diagram|textbf}} (or calibration plot) groups the test examples into bins of
 predicted probability and plots, for each bin, the mean predicted probability against the
 observed fraction of positives. A calibrated model follows the diagonal. A histogram of the
 predicted probabilities, shown alongside, tells how many examples support each point.
 
 \Cref{fig:reliability} compares four models trained on the same data. Logistic regression,
-which directly optimises the log loss, is close to the diagonal. Naive Bayes concentrates its
+which directly optimises the log loss\index{log loss}, is close to the diagonal. Naive Bayes concentrates its
 probabilities near 0 and 1 and is \emph{overconfident}: when it predicts 0.9, the observed
 frequency is much lower. The SVM, whose decision values have been naively rescaled to $[0,1]$,
 is \emph{underconfident}: its outputs cluster around 0.5 while the actual frequencies are much
@@ -1427,7 +1427,7 @@ models trained on 1000 examples and tested on 99,000.}
 Most calibration measures segment the test examples into bins and estimate the local
 calibration error in each bin:
 \begin{itemize}
-  \item the \emph{expected calibration error} \citep{naeini2015obtaining} averages the
+  \item the \emph{expected calibration\index{calibration|textbf} error\index{calibration!expected calibration error|textbf}} \citep{naeini2015obtaining} averages the
         calibration gaps of $B$ bins, weighted by their sizes:
         \begin{equation}
           \mathrm{ECE}=\sum_{b=1}^{B}\frac{|S_b|}{n}\,\bigl|\bar y_b-\bar p_b\bigr|,
@@ -1435,17 +1435,17 @@ calibration error in each bin:
         where $\bar y_b$ and $\bar p_b$ are the fraction of positives and the mean predicted
         probability in bin $b$. The \emph{maximum calibration error} (MCE) takes the maximum
         gap instead. In the example of \cref{fig:reliability}, the ECE is 0.020 for logistic
-        regression, 0.107 for naive Bayes, 0.203 for the rescaled SVM and 0.023 for the
+        regression, 0.107 for naive Bayes\index{naive Bayes}, 0.203 for the rescaled SVM and 0.023 for the
         random forest. ECE depends on the number and type (equal width or equal frequency) of
         bins and is biased for small samples;
-  \item \emph{CalBin} uses overlapping bins: the examples are sorted by predicted probability,
+  \item \emph{CalBin\index{calibration!CalBin and CalLoss|textbf}} uses overlapping bins: the examples are sorted by predicted probability,
         a sliding window of consecutive examples (for instance 100) moves along the ranking,
         and the absolute differences between the mean probability and the fraction of
         positives in each window are averaged, as in the CAL measure of \citet{caruana2004data};
         other versions average the deviation of each individual prediction from the fraction of
         positives of its window \citep{ferri2009experimental}, so the variant used must be stated;
-  \item \emph{CalLoss} derives the bins from the segments of the ROC convex hull, which
-        coincide with the blocks produced by isotonic regression
+  \item \emph{CalLoss} derives the bins from the segments of the ROC convex hull\index{ROC convex hull}, which
+        coincide with the blocks produced by isotonic regression\index{calibration!isotonic regression}
         \citep{fawcett2007pav}. The slope $m$ of a segment is a likelihood ratio, not a probability: with
         a proportion $\pi$ of positives, the empirical probability of the positive class in the
         segment is $m\pi/(m\pi+1-\pi)$ (for instance $2/3$ for $m=2$ and balanced classes). The
@@ -1454,9 +1454,9 @@ calibration error in each bin:
         probabilities instead of hull segments, so here too the variant must be stated. A measure
         computed on evaluation data is a diagnostic; a calibrator to deploy must be fitted on
         separate calibration data;
-  \item the MSE and the log loss also measure calibration, mixed with discrimination. For
+  \item the MSE\index{mean squared error (MSE)} and the log loss\index{log loss} also measure calibration, mixed with discrimination. For
         forecasts that take $K$ distinct values $p_k$ ($n_k$ examples each, with a fraction
-        $\bar y_k$ of positives, and an overall fraction $\bar y$), the Brier score decomposes
+        $\bar y_k$ of positives, and an overall fraction $\bar y$), the Brier score\index{Brier score} decomposes
         exactly \citep{murphy1973new} as
         \begin{equation}\label{eq:murphy}
           \mathrm{BS}=\underbrace{\frac1n\sum_k n_k(p_k-\bar y_k)^2}_{\text{reliability}}
@@ -1479,26 +1479,26 @@ calibrator must not have been used to train the classifier, because scores on tr
 are optimistic; scikit-learn's \code{CalibratedClassifierCV} handles this with an internal
 cross-validation. The most common calibrators are:
 \begin{itemize}
-  \item \emph{Platt scaling} \citep{platt1999probabilistic}: a logistic regression on the
+  \item \emph{Platt scaling\index{calibration!Platt scaling|textbf}} \citep{platt1999probabilistic}: a logistic regression on the
         score $s$, $\hat p=1/\bigl(1+\exp(As+B)\bigr)$, with $A$ and $B$ fitted by maximum
         likelihood. It has only two parameters, needs little data and corrects
         sigmoid-shaped distortions such as those of SVMs;
-  \item \emph{isotonic regression} \citep{zadrozny2002transforming}: fits a non-parametric,
+  \item \emph{isotonic regression\index{calibration!isotonic regression|textbf}} \citep{zadrozny2002transforming}: fits a non-parametric,
         non-decreasing step function with the pool-adjacent-violators (PAV) algorithm. It can
         correct any monotone distortion but needs more data, since it can overfit small
-        calibration sets. It is equivalent to calibrating with the ROC convex hull
+        calibration sets. It is equivalent to calibrating with the ROC convex hull\index{ROC convex hull}
         \citep{fawcett2007pav};
   \item \emph{temperature scaling} \citep{guo2017calibration}: for multiclass neural networks,
-        divides the logits $z$ by a single parameter $T>0$ fitted on validation data,
+        divides the logits $z$ by a single parameter $T>0$ fitted on validation data\index{validation set},
         $\hat p=\operatorname{softmax}(z/T)$. It does not change the predicted class, so the
         accuracy is unchanged;
-  \item \emph{beta calibration} \citep{kull2017beta}: a three-parameter family that contains
+  \item \emph{beta calibration\index{calibration|textbf}} \citep{kull2017beta}: a three-parameter family that contains
         the identity map, designed for scores that are already in $[0,1]$.
 \end{itemize}
 
 \Cref{fig:calibmethods} calibrates an SVM like that of \cref{fig:reliability}, trained on a different sample: Platt scaling reduces
-the ECE from 0.285 to 0.032 and isotonic regression to 0.007. \Cref{lst:calibration} does the
-same for naive Bayes and reports the three probabilistic metrics: the log loss falls from 1.15
+the ECE\index{calibration!expected calibration error} from 0.285 to 0.032 and isotonic regression to 0.007. \Cref{lst:calibration} does the
+same for naive Bayes\index{naive Bayes} and reports the three probabilistic metrics: the log loss\index{log loss} falls from 1.15
 to 0.28, mostly because the overconfident mistakes disappear. A strictly increasing
 calibrator applied to a fixed score preserves the ranking and the AUC. Isotonic regression can
 introduce ties, and when, as in the listing, the calibrated probabilities of models fitted on
@@ -1548,13 +1548,13 @@ NB + isotonic  Brier=0.0849  LogLoss=0.2809  ECE=0.0068
 \section{Imbalanced classification}\label{sec:imbalance}
 
 In many important problems one class is rare: fraud, diseases, machine failures, customers
-who respond to a campaign. Imbalance affects both evaluation and learning.
+who respond to a campaign\index{mailing campaign}. Imbalance\index{class imbalance} affects both evaluation and learning.
 
 \subsection{Why accuracy fails}
 
 \begin{example}{Detecting a rare event}{valves}
 A plant monitors 100,000 safety valves, of which 500 (0.5\%) are faulty (\emph{open}) and must
-be inspected; the rest are \emph{closed}. Three classifiers produce these confusion matrices
+be inspected; the rest are \emph{closed}. Three classifiers produce these confusion matrices\index{confusion matrix}
 (rows: predicted; columns: actual):
 \begin{center}\small
 \begin{tabular}{@{}lcc@{\qquad}lcc@{\qquad}lcc@{}}
@@ -1573,12 +1573,12 @@ Their metrics are:
 & $c_1$ & $c_2$ & $c_3$\\
 \midrule
 Error & 0.70\% & \textbf{0.50\%} & 5.50\%\\
-TPR / TNR & 60.0\% / 99.5\% & 0.0\% / 100\% & 80.0\% / 94.6\%\\
-PPV / NPV & 37.5\% / 99.8\% & undefined / 99.5\% & 6.9\% / 99.9\%\\
-Balanced accuracy & 79.8\% & 50.0\% & \textbf{87.3\%}\\
+TPR\index{true positive rate} / TNR & 60.0\% / 99.5\% & 0.0\% / 100\% & 80.0\% / 94.6\%\\
+PPV\index{predictive value!positive} / NPV\index{predictive value!negative} & 37.5\% / 99.8\% & undefined / 99.5\% & 6.9\% / 99.9\%\\
+Balanced accuracy\index{balanced accuracy} & 79.8\% & 50.0\% & \textbf{87.3\%}\\
 G-mean & 0.773 & 0 & \textbf{0.870}\\
 $F_1$ & \textbf{0.462} & 0 & 0.127\\
-MCC & \textbf{0.471} & 0 & 0.225\\
+MCC\index{Matthews correlation coefficient} & \textbf{0.471} & 0 & 0.225\\
 Kappa & \textbf{0.458} & 0 & 0.119\\
 \bottomrule
 \end{tabular}
@@ -1592,23 +1592,23 @@ consequences of each type of error can. We will come back to this example in
 \end{example}
 
 \begin{keyidea}
-When classes are imbalanced, avoid metrics centred only on counting mistakes (accuracy,
+When classes are imbalanced\index{class imbalance}, avoid metrics centred only on counting mistakes (accuracy,
 error): the trivial majority classifier is hard to beat on them. Recommended alternatives are
-the AUC and the average precision for rankings, and the $F_1$ score, balanced accuracy,
+the AUC and the average precision\index{average precision} for rankings, and the $F_1$ score, balanced accuracy,
 G-mean and MCC for crisp decisions, ideally complemented by an explicit cost analysis.
 \end{keyidea}
 
 \subsection{Precision--recall analysis}
 
-The \emph{precision--recall} (PR) curve plots precision against recall for all thresholds, and
-the \emph{average precision} (AP) summarises it as a step-wise area,
+The \emph{precision\index{precision|textbf}--recall\index{recall|textbf}} (PR) curve plots precision against recall for all thresholds, and
+the \emph{average precision\index{average precision|textbf}} (AP) summarises it as a step-wise area,
 $\mathrm{AP}=\sum_k(R_k-R_{k-1})P_k$, where $P_k$ and $R_k$ are the precision and recall at the
-$k$-th threshold. Unlike the ROC curve, the PR curve depends on the class distribution: the
-precision of a random classifier equals the prevalence. This is exactly why it is informative
+$k$-th threshold. Unlike the ROC curve\index{ROC curve}, the PR curve depends on the class distribution: the
+precision of a random classifier equals the prevalence\index{prevalence}. This is exactly why it is informative
 with rare positives \citep{saito2015precision}. In \cref{fig:prvsroc} the same score
 distributions are evaluated with 50\% and 2\% of positives. The ROC curves are almost
 identical (AUC 0.857 and 0.862), but the average precision drops from 0.855 to 0.213: with
-many negatives, even a small false positive rate produces many false alarms, and most positive
+many negatives, even a small false positive rate\index{false positive rate} produces many false alarms, and most positive
 predictions are wrong. The ROC curve hides this; the PR curve shows it.
 
 \begin{figure}[htbp]
@@ -1620,7 +1620,7 @@ the precision of a random classifier (the prevalence).}
 \label{fig:prvsroc}
 \end{figure}
 
-\citet{davis2006relationship} proved that a curve dominates another in ROC space if and only
+\citet{davis2006relationship} proved that a curve dominates another in ROC space\index{ROC space} if and only
 if it dominates it in PR space, but that linear interpolation between points, valid in ROC
 space, is not valid in PR space. This is why AP is computed as a step-wise sum rather than
 with the trapezoidal rule.
@@ -1630,9 +1630,9 @@ with the trapezoidal rule.
 Many learning methods minimise the number of mistakes, and the learned models may simply
 ignore the minority class \citep{japkowicz2002class,he2009learning}. The main remedies are:
 \begin{itemize}
-  \item \emph{undersampling} the majority class, which is fast but removes useful
+  \item \emph{undersampling\index{undersampling|textbf}} the majority class, which is fast but removes useful
         information;
-  \item \emph{oversampling} the minority class by replication, which creates redundant
+  \item \emph{oversampling\index{oversampling|textbf}} the minority class by replication, which creates redundant
         examples and encourages overfitting;
   \item \emph{learning with costs or weights}, which minimises the (weighted) cost instead of
         the number of errors; in scikit-learn, \code{class_weight="balanced"} weights each
@@ -1640,14 +1640,14 @@ ignore the minority class \citep{japkowicz2002class,he2009learning}. The main re
   \item \emph{synthetic oversampling}, which creates new minority examples.
 \end{itemize}
 
-The best known synthetic method is SMOTE, the Synthetic Minority Oversampling Technique
+The best known synthetic method is SMOTE\index{SMOTE}, the Synthetic Minority Oversampling Technique
 \citep{chawla2002smote}. To create each synthetic example, SMOTE chooses a random minority
-example, finds its $k$ (usually 5) nearest neighbours of the same class, picks one of them at
+example, finds its $k$ (usually 5) nearest neighbours\index{k-nearest neighbours@$k$-nearest neighbours} of the same class, picks one of them at
 random and creates a new example at a random point of the segment that joins the two
 (\cref{fig:smote}). The core of the algorithm takes a few lines (\cref{lst:smote}).
 Variants concentrate the new examples where they are most useful: Borderline-SMOTE near the
 class boundary \citep{han2005borderline} and ADASYN where the minority class is harder to learn
-\citep{he2008adasyn}. ROSE \citep{menardi2014training} uses a \emph{smoothed bootstrap}
+\citep{he2008adasyn}. ROSE \citep{menardi2014training} uses a \emph{smoothed bootstrap\index{bootstrap|textbf}}
 instead: it draws an example (choosing each class with equal probability) and generates a new
 one from a kernel density centred on it, that is, from its neighbourhood.
 
@@ -1678,17 +1678,17 @@ def smote(X_min, n_new, k=5, seed=0):
 \begin{pitfall}
 Resample only the training data. If SMOTE or any other resampling is applied before splitting
 the data or before cross-validation, synthetic copies of test examples end up in the training
-set and the evaluation is optimistic. The \code{Pipeline} of \textsf{imbalanced-learn}
+set and the evaluation is optimistic. The \code{Pipeline} of \textsf{imbalanced\index{class imbalance}-learn}
 \citep{lemaitre2017imbalanced} applies the resampling only when fitting, inside each fold.
 \end{pitfall}
 
 \subsection{What rebalancing really does}
 
-\Cref{lst:imbalance} compares, with 5-fold CV on a problem with about 3.5\% of positives (3\% before the label noise
+\Cref{lst:imbalance} compares, with 5-fold CV on a problem with about 3.5\% of positives (3\% before the label noise\index{label noise}
 of the generator), a plain
-logistic regression, a class-weighted one and SMOTE followed by logistic regression. Rebalancing
-increases the balanced accuracy (from 0.60 to about 0.70) but \emph{decreases} the $F_1$ score
-(from 0.33 to 0.15), slightly decreases the average precision, and multiplies the Brier score
+logistic regression, a class-weighted one and SMOTE\index{SMOTE} followed by logistic regression. Rebalancing
+increases the balanced accuracy\index{balanced accuracy} (from 0.60 to about 0.70) but \emph{decreases} the $F_1$ score
+(from 0.33 to 0.15), slightly decreases the average precision\index{average precision}, and multiplies the Brier score\index{Brier score}
 by seven.
 
 \begin{pylisting}[label={lst:imbalance}]{Effect of class weights and SMOTE on four metrics}
@@ -1718,14 +1718,14 @@ weighted LR BA=0.697 F1=0.150 AP=0.377 Brier=0.1800
 SMOTE + LR  BA=0.694 F1=0.148 AP=0.373 Brier=0.1771
 \end{pyoutput}
 
-In this experiment, rebalancing acts mostly like \emph{moving the decision threshold}: the
+In this experiment, rebalancing acts mostly like \emph{moving the decision threshold\index{threshold|textbf}}: the
 rebalanced model predicts many more positives (more true positives and many more false
 positives) without ranking the examples better. This is common but not guaranteed: changing the
 weights or the sample also changes the fitted model, and with it the ranking, in ways that depend
 on the learner and on the sampling method. And because the model has learned that positives are as
 frequent as negatives, its probabilities no longer describe the original population. Under pure
-prior shift, when the class-conditional distributions do not change, the probabilities of a model
-trained with a prevalence $\pi'$ can be corrected for a population with prevalence $\pi$ (random
+prior shift\index{label shift}, when the class-conditional distributions do not change, the probabilities of a model
+trained with a prevalence\index{prevalence} $\pi'$ can be corrected for a population with prevalence $\pi$ (random
 sampling of whole classes approximates this situation; after SMOTE or other feature-dependent
 sampling, recalibrate on data representative of deployment instead)
 \citep{saerens2002adjusting,elkan2001foundations}:
@@ -1734,7 +1734,7 @@ sampling, recalibrate on data representative of deployment instead)
 \end{equation}
 For example, a model trained on balanced data ($\pi'=0.5$) that outputs $\hat p'=0.5$ for a
 case from a population with $\pi=0.03$ corresponds to $\hat p=0.03$. In clinical risk
-prediction, \citet{vandengoorbergh2022harm} showed that imbalance corrections worsened the
+prediction, \citet{vandengoorbergh2022harm} showed that imbalance\index{class imbalance} corrections worsened the
 calibration of logistic regression models without improving their discrimination.
 
 \begin{keyidea}
@@ -1753,9 +1753,9 @@ Not all mistakes have the same consequences. In COVID-19 detection a false negat
 infected person sent home) is much worse than a false positive (an unnecessary quarantine). In
 credit granting, if the positive class is ``grant the loan'', a false positive (lending to
 someone who will not pay back) usually costs much more than a false negative (losing the
-margin of a good customer). A \emph{cost matrix} $C$ states the cost of every possible
+margin of a good customer). A \emph{cost matrix\index{cost matrix|textbf}} $C$ states the cost of every possible
 decision: $C(i,j)$ is the cost of predicting class $i$ when the actual class is $j$. It has the
-same layout as the confusion matrix $M$, and the total cost of a classifier on a test set is
+same layout as the confusion matrix\index{confusion matrix} $M$, and the total cost of a classifier on a test set is
 \begin{equation}
   \text{Cost}=\sum_{i=1}^{c}\sum_{j=1}^{c}C(i,j)\,M(i,j).
 \end{equation}
@@ -1795,11 +1795,11 @@ Returning to the valves of \cref{ex:valves}, suppose that an unnecessary inspect
 100\EUR{} and an undetected faulty valve costs 2000\EUR. The total costs are
 $500\cdot100+200\cdot2000=450{,}000$\EUR{} for $c_1$, $500\cdot2000=1{,}000{,}000$\EUR{} for
 $c_2$ and $5400\cdot100+100\cdot2000=740{,}000$\EUR{} for $c_3$. Classifier $c_1$ is the best
-choice, and $c_3$, preferred by balanced accuracy, costs 64\% more.
+choice, and $c_3$, preferred by balanced accuracy\index{balanced accuracy}, costs 64\% more.
 
 \subsection{Optimal decisions from probabilities}
 
-If a model provides calibrated probabilities $p(j\mid x)$, the expected cost of predicting
+If a model provides calibrated probabilities $p(j\mid x)$, the expected cost\index{expected cost} of predicting
 class $i$ for example $x$ is $\sum_j p(j\mid x)\,C(i,j)$, and the optimal decision is the class
 with the lowest expected cost. With two classes and costs $c_{ij}$ (predicted $i$, actual $j$,
 with 1 the positive class), predicting positive is optimal when
@@ -1856,7 +1856,7 @@ dots: empirical minimum.}
 \label{fig:costthreshold}
 \end{figure}
 
-The same reasoning applies to more classes. With the cost matrix of \cref{ex:cost3} and a case
+The same reasoning applies to more classes. With the cost matrix\index{cost matrix} of \cref{ex:cost3} and a case
 with probabilities $(0.5, 0.3, 0.2)$ for \emph{low}, \emph{medium} and \emph{high}, the expected
 costs are $0\cdot0.5+5\cdot0.3+2\cdot0.2=1.9$\EUR{} for predicting \emph{low},
 $200\cdot0.5-2000\cdot0.3+10\cdot0.2=-498$\EUR{} for \emph{medium} and
@@ -1865,19 +1865,19 @@ $10\cdot0.5+1\cdot0.3-15\cdot0.2=2.3$\EUR{} for \emph{high}: the best decision i
 
 \subsection{Cost curves}
 
-ROC space shows costs only indirectly, through the slopes of the iso-performance lines.
-\emph{Cost curves} \citep{drummond2006cost} show them directly. The horizontal axis is the
+ROC space\index{ROC space} shows costs only indirectly, through the slopes of the iso-performance lines.
+\emph{Cost curves\index{cost curve|textbf}} \citep{drummond2006cost} show them directly. The horizontal axis is the
 \emph{probability cost}
 \begin{equation}
   PC(+)=\frac{\pi_+\,c_{\mathrm{FN}}}{\pi_+\,c_{\mathrm{FN}}+\pi_-\,c_{\mathrm{FP}}}\in[0,1],
 \end{equation}
-which summarises the operating condition (class distribution and costs) in a single number,
-and the vertical axis is the \emph{normalised expected cost}
+which summarises the operating condition\index{operating point} (class distribution and costs) in a single number,
+and the vertical axis is the \emph{normalised expected cost\index{expected cost|textbf}}
 $\mathrm{NEC}=\FNR\cdot PC(+)+\FPR\cdot\bigl(1-PC(+)\bigr)$. Each classifier becomes a straight
 line from $(0,\FPR)$ to $(1,\FNR)$; AlwaysNeg is the line $\mathrm{NEC}=PC(+)$ and AlwaysPos
 the line $\mathrm{NEC}=1-PC(+)$. The lower envelope of all the lines gives the best achievable
 cost for every operating condition, and it is the exact counterpart (the dual) of the ROC
-convex hull: points of ROC space become lines, and vertices of the hull become segments of the
+convex hull\index{ROC convex hull}: points of ROC space become lines, and vertices of the hull become segments of the
 envelope. \Cref{fig:costcurves} shows the five classifiers of \cref{ex:rochull}: we can read
 directly the range of conditions in which each classifier is optimal and by how much it
 improves on the others.
@@ -1894,7 +1894,7 @@ envelope, which corresponds to the ROC convex hull of \cref{fig:rochull}.}
 
 There are four main ways of making a learning process sensitive to costs:
 \begin{enumerate}
-  \item \emph{Expected cost minimisation (thresholding).} Train an ordinary probabilistic
+  \item \emph{Expected cost\index{expected cost|textbf} minimisation (thresholding).} Train an ordinary probabilistic
         model, calibrate it if needed, and predict the class of minimum expected cost
         (\cref{eq:tstar}). It is simple, it works with any probabilistic model, and the
         costs can be changed after training.
@@ -1906,7 +1906,7 @@ There are four main ways of making a learning process sensitive to costs:
   \item \emph{Weighting.} Give each training example a weight proportional to the cost of
         misclassifying it \citep{zadrozny2003cost}. Most scikit-learn estimators accept
         \code{class_weight} or \code{sample_weight} for this purpose.
-  \item \emph{Cost-sensitive algorithms.} MetaCost \citep{domingos1999metacost} estimates the
+  \item \emph{Cost-sensitive\index{cost-sensitive learning|textbf} algorithms.} MetaCost\index{MetaCost} \citep{domingos1999metacost} estimates the
         class probabilities of the training examples with a bagged ensemble, relabels each
         training example with the class of minimum expected cost and retrains the base
         learner on the relabelled data, producing a single cost-sensitive model of the
@@ -1923,12 +1923,12 @@ nine types of cost in inductive learning, among which:
   \item the cost of \emph{tests}: obtaining the value of an attribute may require a laboratory
         analysis, a sensor or a questionnaire;
   \item the cost of the \emph{teacher}: labelling examples requires experts, which motivates
-        active and semi-supervised learning;
+        active and semi-supervised\index{semi-supervised learning} learning;
   \item the cost of \emph{computation}: training and prediction time, memory and energy, which
         matter at deployment time (Unit~5);
   \item the cost of \emph{cases}: collecting data;
   \item the cost of \emph{instability}: models that change substantially when the data change
-        slightly are hard to trust and to maintain, which is closely related to concept drift
+        slightly are hard to trust and to maintain, which is closely related to concept drift\index{concept drift}
         and to the need to update models (Unit~6).
 \end{itemize}
 
@@ -1936,9 +1936,9 @@ nine types of cost in inductive learning, among which:
 
 Knowing the exact value of some features has a cost. To diagnose a heart condition, the age of
 the patient is free, the blood pressure is cheap and the cholesterol level requires a blood test.
-When tests are costly, we want models that minimise the expected test cost while keeping their
+When tests are costly, we want models that minimise the expected test cost\index{test costs} while keeping their
 predictive performance. A model that needs every feature for every case, as most ensembles and
-neural networks do, pays the full cost every time. A decision tree only asks for the tests on
+neural networks do, pays the full cost every time. A decision tree\index{decision tree} only asks for the tests on
 the path followed by each case, and it can be induced to prefer cheap tests near the root
 \citep{nunez1991use,turney1995cost}. For example, if a tree asks for the free attribute first,
 for the blood pressure (5\EUR) in 60\% of the cases and for the cholesterol (40\EUR) in 20\%,
@@ -1951,7 +1951,7 @@ misclassification cost and the expected test cost together.
 In some domains the cost of an error is not constant but varies from example to example.
 \citet{elkan2001foundations} gives the example of credit card transactions, where $x$ is the
 amount of the transaction. Here it is more convenient to use a \emph{benefit} matrix $B$ rather than a cost
-matrix: positive entries are gains and negative entries losses, and the optimal decision maximises the
+matrix\index{cost matrix}: positive entries are gains and negative entries losses, and the optimal decision maximises the
 expected benefit (equivalently, it minimises the costs $C=-B$):
 \begin{center}\small
 \begin{tabular}{@{}lcc@{}}
@@ -2011,16 +2011,16 @@ Given a set $S$ of $n$ examples:
   \mathrm{MSE}&=\frac1n\sum_{i=1}^n(y_i-\hat y_i)^2, &
   \mathrm{RMSE}&=\sqrt{\mathrm{MSE}}.
 \end{align}
-In the example, the \emph{mean absolute error} is $70/10=7.0$, the \emph{mean squared error}
-$744/10=74.4$ and the \emph{root mean squared error} 8.63 million euros. The RMSE is in the
+In the example, the \emph{mean absolute error\index{mean absolute error (MAE)|textbf}} is $70/10=7.0$, the \emph{mean squared error\index{mean squared error (MSE)|textbf}}
+$744/10=74.4$ and the \emph{root mean squared error\index{root mean squared error (RMSE)|textbf}} 8.63 million euros. The RMSE is in the
 units of the target and is always at least as large as the MAE; the gap between them grows
 with the variability of the errors. The single error of 20 contributes 400 of the 744 squared
 units: squared errors are dominated by the largest mistakes, which is desirable if large
 errors are disproportionately harmful and undesirable if they come from outliers. Other
 useful metrics are:
 \begin{itemize}
-  \item the \emph{median absolute error}, robust to outliers: 6.0 in the example;
-  \item the \emph{mean absolute percentage error},
+  \item the \emph{median absolute error\index{median absolute error|textbf}}, robust to outliers: 6.0 in the example;
+  \item the \emph{mean absolute percentage error\index{mean absolute percentage error|textbf}},
         $\mathrm{MAPE}=\frac1n\sum_i|y_i-\hat y_i|/|y_i|$: 9.0\% in the example. It is
         scale-free and easy to communicate, but it is undefined or explodes when $y_i$ is close
         to zero, and it is asymmetric: for a positive target an under-prediction can never cost
@@ -2040,7 +2040,7 @@ Relative metrics compare the model with the trivial model that always predicts t
 $\bar y$ of the target. The \emph{relative absolute error}
 $\mathrm{RAE}=\sum_i|y_i-\hat y_i|/\sum_i|y_i-\bar y|$ is $70/244.2=0.287$ in the example. A
 value below 1 means that the model is better than the mean, and a value above 1 that it is
-worse: relative errors are not bounded by 1. The \emph{coefficient of determination}
+worse: relative errors are not bounded by 1. The \emph{coefficient of determination\index{coefficient of determination@coefficient of determination ($R^2$)|textbf}}
 \begin{equation}
   R^2=1-\frac{\sum_i(y_i-\hat y_i)^2}{\sum_i(y_i-\bar y)^2}
 \end{equation}
@@ -2090,9 +2090,9 @@ bias = 3.000   (mean of yhat - y)
 
 \subsection{Correlation-based metrics}
 
-The \emph{Pearson correlation} between predictions and actual values,
+The \emph{Pearson\index{Pearson correlation|textbf} correlation} between predictions and actual values,
 $r=\operatorname{cov}(y,\hat y)/(\sigma_y\sigma_{\hat y})$, measures their linear association,
-and the \emph{Spearman correlation}, the Pearson correlation between their ranks, measures any
+and the \emph{Spearman\index{Spearman correlation|textbf} correlation}, the Pearson correlation between their ranks, measures any
 monotone association. Both are invariant to (increasing linear or monotone) transformations of
 the predictions: a model that predicts $\hat y=2y$ has a perfect correlation of 1, but its
 errors are enormous (for $y=1,\dots,5$, $R^2=-4.5$). Correlations are useful to evaluate the
@@ -2100,7 +2100,7 @@ ability of a model to rank or to follow the trend of the target, not its accurac
 
 \subsection{Residual analysis}
 
-Single numbers hide structure. Plots of predicted against actual values and of residuals
+Single numbers hide structure. Plots of predicted against actual values and of residuals\index{residual analysis}
 $y-\hat y$ against predictions (\cref{fig:residuals}) reveal curvature (a missing non-linear
 effect), funnels (errors that grow with the prediction, which makes constant-width
 prediction intervals inadequate; see \cref{sec:other}), outliers and groups of examples where
@@ -2122,7 +2122,7 @@ Consider a supermarket that forecasts the demand of a product. An under-predicti
 \emph{stockout}: lost sales and unhappy customers. An over-prediction leaves surplus stock,
 which costs storage or, for fresh products, is wasted. The two costs are rarely equal, so a
 model ``centred'' on the expected demand is not the best option: the model that minimises the
-MSE predicts the conditional mean, and the one that minimises the MAE predicts the conditional
+MSE\index{mean squared error (MSE)} predicts the conditional mean, and the one that minimises the MAE\index{mean absolute error (MAE)} predicts the conditional
 median, but neither takes the asymmetry into account. \Cref{fig:losses} compares several loss
 functions.
 
@@ -2145,7 +2145,7 @@ $L(-200)=e^{2}-3\approx4.39$, whereas over-predicting it by 200 units costs
 $L(200)=e^{-2}+1\approx1.14$: being short is about four times worse than having a surplus. Note
 that a function such as $1-e^{ae}$ is not a valid loss, since it is negative for errors of one
 sign. With an asymmetric cost function we can select the model with the lowest average cost on
-validation data or, better, train the model to minimise that cost directly.
+validation data\index{validation set} or, better, train the model to minimise that cost directly.
 
 Another important asymmetric loss is the \emph{pinball} (or quantile) loss, with
 $\tau\in(0,1)$,
@@ -2166,7 +2166,7 @@ forecast should target the 75th percentile of the demand, not its mean.
 \begin{keyidea}
 The optimal decision threshold of a classifier, $t^\star=c_{\mathrm{FP}}/(c_{\mathrm{FP}}+c_{\mathrm{FN}})$,
 and the optimal quantile of a regressor, $\tau^\star=c_u/(c_u+c_o)$, have the same structure:
-the costs of the two kinds of error determine the operating point. A good model provides
+the costs of the two kinds of error determine the operating point\index{operating point}. A good model provides
 calibrated probabilities or quantiles; the context decides how to use them.
 \end{keyidea}
 
@@ -2179,31 +2179,31 @@ marks the important values of the target, and a utility function that combines t
 accurate predictions of relevant values with the costs of false alarms and missed events.
 Models are then evaluated, selected and even trained to maximise utility rather than to
 minimise a symmetric error. The cost penalties can also be added to standard regression
-techniques so that they minimise the expected cost directly.
+techniques so that they minimise the expected cost\index{expected cost} directly.
 
 \subsection{Imbalanced regression}
 
 When the values of interest are rare (extreme values of the target), regression suffers from
-the same problem as imbalanced classification: standard losses are dominated by the frequent
+the same problem as imbalanced\index{class imbalance} classification: standard losses are dominated by the frequent
 central values, and the model learns to ignore the extremes \citep{branco2016survey}. The
-preprocessing strategies are analogous to those of classification: undersampling the common
-values and oversampling the rare ones. \emph{SMOTE for regression} (SMOTER) interpolates both
+preprocessing strategies are analogous to those of classification: undersampling\index{undersampling} the common
+values and oversampling\index{oversampling} the rare ones. \emph{SMOTE\index{SMOTE|textbf} for regression} (SMOTER) interpolates both
 the inputs and the target between rare examples \citep{torgo2013smote}, and \emph{SMOGN}
 combines random undersampling with two oversampling strategies, SMOTER and the addition of
 Gaussian noise \citep{branco2017smogn}. Evaluation must then focus on the relevant values, for
 example with errors restricted to them or with utility-based precision and recall, rather than
-on a global MSE.
+on a global MSE\index{mean squared error (MSE)}.
 
 % ---------------------------------------------------------------------
 \section{Other supervised settings}\label{sec:other}
 
 \subsection{Ordinal regression}
 
-In \emph{ordinal regression} (or ordinal classification) the classes have a natural order:
+In \emph{ordinal regression\index{ordinal regression|textbf}} (or ordinal classification) the classes have a natural order:
 low $<$ medium $<$ high, star ratings, stages of a disease. Treating them as nominal classes
 ignores that predicting \emph{high} for a \emph{low} case is worse than predicting
 \emph{medium}; treating them as numbers assumes that consecutive classes are equally far
-apart. Appropriate metrics \citep{gutierrez2016ordinal} include the MAE computed on the ranks
+apart. Appropriate metrics \citep{gutierrez2016ordinal} include the MAE\index{mean absolute error (MAE)} computed on the ranks
 of the classes, $\frac1n\sum_i|r(y_i)-r(\hat y_i)|$; rank correlations; and the
 \emph{weighted kappa} \citep{cohen1968weighted},
 \begin{equation}
@@ -2216,27 +2216,27 @@ more than adjacent ones.
 
 \subsection{Multi-label classification}
 
-In \emph{multi-label} classification each example can have several non-exclusive labels
+In \emph{multi-label\index{multi-label classification|textbf}} classification each example can have several non-exclusive labels
 $Y_i\subseteq\mathcal L$: a news item can be about \emph{sports} and \emph{economy} at the same
 time \citep{tsoumakas2007multi}. Suppose that the possible labels are \emph{sports},
 \emph{politics} and \emph{economy}, that the actual labels of an example are
 $\{$sports, economy$\}$ and that the predicted ones are $\{$sports, politics$\}$. Then:
 \begin{itemize}
-  \item the \emph{subset accuracy} (exact match) is 0, a very strict criterion;
+  \item the \emph{subset accuracy\index{accuracy|textbf}} (exact match) is 0, a very strict criterion;
   \item the \emph{Hamming loss}, the fraction of wrong label decisions,
         $\frac{1}{n|\mathcal L|}\sum_i|Y_i\,\triangle\,\hat Y_i|$, is $2/3$ (\emph{politics}
         wrongly added and \emph{economy} missed);
   \item the example-based \emph{Jaccard index} $|Y_i\cap\hat Y_i|/|Y_i\cup\hat Y_i|$ is $1/3$,
         and the example-based precision, recall and $F_1$ are all $1/2$;
   \item label-based metrics compute a binary metric for each label and average them with a
-        micro or macro average, as in \cref{sec:crisp}.
+        micro or macro average\index{macro-average}, as in \cref{sec:crisp}.
 \end{itemize}
 
 \subsection{Hierarchical classification}
 
 In \emph{hierarchical} classification the classes are organised in a tree or a directed acyclic
-graph (animal $\to$ mammal $\to$ dog), and confusing two sibling classes is less serious than
-confusing two distant ones. \emph{Hierarchical precision and recall} \citep{silla2011survey}
+graph\index{causal graph} (animal $\to$ mammal $\to$ dog), and confusing two sibling classes is less serious than
+confusing two distant ones. \emph{Hierarchical precision\index{precision|textbf} and recall\index{recall|textbf}} \citep{silla2011survey}
 extend the sets of actual and predicted classes $C_i$ and $\hat C_i$ with all their ancestors
 (except the root) and compute
 \begin{equation}
@@ -2251,10 +2251,10 @@ If a dog ($\{\text{animal},\text{mammal},\text{dog}\}$) is classified as a cat
 \subsection{Ranking and recommendation}
 
 When the output of the model is an ordered list (search results, recommended products), what
-matters is the quality of the first positions. Common metrics are \emph{precision@$k$} and
-\emph{recall@$k$} (computed on the top $k$ items), the \emph{mean reciprocal rank} (the average
+matters is the quality of the first positions. Common metrics are \emph{precision\index{precision|textbf}@$k$} and
+\emph{recall\index{recall|textbf}@$k$} (computed on the top $k$ items), the \emph{mean reciprocal rank\index{mean reciprocal rank|textbf}} (the average
 of $1/\text{rank}$ of the first relevant item) and the \emph{normalised discounted cumulative
-gain} \citep{jarvelin2002cumulated}:
+gain\index{NDCG|textbf}} \citep{jarvelin2002cumulated}:
 \begin{equation}
   \mathrm{DCG@}k=\sum_{i=1}^{k}\frac{\mathit{rel}_i}{\log_2(i+1)},
   \qquad
@@ -2263,22 +2263,22 @@ gain} \citep{jarvelin2002cumulated}:
 where $\mathit{rel}_i$ is the graded relevance of the item at position $i$ and IDCG is the DCG
 of the ideal ordering. If the top three recommendations have relevances $(3,0,2)$,
 $\mathrm{DCG@3}=3+0+2/2=4$; the ideal order $(3,2,0)$ gives $\mathrm{IDCG@3}=3+2/\log_2 3=4.26$,
-and $\mathrm{NDCG@3}=0.94$. These metrics are studied in depth with recommender systems
+and $\mathrm{NDCG@3}=0.94$. These metrics are studied in depth with recommender systems\index{recommender system}
 (Unit~7).
 
 \subsection{Conformal prediction}
 
-A point prediction does not say how much we can trust it. \emph{Conformal prediction}
+A point prediction does not say how much we can trust it. \emph{Conformal prediction\index{conformal prediction|textbf}}
 \citep{vovk2005algorithmic,angelopoulos2023conformal} is a framework for uncertainty
-quantification that turns any point predictor into one that outputs a \emph{set}: an interval
+quantification\index{quantification} that turns any point predictor into one that outputs a \emph{set}: an interval
 in regression, a set of labels in classification. These sets have a statistically valid
-coverage guarantee,
+coverage\index{coverage} guarantee,
 \begin{equation}
   P\bigl(Y_{n+1}\in\mathcal C(X_{n+1})\bigr)\geq1-\alpha,
 \end{equation}
 for any model and any data distribution, under the only assumption that the data are
 exchangeable (for instance, independent and identically distributed). The simplest version,
-\emph{split conformal prediction}, is shown in \cref{alg:conformal} and \cref{lst:conformal}.
+\emph{split conformal\index{conformal prediction!split|textbf} prediction}, is shown in \cref{alg:conformal} and \cref{lst:conformal}.
 
 \begin{algorithm}[htbp]
 \caption{Split conformal prediction for regression}\label{alg:conformal}
@@ -2326,8 +2326,8 @@ calibration sample, so a single run can fall slightly below $1-\alpha$). It does
 every region of the input space. In \cref{fig:conformal}a the noise grows with $x$, but the
 split conformal intervals have constant width: they cover 99.9\% of the test points with
 $x<3$ and only 76.5\% of those with $x>7$, and the overall coverage is 90.3\%.
-\emph{Conformalised quantile regression} \citep{romano2019conformalized} starts from two quantile
-regression models, trained with the pinball loss of \cref{eq:pinball}, and conformalises their
+\emph{Conformalised quantile regression\index{conformal prediction!quantile regression|textbf}\index{quantile regression|textbf}} \citep{romano2019conformalized} starts from two quantile
+regression models, trained with the pinball loss\index{pinball loss} of \cref{eq:pinball}, and conformalises their
 interval; its intervals adapt to the noise (\cref{fig:conformal}b), with coverages of 93.5\%
 and 91.1\% in the two regions and narrower intervals on average (6.18 against 7.03).
 
@@ -2348,12 +2348,12 @@ coverage, narrower intervals or smaller sets are better.
 
 \subsection{Semi-supervised learning}
 
-In \emph{semi-supervised learning} a small amount of labelled data is combined with a large
+In \emph{semi-supervised\index{semi-supervised learning|textbf} learning} a small amount of labelled data is combined with a large
 amount of unlabelled data, which helps to discover the structure of the input space (for
 instance, by placing the decision boundary in low-density regions) \citep{vanengelen2020survey}.
 Evaluation must always use held-out \emph{labelled} data, and it is easy to get wrong.
 \citet{oliver2018realistic} recommend comparing against well-tuned supervised baselines that
-use the same model and tuning budget; using realistically small validation sets (tuning
+use the same model and tuning budget; using realistically small validation sets\index{validation set} (tuning
 hyperparameters with 5000 labelled validation examples makes no sense if only 250 labels are
 supposed to be available); reporting performance as a function of the number of labels; and
 checking what happens when the unlabelled data contain classes absent from the labelled data.
@@ -2361,7 +2361,7 @@ checking what happens when the unlabelled data contain classes absent from the l
 \subsection{Open-set recognition}
 
 Standard classifiers assume a \emph{closed set}: the classes seen at test time are those seen
-during training. In an \emph{open-set} scenario \citep{scheirer2013toward} the model may
+during training. In an \emph{open-set\index{open-set recognition|textbf}} scenario \citep{scheirer2013toward} the model may
 encounter classes never seen during training: a model trained to recognise cars, dogs and
 people will sooner or later receive a helicopter. A closed-set classifier is forced to assign
 one of the known labels, often with high confidence (a \emph{high-confidence false
@@ -2370,9 +2370,9 @@ the unknown ones.
 
 Two metrics are standard. The \emph{AUROC for open set} measures how well a confidence score
 $S(x)$ separates known from unknown examples: known test examples are treated as positives,
-unknown ones as negatives, and the usual AUC is computed (1 means perfect separation). It is
-often complemented by the FPR at 95\% TPR, the fraction of unknowns accepted when 95\% of the
-knowns are accepted. The \emph{open-set classification rate} (OSCR) curve
+unknown ones as negatives, and the usual AUC is computed (1 means perfect separation\index{fairness!separation}). It is
+often complemented by the FPR\index{false positive rate} at 95\% TPR\index{true positive rate}, the fraction of unknowns accepted when 95\% of the
+knowns are accepted. The \emph{open-set classification rate} (OSCR\index{open set classification rate (OSCR)}) curve
 \citep{dhamija2018reducing} combines the two goals: for each threshold $\tau$ it plots the
 correct classification rate on the known examples $D_K$ against the false positive rate on the
 unknown examples $D_U$,
@@ -2406,7 +2406,7 @@ The main families of methods are:
   \item \emph{distance-based methods} (metric learning): the model maps the examples into a
         space where each class forms a compact cluster, and an example far from all clusters
         is rejected, for instance using the Mahalanobis distance \citep{lee2018simple};
-  \item \emph{background class} or \emph{outlier exposure}: the model is trained with an
+  \item \emph{background class} or \emph{outlier exposure\index{outlier exposure|textbf}}: the model is trained with an
         auxiliary set of ``garbage'' examples labelled as unknown
         \citep{hendrycks2019deep}. It is very effective when the auxiliary data resemble the
         unknowns that will actually appear.
@@ -2425,18 +2425,18 @@ describe the open-set protocol (known classes, unknown classes, their proportion
 
 Computer vision distinguishes three main tasks. \emph{Image classification} assigns a single
 label to a whole image (``what is in this image?'') and is evaluated with the metrics of
-\cref{sec:crisp,sec:roc,sec:scoring,sec:calibration}, often with \emph{top-$k$ accuracy} (the
-actual class is among the $k$ classes with the highest scores). \emph{Object detection}
+\cref{sec:crisp,sec:roc,sec:scoring,sec:calibration}, often with \emph{top-$k$ accuracy\index{accuracy|textbf}} (the
+actual class is among the $k$ classes with the highest scores). \emph{Object detection\index{object detection|textbf}}
 identifies what is in the image and \emph{where}: it draws a bounding box around each object
 and labels it, as the YOLO family of detectors does \citep{redmon2016you,jocher2023yolov8}.
-\emph{Image segmentation} classifies the image at the pixel level: \emph{semantic}
+\emph{Image segmentation\index{segmentation|textbf}} classifies the image at the pixel level: \emph{semantic}
 segmentation assigns a class to every pixel, \emph{instance} segmentation separates the
 individual objects, and \emph{panoptic} segmentation does both; foundation models such as SAM
 \citep{kirillov2023segment} segment arbitrary objects.
 
 \subsection{Object detection: IoU, AP and mAP}
 
-The \emph{intersection over union} (IoU, or Jaccard index) measures how well a predicted box
+The \emph{intersection over union\index{intersection over union (IoU)|textbf}} (IoU, or Jaccard index) measures how well a predicted box
 $B_p$ overlaps the ground-truth box $B_{gt}$:
 \begin{equation}
   \mathrm{IoU}=\frac{\operatorname{area}(B_p\cap B_{gt})}{\operatorname{area}(B_p\cup B_{gt})}.
@@ -2477,8 +2477,8 @@ always at least as large.}
 \end{figure}
 
 Detections are sorted by confidence, and precision and recall are computed down the ranked
-list. The \emph{average precision} (AP) of a class is the area under its precision--recall
-curve, computed after replacing each precision by the maximum precision at any higher recall
+list. The \emph{average precision\index{average precision|textbf}\index{precision|textbf}} (AP) of a class is the area under its precision--recall
+curve\index{precision--recall curve}, computed after replacing each precision by the maximum precision at any higher recall
 (the \emph{interpolated} precision, which makes the curve monotone):
 \begin{equation}
   \mathrm{AP}=\sum_k(r_k-r_{k-1})\,p_{\text{interp}}(r_k),\qquad
@@ -2546,7 +2546,7 @@ recall:    [0.2 0.4 0.4 0.6 0.6 0.6 0.8 0.8]
 AP = 0.6643
 \end{pyoutput}
 
-The \emph{mean average precision} (mAP) is the average of the AP over all classes (cars,
+The \emph{mean average precision\index{mean average precision (mAP)|textbf}} (mAP) is the average of the AP over all classes (cars,
 pedestrians, traffic lights\dots) and is the standard metric of detection benchmarks.
 \emph{mAP@0.5} counts a detection as correct when its IoU exceeds 0.5 (PASCAL VOC), whereas
 \emph{mAP@[0.5:0.95]} averages the mAP over IoU thresholds $0.50,0.55,\dots,0.95$ (COCO), so it
@@ -2554,15 +2554,15 @@ also rewards precise localisation \citep{lin2014microsoft}.
 
 \subsection{Segmentation: pixel accuracy, mIoU and Dice}
 
-\emph{Pixel accuracy}, the percentage of correctly classified pixels, suffers from the same
-problem as accuracy with imbalanced classes: if 90\% of an image is sky, a model that always
+\emph{Pixel accuracy\index{accuracy|textbf}}, the percentage of correctly classified pixels, suffers from the same
+problem as accuracy with imbalanced\index{class imbalance} classes: if 90\% of an image is sky, a model that always
 predicts ``sky'' reaches 90\% pixel accuracy while failing completely on the road and the cars.
-The \emph{mean intersection over union} (mIoU) computes the IoU of each class at pixel level,
+The \emph{mean intersection over union\index{intersection over union (IoU)|textbf}} (mIoU) computes the IoU of each class at pixel level,
 $\TP_j/(\TP_j+\FP_j+\FN_j)$, and averages it over classes \citep{long2015fully}, which prevents
 large background classes from hiding errors on small but important classes such as
 pedestrians.
 
-The \emph{Dice coefficient} \citep{dice1945measures} is the $F_1$ score at pixel level:
+The \emph{Dice\index{Dice coefficient|textbf} coefficient} \citep{dice1945measures} is the $F_1$ score at pixel level:
 \begin{equation}
   \mathrm{Dice}=\frac{2|A\cap B|}{|A|+|B|}=\frac{2\TP}{2\TP+\FP+\FN}.
 \end{equation}
@@ -2571,7 +2571,7 @@ false positives and false negatives in the same, symmetric way; the difference i
 counts the overlap twice, so for the same errors Dice is larger than IoU. In fact
 $\mathrm{Dice}=2J/(1+J)$ with $J$ the IoU (\cref{fig:iou}b): the two boxes of \cref{fig:iou}a,
 seen as masks, have $\mathrm{IoU}=0.231$ and $\mathrm{Dice}=0.375$. Being monotonically related,
-they rank the segmentations of a single image identically, but their averages over many images
+they rank the segmentations\index{segmentation} of a single image identically, but their averages over many images
 can rank models differently. When the shape of the boundary matters, distance-based metrics such
 as the Hausdorff distance are used \citep{taha2015metrics}; \citet{maierhein2024metrics} give
 detailed guidelines for choosing metrics in image analysis.
@@ -2590,7 +2590,7 @@ metrics of \cref{sec:crisp} apply: accuracy for balanced problems, and per-class
 recall and $F_1$ otherwise. In \emph{named entity recognition} most tokens belong to the
 non-entity class ``O'', so token accuracy is uninformative; the standard is entity-level $F_1$,
 where an entity counts as correct only if both its span and its type match exactly
-\citep{tjong2003introduction}. Cohen's kappa is used to measure the agreement between human
+\citep{tjong2003introduction}. Cohen's kappa\index{Cohen's kappa} is used to measure the agreement between human
 annotators and thus the reliability of the data set.
 
 \subsection{Text generation: n-gram overlap metrics}
@@ -2600,7 +2600,7 @@ sentence can be translated or summarised in many valid ways. Traditional metrics
 output of the model with one or more human-written \emph{references} by counting shared
 $n$-grams (sequences of $n$ words).
 
-BLEU \citep{papineni2002bleu}, designed for machine translation, focuses on precision. For each
+BLEU\index{BLEU} \citep{papineni2002bleu}, designed for machine translation, focuses on precision. For each
 $n$ it computes the \emph{modified} $n$-gram precision $p_n$, in which each $n$-gram of the
 candidate is counted at most as many times as it appears in the reference, and combines them
 with a geometric mean and a \emph{brevity penalty} BP that prevents very short candidates from
@@ -2623,14 +2623,14 @@ because one of the precisions is zero: at sentence level BLEU needs smoothing
 
 Candidate B, ``\emph{the feline is on the rug}'', means exactly the same as the reference but
 uses synonyms: $p_1=4/6$, $p_2=2/5$ and BLEU-2 $=\sqrt{4/6\cdot2/5}=0.516$. BLEU does not
-understand synonyms. Its ROUGE-1 recall is also $4/6=0.667$, and the longest common subsequence
+understand synonyms. Its ROUGE\index{ROUGE}-1 recall is also $4/6=0.667$, and the longest common subsequence
 with the reference, ``\emph{the is on the}'', has four words, so ROUGE-L recall and precision
 are $4/6$ as well.
 \end{example}
 
 Several metrics address the limitations of BLEU:
 \begin{itemize}
-  \item METEOR \citep{banerjee2005meteor} aligns the words of candidate and reference using
+  \item METEOR\index{METEOR} \citep{banerjee2005meteor} aligns the words of candidate and reference using
         exact matches, stems (\emph{running} matches \emph{run}) and synonyms from WordNet,
         combines precision and recall (weighting recall more) and penalises differences in word
         order;
@@ -2638,47 +2638,47 @@ Several metrics address the limitations of BLEU:
         the fraction of the reference $n$-grams that appear in the candidate (how much of the
         reference summary the model captured), and ROUGE-L is based on the longest common
         subsequence;
-  \item chrF \citep{popovic2015chrf} computes an F-score over character $n$-grams, which is
+  \item chrF \citep{popovic2015chrf} computes an F-score\index{F1 score@$F_1$ score} over character $n$-grams, which is
         more robust to morphology.
 \end{itemize}
 
 \subsection{Embedding-based and learned metrics}
 
 Modern metrics use neural representations to check whether the \emph{meaning} is the same, even
-when the words differ. BERTScore \citep{zhang2020bertscore} represents each token of the
-candidate $\hat x$ and of the reference $x$ by its contextual embedding and matches each token
+when the words differ. BERTScore\index{BERTScore} \citep{zhang2020bertscore} represents each token of the
+candidate $\hat x$ and of the reference $x$ by its contextual embedding\index{embedding} and matches each token
 with its most similar token in the other sentence; for instance, the recall is
 \begin{equation}
   R_{\text{BERT}}=\frac{1}{|x|}\sum_{x_i\in x}\ \max_{\hat x_j\in\hat x}\ \mathbf x_i^{\top}\hat{\mathbf x}_j,
 \end{equation}
-with normalised embeddings, so that the inner product is the cosine similarity. ``Cat'' and
+with normalised embeddings, so that the inner product is the cosine\index{cosine similarity} similarity\index{similarity measure}. ``Cat'' and
 ``feline'' obtain a high similarity. \emph{Learned} metrics such as COMET \citep{rei2020comet} go
 further and are trained to predict human quality judgements. These metrics correlate better with
-human judgement than $n$-gram overlap, at the price of interpretability and of inheriting the
+human judgement than $n$-gram overlap, at the price of interpretability\index{interpretability} and of inheriting the
 biases of the underlying models.
 
 \subsection{Language models and LLMs}
 
-A language model is evaluated intrinsically by its \emph{perplexity} on held-out text,
+A language model\index{language model} is evaluated intrinsically by its \emph{perplexity} on held-out text,
 \begin{equation}
   \mathrm{PPL}=\exp\Bigl(-\frac1N\sum_{t=1}^{N}\log p(w_t\mid w_{<t})\Bigr),
 \end{equation}
-which is the exponential of the per-token log loss of \cref{sec:scoring}. A model that assigns
+which is the exponential of the per-token log loss\index{log loss} of \cref{sec:scoring}. A model that assigns
 probability $1/4$ to every token has perplexity 4: it is as uncertain as if it had to choose
 among four equally likely words. Perplexities are only comparable for the same tokenisation and
 test text.
 
-For large language models (LLMs), traditional metrics often fail, because a correct answer may
+For large language models\index{large language model (LLM)} (LLMs), traditional metrics often fail, because a correct answer may
 look nothing like the reference. Common approaches are:
 \begin{itemize}
   \item \emph{benchmarks} with automatically checkable answers, such as multiple-choice
         questions \citep[e.g.][]{hendrycks2021measuring}, evaluated with accuracy;
   \item \emph{functional correctness} for code: the generated program is run against unit
-        tests. The metric pass@$k$ is the probability that at least one of $k$ generated
+        tests\index{testing!unit tests}. The metric pass@$k$ is the probability that at least one of $k$ generated
         samples passes; with $n\geq k$ samples of which $c$ pass, an unbiased estimator is
         $1-\binom{n-c}{k}\big/\binom{n}{k}$ \citep{chen2021evaluating}. With $n=10$ and $c=3$,
         pass@1 $=0.3$ and pass@5 $=1-21/252=0.917$;
-  \item \emph{LLM-as-a-judge} \citep{zheng2023judging}: a stronger model grades the outputs of
+  \item \emph{LLM-as-a-judge\index{LLM-as-a-judge|textbf}} \citep{zheng2023judging}: a stronger model grades the outputs of
         another, either scoring each answer against a rubric (``rate this answer from 1 to 5
         according to its helpfulness'') or comparing two answers. It is cheap and agrees
         reasonably well with humans, but judges have known biases: \emph{position} bias
@@ -2686,26 +2686,26 @@ look nothing like the reference. Common approaches are:
         answers) and \emph{self-enhancement} bias (preferring answers produced by
         themselves). Mitigations include swapping the order of the answers, using explicit
         rubrics or reference answers \citep{liu2023geval}, and validating the judge against a
-        sample of human judgements (reporting, for instance, Cohen's kappa);
+        sample of human judgements (reporting, for instance, Cohen's kappa\index{Cohen's kappa});
   \item \emph{human preference} evaluation: platforms such as Chatbot Arena collect pairwise
         votes and aggregate them with Bradley--Terry or Elo-style models
         \citep{chiang2024chatbot}.
 \end{itemize}
 Finally, benchmark questions may have leaked into the enormous pre-training corpora
-(\emph{data contamination}), which inflates the scores: this is data leakage
+(\emph{data contamination\index{contamination of benchmarks|textbf}}), which inflates the scores: this is data leakage\index{data leakage}
 (\cref{sec:protocols}) at the scale of the Internet. Recent or private test sets are preferable.
 
 \subsection{Retrieval-augmented generation}
 
-A retrieval-augmented generation (RAG) system first retrieves documents relevant to a question
+A retrieval-augmented generation\index{retrieval-augmented generation (RAG)} (RAG) system first retrieves documents relevant to a question
 and then generates an answer conditioned on them. Both components must be evaluated. The
-\emph{retrieval} step is evaluated with ranking metrics (recall@$k$, MRR, NDCG) or with
-\emph{context precision} (are the retrieved passages relevant?) and \emph{context recall} (do
+\emph{retrieval} step is evaluated with ranking metrics (recall@$k$, MRR\index{mean reciprocal rank}, NDCG\index{NDCG}) or with
+\emph{context precision\index{precision|textbf}} (are the retrieved passages relevant?) and \emph{context recall\index{recall|textbf}} (do
 they contain the information needed?). The \emph{generation} step is evaluated with
-\emph{faithfulness} (is every claim of the answer supported by the retrieved documents, that is,
+\emph{faithfulness\index{faithfulness|textbf}} (is every claim of the answer supported by the retrieved documents, that is,
 are there no hallucinations?), \emph{answer relevance} (does the answer actually address the
 question?) and, when a reference answer exists, correctness. Frameworks such as RAGAS
-\citep{es2024ragas} compute these quantities with LLM judges; for instance, faithfulness is the
+\citep{es2024ragas} compute these quantities with LLM\index{large language model (LLM)} judges; for instance, faithfulness is the
 fraction of the statements of the answer that can be inferred from the retrieved context.
 
 % ---------------------------------------------------------------------
@@ -2725,10 +2725,10 @@ for the task that motivated the analysis.
 
 \subsection{Clustering: internal evaluation}
 
-Internal evaluation judges a clustering using only the data that were clustered. The most
+Internal evaluation judges a clustering\index{clustering} using only the data that were clustered. The most
 popular indices reward compact and well-separated clusters.
 
-The \emph{silhouette coefficient} \citep{rousseeuw1987silhouettes} is computed for each example
+The \emph{silhouette\index{silhouette coefficient|textbf} coefficient} \citep{rousseeuw1987silhouettes} is computed for each example
 $i$ from two quantities: $a(i)$, the mean distance between $i$ and the other points of its
 cluster, and $b(i)$, the mean distance between $i$ and the points of the nearest other cluster:
 \begin{equation}
@@ -2750,7 +2750,7 @@ four groups, for $k=3,4,5$. The dashed line marks the mean silhouette.}
 \label{fig:silhouette}
 \end{figure}
 
-The \emph{Calinski--Harabasz index} (or variance ratio criterion) \citep{calinski1974dendrite}
+The \emph{Calinski--Harabasz\index{Calinski--Harabasz index|textbf} index} (or variance ratio criterion) \citep{calinski1974dendrite}
 is the ratio between the dispersion \emph{between} clusters and the dispersion \emph{within}
 clusters, each normalised by its degrees of freedom:
 \begin{equation}
@@ -2764,7 +2764,7 @@ where $\mathbf c_q$ and $n_q$ are the centroid and size of cluster $C_q$ and $\m
 global centroid; the traces are sums of squared distances. The score is higher when clusters are
 dense and well separated, and it is fast to compute.
 
-The \emph{Davies--Bouldin index} \citep{davies1979cluster} estimates the average similarity
+The \emph{Davies--Bouldin\index{Davies--Bouldin index|textbf} index} \citep{davies1979cluster} estimates the average similarity\index{similarity measure}
 between each cluster and its most similar one, where similarity compares the distance between
 clusters with their sizes:
 \begin{equation}
@@ -2772,7 +2772,7 @@ clusters with their sizes:
 \end{equation}
 with $\sigma_i$ the mean distance of the points of cluster $i$ to its centroid. Lower values are
 better (the minimum is 0). It is simpler to compute than the silhouette, but it is based on
-centroids and therefore limited to Euclidean distance.
+centroids and therefore limited to Euclidean\index{Euclidean distance} distance.
 
 In \cref{fig:indices} and \cref{lst:clustering} the three indices agree on $k=4$. In general
 they do not always agree, and all of them favour convex, compact clusters: their values are generally
@@ -2818,16 +2818,16 @@ k=6  sil=0.531  CH=  3926  DB=0.857  ARI=0.824  NMI=0.891
 \subsection{Clustering: external evaluation}
 
 When reference labels exist (for benchmarking, or for a labelled subset of the data), the
-clustering can be compared with them. Since cluster identifiers are arbitrary, the measures
+clustering\index{clustering} can be compared with them. Since cluster identifiers are arbitrary, the measures
 must be invariant to permutations of the labels:
 \begin{itemize}
   \item the \emph{Rand index} \citep{rand1971objective} is the fraction of pairs of examples
         on which both partitions agree (both together or both apart). The \emph{adjusted Rand
-        index} (ARI) \citep{hubert1985comparing} corrects it for chance,
+        index\index{adjusted Rand index|textbf}} (ARI) \citep{hubert1985comparing} corrects it for chance,
         $\mathrm{ARI}=(\mathrm{RI}-\E[\mathrm{RI}])/(\max\mathrm{RI}-\E[\mathrm{RI}])$: it is 1
         for identical partitions, close to 0 for random ones and can be negative;
   \item the \emph{mutual information} (MI) between the two labellings measures their agreement
-        ignoring permutations. Its \emph{normalised} version (NMI) \citep{strehl2002cluster}
+        ignoring permutations. Its \emph{normalised} version (NMI\index{normalised mutual information}) \citep{strehl2002cluster}
         lies in $[0,1]$ and is very popular, but it is not corrected for chance and tends to
         increase with the number of clusters; the \emph{adjusted} mutual information (AMI)
         corrects it \citep{vinh2010information};
@@ -2839,7 +2839,7 @@ must be invariant to permutations of the labels:
 
 \subsection{Association rules}
 
-\emph{Association rule} learning discovers interesting relations between variables in large
+\emph{Association rule\index{association rules|textbf}} learning discovers interesting relations between variables in large
 databases \citep{agrawal1993mining}. It identifies strong rules, ranked by some measure of
 interestingness, and is used in market basket analysis, web usage mining, intrusion detection
 and bioinformatics. A rule $A\Rightarrow B$ has an \emph{antecedent} $A$ and a
@@ -2885,12 +2885,12 @@ The usual measures are:
   \item \emph{confidence}: how frequently the rule is true when it can be applied,
         $P(B\mid A)=\mathrm{supp}(A\cup B)/\mathrm{supp}(A)$. Four baskets contain $A$ (T3, T4,
         T7, T8), so the confidence is $3/4=0.75$;
-  \item \emph{lift} \citep{brin1997dynamic}: the ratio between the observed support and the
+  \item \emph{lift\index{lift|textbf}} \citep{brin1997dynamic}: the ratio between the observed support and the
         support expected if $A$ and $B$ were independent,
         $\mathrm{conf}(A\Rightarrow B)/P(B)=P(A\cap B)/\bigl(P(A)P(B)\bigr)$. Six baskets contain
         $B$, so $\mathrm{lift}=0.3/(0.4\cdot0.6)=1.25$. A lift of 1 means independence; above 1,
         the presence of $A$ increases the probability of $B$; below 1, it decreases it;
-  \item \emph{leverage}, $P(A\cap B)-P(A)P(B)=0.06$, and \emph{conviction},
+  \item \emph{leverage}, $P(A\cap B)-P(A)P(B)=0.06$, and \emph{conviction\index{conviction|textbf}},
         $(1-P(B))/(1-\mathrm{conf})=0.4/0.25=1.6$, which is infinite for rules that are always
         true.
 \end{itemize}
@@ -2927,12 +2927,12 @@ new data \citep{tan2004selecting,han2011data}.
 \subsection{Other unsupervised tasks}
 
 In \emph{anomaly detection} \citep{chandola2009anomaly}, if some labelled anomalies are
-available the problem is evaluated as an extremely imbalanced classification problem (AUC,
-average precision, precision@$k$ among the top-ranked cases); otherwise, experts review the
+available the problem is evaluated as an extremely imbalanced\index{class imbalance} classification problem (AUC,
+average precision\index{average precision}, precision@$k$ among the top-ranked cases); otherwise, experts review the
 top-ranked anomalies. \emph{Dimensionality reduction} can be evaluated by the reconstruction
 error, by how well neighbourhoods are preserved, or by the performance of a downstream model.
 Density estimators and generative models are evaluated by the log-likelihood of held-out data,
-the log loss once again.
+the log loss\index{log loss} once again.
 
 % ---------------------------------------------------------------------
 \section{Comparing models statistically}\label{sec:stats}
@@ -2944,14 +2944,14 @@ model B, we must ask whether the difference could be due to chance.
 \subsection{Uncertainty of a single estimate}
 
 If a classifier is tested on $n$ independent examples, the number of correct predictions follows
-a binomial distribution. The \emph{Wilson interval} \citep{wilson1927probable} for the accuracy
+a binomial distribution. The \emph{Wilson\index{Wilson interval|textbf} interval} \citep{wilson1927probable} for the accuracy
 $\hat p$ behaves better than the usual normal approximation $\hat p\pm z\sqrt{\hat p(1-\hat p)/n}$,
 especially for small $n$ or accuracies close to 1:
 \begin{equation}
   \frac{\hat p+\frac{z^2}{2n}\pm z\sqrt{\frac{\hat p(1-\hat p)}{n}+\frac{z^2}{4n^2}}}{1+\frac{z^2}{n}},
 \end{equation}
 with $z=1.96$ for 95\% confidence. An accuracy of 170/200 has the interval $[0.794, 0.893]$. For
-metrics without a simple sampling distribution (AUC, $F_1$, MCC\dots) the \emph{bootstrap}
+metrics without a simple sampling distribution (AUC, $F_1$, MCC\index{Matthews correlation coefficient}\dots) the \emph{bootstrap\index{bootstrap|textbf}}
 \citep{efron1993introduction} is the general solution: resample the test set with replacement
 many times, recompute the metric on each resample and take the percentiles of the results
 (\cref{lst:ci}).
@@ -2991,10 +2991,10 @@ AUC = 0.843, 95% bootstrap CI: [0.779, 0.898]
 
 \subsection{Two models on the same data}
 
-When two classifiers are evaluated on the same test set, their errors are paired. \emph{McNemar's
+When two classifiers are evaluated on the same test set, their errors are paired. \emph{McNemar\index{McNemar's test|textbf}'s
 test} \citep{mcnemar1947note} uses only the examples on which they disagree: $b$, the number
 correctly classified by A and misclassified by B, and $c$, the number misclassified by A and
-correctly classified by B. If both models have the same error rate, $b$ should follow a binomial
+correctly classified by B. If both models have the same error rate\index{error rate}, $b$ should follow a binomial
 distribution $\mathrm{Bin}(b+c,1/2)$, which gives an exact test; for large counts,
 $\chi^2=(|b-c|-1)^2/(b+c)$ with one degree of freedom is used. \citet{dietterich1998approximate}
 recommends this test when the models can be trained only once.
@@ -3002,14 +3002,14 @@ recommends this test when the models can be trained only once.
 With cross-validation, the tempting approach is a paired $t$-test on the $k$ fold differences.
 It is not valid: the training sets overlap, the differences are positively correlated, the
 variance is underestimated and the test finds far too many ``significant'' differences
-\citep{dietterich1998approximate}. The \emph{corrected resampled $t$-test}
+\citep{dietterich1998approximate}. The \emph{corrected resampled\index{corrected resampled t-test@corrected resampled $t$-test|textbf} $t$-test}
 \citep{nadeau2003inference} inflates the variance to account for the overlap:
 \begin{equation}
   t=\frac{\bar d}{\sqrt{\Bigl(\frac1J+\frac{n_{\text{test}}}{n_{\text{train}}}\Bigr)\hat\sigma_d^2}},
 \end{equation}
 where $\bar d$ and $\hat\sigma_d^2$ are the mean and the variance of the $J$ differences, and
 $n_{\text{test}}/n_{\text{train}}=1/(k-1)$ in $k$-fold CV. \Cref{lst:compare} compares logistic
-regression and naive Bayes. McNemar's test finds no significant difference ($p=0.58$). Over
+regression and naive Bayes\index{naive Bayes}. McNemar's test finds no significant difference ($p=0.58$). Over
 10$\times$10-fold CV the mean difference in accuracy is 0.015; the naive $t$-test declares it
 overwhelmingly significant ($p\approx10^{-7}$), whereas the corrected test does not ($p=0.11$).
 
@@ -3056,17 +3056,17 @@ To compare learning algorithms rather than models, they must be evaluated on man
 \citet{demsar2006statistical} recommends non-parametric tests, which do not assume normality and
 are not dominated by a few data sets:
 \begin{itemize}
-  \item for two algorithms, the \emph{Wilcoxon signed-rank test} \citep{wilcoxon1945individual}
+  \item for two algorithms, the \emph{Wilcoxon\index{Mann--Whitney--Wilcoxon statistic|textbf} signed-rank test} \citep{wilcoxon1945individual}
         on the differences of performance across data sets;
-  \item for $k$ algorithms on $N$ data sets, the \emph{Friedman test} \citep{friedman1937use}:
+  \item for $k$ algorithms on $N$ data sets, the \emph{Friedman test\index{Friedman test|textbf}} \citep{friedman1937use}:
         the algorithms are ranked on each data set (1 for the best), $R_j$ is the average rank
         of algorithm $j$, and
         \begin{equation}
           \chi^2_F=\frac{12N}{k(k+1)}\Bigl[\sum_{j}R_j^2-\frac{k(k+1)^2}{4}\Bigr]
         \end{equation}
         follows approximately a $\chi^2$ distribution with $k-1$ degrees of freedom. If the
-        null hypothesis is rejected, the \emph{Nemenyi} post-hoc test declares two algorithms
-        different if their average ranks differ by at least the \emph{critical difference}
+        null hypothesis is rejected, the \emph{Nemenyi\index{Nemenyi test|textbf}} post-hoc test declares two algorithms
+        different if their average ranks differ by at least the \emph{critical difference\index{critical difference diagram|textbf}}
         $\mathrm{CD}=q_\alpha\sqrt{k(k+1)/(6N)}$, with $q_{0.05}=2.728$ for $k=5$.
 \end{itemize}
 The results are summarised in a \emph{critical difference diagram} (\cref{fig:cd}), which
@@ -3082,7 +3082,7 @@ significantly different (Nemenyi test, $\alpha=0.05$).}
 \label{fig:cd}
 \end{figure}
 
-In the experiment of \cref{fig:cd}, logistic regression (LR), naive Bayes (NB), $k$-NN, a
+In the experiment of \cref{fig:cd}, logistic regression (LR), naive Bayes\index{naive Bayes} (NB), $k$-NN, a
 decision tree (DT) and a random forest (RF) were compared on 12 data sets. The average ranks are
 1.58 (RF), 1.79 ($k$-NN), 3.38 (NB), 3.83 (LR) and 4.42 (DT); the Friedman statistic is
 $\chi^2_F=30.4$ ($p=4\times10^{-6}$) and $\mathrm{CD}=1.76$. Random forest and $k$-NN are
@@ -3098,7 +3098,7 @@ want answered.
 
 \subsection{Statistical versus practical significance}
 
-Statistical significance is not practical significance. With a test set of a million examples a
+Statistical significance\index{statistical significance} is not practical significance. With a test set of a million examples a
 difference of 0.1\% in accuracy can be significant and irrelevant; with 100 examples a
 difference of 5\% may not be significant and yet be important. Report effect sizes with their
 intervals, correct for multiple comparisons when many models are compared, and decide with the
@@ -3152,21 +3152,21 @@ Clustering & internal indices plus stability and domain validation; ARI/AMI with
   \item The evaluation of learned models must be performed thoroughly, on data that played no
         role in building them; protocols must respect the structure of the data (groups,
         time) and keep every data-dependent step inside the evaluation loop.
-  \item Training error is optimistic. The bias--variance trade-off explains underfitting and
-        overfitting, and learning curves help to diagnose them.
-  \item Models should be validated and compared over ranges of contexts. ROC analysis and cost
-        curves show which model is optimal for each class distribution and cost ratio.
+  \item Training error is optimistic. The bias--variance\index{bias--variance trade-off} trade-off explains underfitting\index{underfitting} and
+        overfitting, and learning curves\index{learning curve} help to diagnose them.
+  \item Models should be validated and compared over ranges of contexts. ROC analysis\index{ROC analysis} and cost
+        curves\index{cost curve} show which model is optimal for each class distribution and cost ratio.
   \item The metric must reflect the main purpose of the model: threshold metrics for decisions,
-        ranking metrics for prioritisation, proper scoring rules and calibration for
+        ranking metrics for prioritisation, proper scoring rules\index{proper scoring rule} and calibration for
         probabilities.
-  \item With imbalanced classes, accuracy is misleading. Rebalancing often acts like moving the decision
+  \item With imbalanced\index{class imbalance} classes, accuracy is misleading. Rebalancing often acts like moving the decision
         threshold and can distort the probabilities for the original population; calibrated probabilities with a cost-based
         threshold are often the better solution.
   \item Regression metrics must match the costs of the errors; asymmetric losses, quantiles and
-        conformal intervals go beyond the mean prediction.
-  \item Specialised tasks (open set, computer vision, natural language, clustering, association
-        rules) have specialised metrics, but the same principles apply.
-  \item Estimates are uncertain: report confidence intervals and use valid statistical tests.
+        conformal\index{conformal prediction} intervals go beyond the mean prediction.
+  \item Specialised tasks (open set\index{open-set recognition}, computer vision, natural language, clustering\index{clustering}, association
+        rules\index{association rules}) have specialised metrics, but the same principles apply.
+  \item Estimates are uncertain: report confidence intervals\index{confidence interval} and use valid statistical tests.
   \item Finally, we need to know the learning algorithms, their strong and weak points, to select
         the best suited ones (or adapt them) to each context.
 \end{itemize}
@@ -3175,15 +3175,15 @@ Clustering & internal indices plus stability and domain validation; ARI/AMI with
 \phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
 \citet{japkowicz2011evaluating} is the most complete textbook on the evaluation of classifiers,
-and \citet{flach2012machine} offers an excellent treatment of ROC analysis and scoring
-classifiers. \citet{fawcett2006introduction} remains the best tutorial introduction to ROC
+and \citet{flach2012machine} offers an excellent treatment of ROC analysis\index{ROC analysis} and scoring
+classifiers\index{scoring classifier}. \citet{fawcett2006introduction} remains the best tutorial introduction to ROC
 analysis, and \citet{hernandez2012unified} unify most classification metrics as expected losses
 under different threshold choice methods. \citet{ferri2009experimental} compare classification
-metrics experimentally. \citet{raschka2018model} reviews evaluation protocols and statistical
+metrics experimentally. \citet{raschka2018model} reviews evaluation protocols\index{evaluation protocol} and statistical
 tests for machine learning, and \citet{demsar2006statistical} is the reference for comparisons
 over multiple data sets. \citet{silvafilho2023classifier} survey classifier calibration,
-\citet{branco2016survey} learning in imbalanced domains, \citet{angelopoulos2023conformal}
-conformal prediction, and \citet{maierhein2024metrics} the metrics for image analysis.
+\citet{branco2016survey} learning in imbalanced\index{class imbalance} domains, \citet{angelopoulos2023conformal}
+conformal prediction\index{conformal prediction}, and \citet{maierhein2024metrics} the metrics for image analysis.
 
 \section*{Exercises}
 \phantomsection\addcontentsline{toc}{section}{Exercises}
@@ -3191,50 +3191,50 @@ conformal prediction, and \citet{maierhein2024metrics} the metrics for image ana
 \begin{enumerate}[label=\textbf{1.\arabic*},ref=1.\arabic*,leftmargin=*,itemsep=6pt]
   \item\label{exr:confusion} A test for a disease is applied to 200 patients, 40 of whom are
         sick. It gives 46 positive results, 30 of them for sick patients. Build the confusion
-        matrix and compute the TPR, TNR, PPV, NPV, accuracy, balanced accuracy, $F_1$, MCC and
-        Cohen's kappa.
+        matrix\index{confusion matrix} and compute the TPR\index{true positive rate}, TNR, PPV\index{predictive value!positive}, NPV\index{predictive value!negative}, accuracy, balanced accuracy\index{balanced accuracy}, $F_1$, MCC\index{Matthews correlation coefficient} and
+        Cohen's kappa\index{Cohen's kappa}.
   \item\label{exr:ppv} The test of Exercise~\ref{exr:confusion} is used to screen a population
-        with a prevalence of 2\%. What fraction of the positive results correspond to sick
+        with a prevalence\index{prevalence} of 2\%. What fraction of the positive results correspond to sick
         people?
   \item\label{exr:aucba} Show that the area under the ROC ``curve'' of a crisp classifier,
         formed by the points $(0,0)$, $(\FPR,\TPR)$ and $(1,1)$, equals its balanced accuracy.
   \item\label{exr:hull} Four classifiers have $(\FPR,\TPR)$ equal to A $(0.1,0.5)$,
-        B $(0.2,0.7)$, C $(0.4,0.9)$ and D $(0.3,0.6)$. Draw the ROC convex hull. Which
-        classifier minimises the expected cost when there are 100 positives and 400 negatives,
+        B $(0.2,0.7)$, C $(0.4,0.9)$ and D $(0.3,0.6)$. Draw the ROC convex hull\index{ROC convex hull}. Which
+        classifier minimises the expected cost\index{expected cost} when there are 100 positives and 400 negatives,
         a false negative costs 10 and a false positive costs 1? Compute its total cost.
   \item\label{exr:roc} A ranker assigns the scores 0.9, 0.8, 0.7, 0.6, 0.55, 0.5, 0.4 and 0.3
-        to eight test examples whose classes are $+,-,+,+,-,-,+,-$. Draw the ROC curve and
+        to eight test examples whose classes are $+,-,+,+,-,-,+,-$. Draw the ROC curve\index{ROC curve} and
         compute the AUC both as an area and by counting pairs.
   \item\label{exr:proper} Show that the expected absolute error $\E|Y-p|$ of a probability $p$
         for a binary event with true probability $q$ is minimised by $p\in\{0,1\}$. What does
-        this imply for a model trained to minimise the MAE of its probabilities?
+        this imply for a model trained to minimise the MAE\index{mean absolute error (MAE)} of its probabilities?
   \item\label{exr:calib} A model predicts $\hat p=0.8$ for 50 test examples, 30 of which are
-        positive, and $\hat p=0.3$ for 100 examples, 40 of which are positive. Compute the ECE
-        with these two bins, and the three terms of Murphy's decomposition of the Brier score
+        positive, and $\hat p=0.3$ for 100 examples, 40 of which are positive. Compute the ECE\index{calibration!expected calibration error}
+        with these two bins, and the three terms of Murphy's decomposition of the Brier score\index{Brier score}
         (\cref{eq:murphy}). Check that they add up to the Brier score.
   \item\label{exr:cost} A false positive costs 5\EUR{} and a false negative 50\EUR. Which
         threshold should be applied to calibrated probabilities? If the learner can only use
         the threshold 0.5, how should the training data be resampled?
-  \item\label{exr:fraud} Using the credit card benefit matrix of \cref{sec:costs}, compute the
+  \item\label{exr:fraud} Using the credit card benefit matrix\index{benefit matrix} of \cref{sec:costs}, compute the
         probability of fraud above which a transaction of 50\EUR{} should be refused.
-  \item\label{exr:corr} For $y=(1,2,3,4,5)$ and the predictions $\hat y=2y$, compute the Pearson
+  \item\label{exr:corr} For $y=(1,2,3,4,5)$ and the predictions $\hat y=2y$, compute the Pearson\index{Pearson correlation}
         correlation, the MAE and $R^2$. Discuss.
   \item\label{exr:bakery} A bakery earns 1.20\EUR{} for each loaf sold and loses 0.40\EUR{} for
         each unsold loaf. Which quantile of the demand should its forecasting model predict?
   \item\label{exr:ap} A detector produces five detections, in order of confidence TP, FP, TP,
         TP, FP, in images with four ground-truth objects. Compute the all-point average
-        precision.
-  \item\label{exr:bleu} Compute BLEU-2 and ROUGE-1 recall for the candidate ``\emph{a cat is on
+        precision\index{average precision}.
+  \item\label{exr:bleu} Compute BLEU\index{BLEU}-2 and ROUGE\index{ROUGE}-1 recall for the candidate ``\emph{a cat is on
         the mat}'' against the reference ``\emph{the cat is on the mat}''.
-  \item\label{exr:rule} Using \cref{tab:baskets}, compute the support, confidence and lift of
+  \item\label{exr:rule} Using \cref{tab:baskets}, compute the support, confidence and lift\index{lift} of
         the rule $\{$La Vaca$\}\Rightarrow\{$Cabez\'on$\}$.
   \item\label{exr:mcnemar} Two classifiers are tested on the same 500 examples. Classifier A is
         right and B wrong on 15 examples, and the opposite happens on 5. Is the difference
         significant at the 5\% level?
   \item\label{exr:protocol} A retail chain wants to predict next month's sales of each of its
         500 stores using three years of monthly data, and to tune the hyperparameters of a
-        gradient boosting model. Design an evaluation protocol that gives an honest estimate of
-        the error and avoids leakage.
+        gradient boosting\index{gradient boosting} model. Design an evaluation protocol\index{evaluation protocol} that gives an honest estimate of
+        the error and avoids leakage\index{data leakage}.
 \end{enumerate}
 
 \section*{Solutions to selected exercises}
@@ -3243,7 +3243,7 @@ conformal prediction, and \citet{maierhein2024metrics} the metrics for image ana
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
   \item[\ref{exr:confusion}] $\TP=30$, $\FP=16$, $\FN=10$, $\TN=144$. $\TPR=0.75$,
         $\TNR=0.90$, $\PPV=30/46=0.652$, $\NPV=144/154=0.935$, accuracy $174/200=0.87$, balanced
-        accuracy $0.825$, $F_1=60/86=0.698$,
+        accuracy\index{balanced accuracy} $0.825$, $F_1=60/86=0.698$,
         $\mathrm{MCC}=(30\cdot144-16\cdot10)/\sqrt{46\cdot40\cdot160\cdot154}=0.618$. For kappa,
         $p_e=0.23\cdot0.20+0.77\cdot0.80=0.662$ and $\kappa=(0.87-0.662)/(1-0.662)=0.615$.
   \item[\ref{exr:ppv}] By \cref{eq:ppv}, $\PPV=0.75\cdot0.02/(0.75\cdot0.02+0.10\cdot0.98)=0.133$:
@@ -3258,13 +3258,13 @@ conformal prediction, and \citet{maierhein2024metrics} the metrics for image ana
         and 1 negatives respectively, so $\mathrm{AUC}=11/16=0.6875$.
   \item[\ref{exr:proper}] $\E|Y-p|=q(1-p)+(1-q)p=q+p(1-2q)$ is linear in $p$, so its minimum over
         $[0,1]$ is at $p=1$ if $q>1/2$ and at $p=0$ if $q<1/2$. A model trained to minimise the
-        MAE of its probabilities learns to output (almost) crisp predictions: the MAE is not a
-        proper scoring rule.
+        MAE\index{mean absolute error (MAE)} of its probabilities learns to output (almost) crisp predictions: the MAE is not a
+        proper scoring rule\index{proper scoring rule}.
   \item[\ref{exr:calib}] Bin 1: $\bar y=0.6$; bin 2: $\bar y=0.4$; overall $\bar y=70/150=0.467$.
         $\mathrm{ECE}=\frac{50}{150}0.2+\frac{100}{150}0.1=0.133$. Reliability
         $=(50\cdot0.04+100\cdot0.01)/150=0.020$; resolution
         $=(50\cdot0.133^2+100\cdot0.067^2)/150=0.0089$; uncertainty $=0.467\cdot0.533=0.249$. The
-        Brier score is $0.020-0.009+0.249=0.260$, which matches the direct computation
+        Brier score\index{Brier score} is $0.020-0.009+0.249=0.260$, which matches the direct computation
         $(30\cdot0.04+20\cdot0.64+40\cdot0.49+60\cdot0.09)/150=39/150=0.26$.
   \item[\ref{exr:cost}] $t^\star=5/(5+50)=0.091$. Multiply the number of negatives by
         $c_{\mathrm{FP}}/c_{\mathrm{FN}}=0.1$ (keep one in ten), or replicate each positive ten
@@ -3278,9 +3278,9 @@ conformal prediction, and \citet{maierhein2024metrics} the metrics for image ana
         0.75)$. Interpolated precision: 1 at recall 0.25, 0.75 at 0.5 and at 0.75, so
         $\mathrm{AP}=0.25\cdot1+0.25\cdot0.75+0.25\cdot0.75=0.625$.
   \item[\ref{exr:bleu}] $p_1=5/6$ (\emph{a} does not match; \emph{the} is matched once),
-        $p_2=4/5$, equal lengths, so BLEU-2 $=\sqrt{5/6\cdot4/5}=0.816$. ROUGE-1 recall $=5/6=0.833$.
+        $p_2=4/5$, equal lengths, so BLEU\index{BLEU}-2 $=\sqrt{5/6\cdot4/5}=0.816$. ROUGE\index{ROUGE}-1 recall $=5/6=0.833$.
   \item[\ref{exr:rule}] La Vaca appears in T4, T6, T8 and T9, and Cabez\'on in T1, T4, T6 and
-        T9; both in T4, T6 and T9. Support $0.3$, confidence $3/4=0.75$, lift $0.75/0.4=1.875$.
+        T9; both in T4, T6 and T9. Support $0.3$, confidence $3/4=0.75$, lift\index{lift} $0.75/0.4=1.875$.
   \item[\ref{exr:mcnemar}] $b=15$, $c=5$. The exact binomial test gives $p=0.041$ and the
         $\chi^2$ test with continuity correction $\chi^2=81/20=4.05$, $p=0.044$: significant at
         the 5\% level (but not at 1\%).

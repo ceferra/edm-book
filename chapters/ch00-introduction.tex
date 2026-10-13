@@ -13,7 +13,7 @@ reviews examined them afterwards. One of them screened more than two thousand st
 the 62 of highest quality; it concluded that none of them was of potential clinical use, because of
 methodological flaws and biases \citep{roberts2021common}. In some of the data sets, for instance, the
 examples without COVID-19 were radiographs of children, so a model could look accurate by recognising
-children. The other review found that almost all the published prediction models were at high risk of bias:
+children. The other review found that almost all the published prediction models were at high risk\index{AI Act!high-risk systems} of bias:
 small or unrepresentative data, and evaluations that could not be trusted \citep{wynants2020prediction}.
 
 The reviews highlighted serious problems in data selection, study design and evaluation, even when
@@ -29,9 +29,9 @@ A model has a life that starts long before it is trained and continues long afte
 (Unit~\ref{ch:hybrid}); make sure that it is fair, that its decisions can be explained and that it resists
 those who want to fool it (Unit~\ref{ch:reliable}); and build it with as much automation as is wise
 (Unit~\ref{ch:learning}). Then it must be put in the hands of its users, reliably and repeatably
-(Unit~\ref{ch:deployment}), and watched, because the world that produced its training data keeps changing,
-until it has to be updated or replaced (Unit~\ref{ch:monitoring}). Recommender systems, customer
-relationship management and interactive applications show the whole cycle at work in business
+(Unit~\ref{ch:deployment}), and watched, because the world that produced its training data\index{training set} keeps changing,
+until it has to be updated or replaced (Unit~\ref{ch:monitoring}). Recommender systems\index{recommender system}, customer
+relationship management\index{customer relationship management (CRM)} and interactive applications show the whole cycle at work in business
 (Unit~\ref{ch:applications}).
 
 \begin{figure}[htbp]
@@ -60,10 +60,10 @@ relationship management and interactive applications show the whole cycle at wor
 
 \section*{A first look}
 
-\Cref{lst:firstlook} gives a taste of what is to come with a real data set: the German credit data, 1000
+\Cref{lst:firstlook} gives a taste of what is to come with a real data set: the German credit\index{German credit data} data, 1000
 applicants for loans at a German bank, 30\% of whom turned out to be bad credit risks
-\citep{hofmann1994statlog}. It trains a logistic regression, the kind of model that takes two lines of code,
-and asks it four questions that its accuracy cannot answer.
+\citep{hofmann1994statlog}. It trains a logistic regression\index{logistic regression}, the kind of model that takes two lines of code,
+and asks it four questions that its accuracy\index{accuracy} cannot answer.
 
 \begin{pylisting}[label={lst:firstlook}]{Four questions that accuracy does not answer, on real credit data}
 import hashlib
@@ -133,14 +133,14 @@ if 50% of the applicants are bad, 20.1% of the approved loans default
   \item \emph{Is it good?} Its accuracy is 0.752, which sounds respectable until we notice that approving every
         applicant would score 0.700. Accuracy alone says little (Unit~\ref{ch:evaluation}).
   \item \emph{Good for what?} The data set comes with its own costs: approving a bad applicant costs five times
-        more than rejecting a good one. With the default threshold of 0.5 the model costs 0.868 per applicant;
+        more than rejecting a good one. With the default threshold\index{threshold} of 0.5 the model costs 0.868 per applicant;
         rejecting every applicant whose probability of being bad exceeds $1/6$, the threshold that these costs
         imply, brings the cost down to 0.530, a reduction of almost 40\% with the \emph{same} model
         (Unit~\ref{ch:evaluation}).
   \item \emph{Good for whom?} The model approves 29\% of the applicants under 25 and 43\% of the others. Is the
         difference justified by their risk, or is the model penalising youth? Answering requires the tools of
-        Unit~\ref{ch:reliable}, and in the European Union credit scoring is a \emph{high-risk} application whose
-        fairness, documentation and oversight are regulated by law (\cref{sec:aiact}).
+        Unit~\ref{ch:reliable}, and in the European Union credit scoring is a \emph{high-risk\index{AI Act!high-risk systems|textbf}} application whose
+        fairness\index{fairness}, documentation and oversight are regulated by law (\cref{sec:aiact}).
   \item \emph{Good for how long?} As an illustrative label-shift scenario, suppose the share of bad applicants rose
         from 30\% to 50\% while the model's approval rates within each class stayed unchanged: the same model would
         approve loans of which 20.1\% default, twice the 9.8\% of today, and the bank would only notice months later,
@@ -153,11 +153,11 @@ None of the four answers is visible in the accuracy, and none of them depends on
 
 Three trends make these questions more pressing than ever. First, models now take or prepare decisions about
 credit, jobs, health, prices and what we read, watch and buy, often for millions of people at once, so their
-mistakes are multiplied. Second, large language models have made it possible for almost anyone to build a
+mistakes are multiplied. Second, large language models\index{large language model (LLM)}\index{language model} have made it possible for almost anyone to build a
 model or an application in an afternoon, and they are themselves models that must be evaluated, deployed and
-monitored; we discuss them as tools for automating data science (\cref{sec:llmds}), as components to deploy
+monitored; we discuss them as tools for automating data science\index{automated data science} (\cref{sec:llmds}), as components to deploy
 (\cref{sec:llmapps}) and as systems to monitor (\cref{sec:llmmonitor}). Third, what used to be good practice is
-becoming law: the European Union's AI Act requires those who build high-risk systems to manage their risks,
+becoming law: the European Union's AI Act\index{AI Act} requires those who build high-risk\index{AI Act!high-risk systems} systems to manage their risks,
 govern their data, document them, log their operation, keep a human in charge, ensure their accuracy and
 robustness, and monitor them once they are on the market (\cref{sec:aiact}). Almost every one of those
 obligations corresponds to a unit of this book.
@@ -175,6 +175,6 @@ companion release of the book (see the Preface).
 
 The units can be read in order, as a course, or separately; Unit~\ref{ch:evaluation} is the foundation of the
 others, and cross-references point to the sections each unit builds on. The reader is expected to know basic
-Python, the elementary concepts of machine learning (training and test data, classification and regression)
+Python, the elementary concepts of machine learning (training and test data\index{test set}, classification and regression)
 and introductory statistics.
 

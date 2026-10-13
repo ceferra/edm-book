@@ -9,7 +9,7 @@ software on the servers that sent its orders to the stock market. A technician h
 the eight servers, where an obsolete function, reactivated by a flag that the new code reused, began to send orders
 that nobody had intended. In 45 minutes the firm lost more than 460 million dollars; it had to be rescued by investors
 and was taken over the following year \citep{sec2013knight}. Knight's software was not a machine learning model, but
-its failure is the nightmare of every deployment: a manual step, no automated check that every server ran the same
+its failure is the nightmare of every deployment\index{deployment}: a manual step, no automated check that every server ran the same
 version, and no quick way of stopping. Deploying models adds risks of its own to these.
 
 A prediction model creates value only when its users can reach its outputs reliably. Deployment is the step that puts a model in front
@@ -17,32 +17,32 @@ of its users, and it is where many data science projects fail: surveys of practi
 models that worked in the laboratory and never reached production, or reached it and broke
 \citep{paleyes2022challenges}. This unit covers the two halves of the problem. The first is
 choosing \emph{how} a model will serve its predictions: on a server that answers requests one by
-one or in batches, on the user's own device, and, for training, federated learning, which learns
+one or in batches, on the user's own device, and, for training, federated learning\index{federated learning}, which learns
 from data that stay on the devices and can produce a shared model or personalised ones. The second is building the \emph{infrastructure} that makes deployment
-reliable and repeatable: version control for code and data, experiment tracking, automated tests,
+reliable and repeatable: version control for code and data, experiment tracking\index{experiment tracking}, automated tests,
 packaging, and pipelines that retrain and redeploy models automatically, a set of practices known
-as ModelOps or MLOps \citep{kreuzberger2023mlops}. We follow the approach of
+as ModelOps\index{ModelOps} or MLOps\index{MLOps} \citep{kreuzberger2023mlops}. We follow the approach of
 \citet{ameisen2020building} for the first half and of \citet{dubovikov2019managing} for the
 second.
 
 \begin{objectives}
 After studying this unit you should be able to:
 \begin{itemize}
-  \item choose a deployment option (server-side streaming or batch, client-side on device or in
-        the browser, federated learning) from the latency, hardware, network, privacy, cost and
+  \item choose a deployment option (server-side\index{server-side deployment} streaming or batch, client-side\index{client-side deployment} on device or in
+        the browser, federated learning) from the latency\index{latency}, hardware, network, privacy, cost and
         complexity requirements of an application;
-  \item build a prediction API, and measure its latency and throughput;
+  \item build a prediction API\index{API}, and measure its latency and throughput\index{throughput};
   \item make a model small enough for a device, and explain how federated learning trains
         personalised models without collecting the data;
-  \item exchange models between platforms with standard formats such as PMML and ONNX, and
+  \item exchange models between platforms with standard formats such as PMML\index{PMML} and ONNX\index{ONNX}, and
         build and test a small web application for a model;
-  \item explain ModelOps and its relation to DevOps, and set up version control for code and data,
+  \item explain ModelOps and its relation to DevOps\index{DevOps}, and set up version control for code and data,
         reproducible environments and experiment tracking;
-  \item write automated tests for data science code, package it, and design a continuous training
+  \item write automated tests for data science code, package it, and design a continuous training\index{continuous training}
         pipeline with data tests and quality gates;
   \item assemble a technology stack for a data science team.
-  \item deploy applications built on large language models: choose where the model runs, treat prompts
-        as code, build and evaluate retrieval-augmented generation, and add guardrails;
+  \item deploy applications built on large language models\index{large language model (LLM)}\index{language model}: choose where the model runs, treat prompts\index{prompt}
+        as code, build and evaluate retrieval-augmented generation\index{retrieval-augmented generation (RAG)}, and add guardrails\index{guardrails};
 \end{itemize}
 \end{objectives}
 
@@ -50,7 +50,7 @@ After studying this unit you should be able to:
 \section{Choosing a deployment option}\label{sec:deployoptions}
 
 Different deployment approaches suit different requirements. Before choosing one we must consider
-the \emph{latency} the application can tolerate, the \emph{hardware} and \emph{network} available
+the \emph{latency\index{latency|textbf}} the application can tolerate, the \emph{hardware} and \emph{network} available
 at prediction time, the \emph{privacy} of the data, the \emph{cost} of running the system and the
 \emph{complexity} we can afford to maintain. \Cref{tab:deploy} summarises how the options of this
 section compare.
@@ -79,7 +79,7 @@ much greater complexity: training, aggregation and privacy on many devices\\
 
 \subsection{Server-side deployment}
 
-Server-side deployment sets up a web server that accepts requests from clients, runs them through an
+Server-side\index{server-side deployment} deployment sets up a web server that accepts requests from clients, runs them through an
 inference pipeline, and returns the results. There are two common workloads: \emph{streaming}, in
 which each request is answered as it arrives, and \emph{batch}, in which predictions are computed in
 advance for many examples (\cref{fig:serverflows}).
@@ -141,7 +141,7 @@ asks.
 \Cref{lst:api} implements such an endpoint with Flask, the framework used by the ML Editor example of
 \citet{ameisen2020building}. It follows the six steps, and its response codes tell the client what
 went wrong: a valid request gets a probability, a decision and the version of the model (always
-worth returning, for debugging and monitoring); a non-numeric value or a value out of range gets a
+worth returning, for debugging and monitoring\index{monitoring}); a non-numeric value or a value out of range gets a
 400 error, an unknown customer a 404, and a wrong key a 401. With Flask's test client, which skips
 the network, a request takes less than a millisecond. In production the application runs behind a
 WSGI server with several workers, and usually behind a load balancer.
@@ -216,7 +216,7 @@ returned without rounding, so that a client can reproduce the decision from it.
 
 The endpoint approach is quick to implement, but the infrastructure has to grow with the number of
 users: if the traffic exceeds the capacity of the servers, requests are delayed or fail. A useful tool
-for sizing it is \emph{Little's law} \citep{little1961proof}: in a stable system, the mean number of
+for sizing it is \emph{Little's law\index{Little's law|textbf}} \citep{little1961proof}: in a stable system, the mean number of
 requests in the system, $L$, including those waiting, equals the arrival rate $\lambda$ times their mean total
 residence time, $W$,
 \begin{equation}\label{eq:little}
@@ -276,7 +276,7 @@ batches of  1000:    31,478 predictions per second
 batches of 10000:    57,923 predictions per second
 \end{pyoutput}
 
-\Cref{lst:latency} and \cref{fig:serving} quantify the difference for a random forest of 200 trees. A
+\Cref{lst:latency} and \cref{fig:serving} quantify the difference for a random forest\index{random forest} of 200 trees. A
 single request takes about 10 milliseconds (p50 9.9, p95 10.5 and p99 11.2), so one process answers
 about 100 requests per second. Called with batches of 10,000 examples, the same model produces about
 58,000 predictions per second, almost 600 times more, because the fixed cost of each call (checking
@@ -299,7 +299,7 @@ failure for the application.
 
 \subsection{Client-side deployment}
 
-The goal of client-side deployment is to run all the computation on the client, eliminating the need
+The goal of client-side\index{client-side deployment} deployment is to run all the computation on the client, eliminating the need
 for a server to run models. Models are usually trained in the same way, on a powerful server, and are
 then sent to the device, through an application or a web browser, which runs the inference. This
 reduces the infrastructure needed to serve every user, reduces the amount of data transferred between
@@ -309,15 +309,15 @@ the complexity of the models that can be used.
 
 \paragraph{On the device} A model that runs on a laptop or a phone should be as small as possible, to
 run quickly and without draining the battery. There are several ways of shrinking it: using a simpler
-model, reducing the number of parameters or the \emph{precision} of the computations (quantisation,
+model, reducing the number of parameters or the \emph{precision\index{precision|textbf}} of the computations (quantisation\index{quantisation},
 \citealp{jacob2018quantization}; pruning, \citealp{han2016deep}), reducing the number of features, or
 distilling a large model into a small one (\cref{sec:drawbacks}). Specialised runtimes, such as
-TensorFlow Lite or ONNX Runtime (\cref{sec:exchange}), execute the result efficiently. Most models
+TensorFlow Lite or ONNX\index{ONNX} Runtime (\cref{sec:exchange}), execute the result efficiently. Most models
 lose a little performance when they are ported to a device; if the product cannot tolerate that
 degradation, the model must stay on a server. Latency matters too: if running the model on the device
 takes longer than sending the data to a server and waiting for the answer, the server may be the better
 option. For many applications, though, the value of a local model that works without connection
-outweighs a small loss of accuracy: predictive keyboards, applications that identify plants from a
+outweighs a small loss of accuracy\index{accuracy}: predictive keyboards, applications that identify plants from a
 photo taken on a hike, or translators.
 
 \begin{pylisting}[label={lst:ondevice}]{Shrinking a model for a device: fewer trees, lower precision, fewer features}
@@ -380,7 +380,7 @@ an accuracy of 0.971 but its serialised artefact occupies 11.6~MiB (11,898~KiB),
 need 1.2~MiB. A small neural
 network is both smaller and as accurate: 19~KiB in 32-bit floating point, 9.8~KiB in 16-bit, and 5.3~KiB
 when its weights are quantised to 8-bit integers with one scale per layer, with no loss of accuracy
-(0.975). A logistic regression that uses only 16 of the 64 pixels fits in 0.7~KiB, at the price of four
+(0.975). A logistic regression\index{logistic regression} that uses only 16 of the 64 pixels fits in 0.7~KiB, at the price of four
 points of accuracy. The neural network in \texttt{int8} is more than 2000 times smaller than the large
 forest, with the same accuracy. These sizes are those of the serialised parameters; the example quantises the stored weights and
 checks the predictions after converting them back to floating point, so it does not measure a complete
@@ -405,7 +405,7 @@ when they come back), which again favours small models.
 
 So far we have deployed a single model, trained in advance, for all users. What if each user needed a
 different model, as in content recommendation or healthcare? One solution is to give a shared model
-user-specific features. Another is \emph{federated learning} \citep{mcmahan2017communication,kairouz2021advances}:
+user-specific features. Another is \emph{federated learning\index{federated learning|textbf}} \citep{mcmahan2017communication,kairouz2021advances}:
 every user has a model with the same architecture but different parameter values; each model learns
 from its user's data, and only sends model updates to a server, which aggregates them to improve a
 global model and sends it back to the clients (\cref{fig:fedround}). Each user receives a model that
@@ -509,8 +509,8 @@ writes mostly two of the ten digits. A softmax regression is trained in four way
 Pooling all the data on a server, which federated learning forbids, gives an accuracy of 0.965 on all
 the digits. A model trained only on each user's data is good at that user's digits (0.874) but poor at
 the others (0.562). Federated averaging reaches 0.952 on all the digits after 30 rounds, without any
-example leaving its device; and fine-tuning the federated model for two epochs on each device gives
-every user a personalised model, and the mean accuracy across clients on their own test data (0.969) matches
+example leaving its device; and fine-tuning\index{fine-tuning} the federated model for two epochs on each device gives
+every user a personalised model, and the mean accuracy across clients on their own test data\index{test set} (0.969) matches
 that of the centralised model. The mean hides differences: in this run some clients gain and others lose
 accuracy with fine-tuning, so the distribution across clients should be reported too. Note that federated
 learning concerns how a model is \emph{trained}; the resulting model can then serve predictions on the devices
@@ -533,7 +533,7 @@ Federated learning is an exciting direction, but it adds a layer of complexity
 that are slow, offline or malicious, and limiting communication. And keeping the data on the device
 is not enough to guarantee privacy, since model updates can leak information about the training
 examples \citep{zhu2019deep}; secure aggregation, which lets the server see only the sum of the updates
-\citep{bonawitz2017practical}, and differential privacy, which adds calibrated noise
+\citep{bonawitz2017practical}, and differential privacy, which adds calibrated\index{calibration} noise
 \citep{abadi2016deep}, are used to close that gap.
 
 % =====================================================================
@@ -569,7 +569,7 @@ standard interface & not a format that other runtimes can execute\\
 
 \subsection{Native serialisation}
 
-The easiest way of saving a scikit-learn model is to serialise the Python object with pickle or joblib,
+The easiest way of saving a scikit-learn model is to serialise the Python object with pickle\index{serialisation of models} or joblib,
 as R users do with \texttt{saveRDS}. It works for any model, but the file can only be loaded by the same
 language, usually with the same versions of the libraries, which ties the production system to the
 training environment. Worse, loading a pickle can run arbitrary code, so a pickle from an untrusted
@@ -582,7 +582,7 @@ trusts them explicitly.
 
 The \emph{Predictive Model Markup Language} is an XML standard maintained by the Data Mining Group (DMG),
 a vendor-neutral consortium, since the late 1990s; its current version is 4.4 \citep{dmg2019pmml,guazzelli2009pmml}.
-A PMML document is \emph{declarative}: it describes the model, and an engine that implements the standard
+A PMML\index{PMML} document is \emph{declarative}: it describes the model, and an engine that implements the standard
 computes the predictions, so loading it never executes code from the author of the file. Its main parts
 are:
 \begin{itemize}
@@ -598,9 +598,9 @@ are:
         \texttt{ModelVerification} records, pairs of inputs and expected outputs that the engine checks
         when it loads the model.
 \end{itemize}
-The standard covers regression and generalised linear models, decision trees, rule sets, naive Bayes,
-support vector machines, neural networks, $k$-nearest neighbours, clustering, association rules, sequence
-and time series models, and ensembles of any of them through segmentation. PMML documents are produced by
+The standard covers regression and generalised linear models, decision trees\index{decision tree}, rule sets, naive Bayes\index{naive Bayes},
+support vector machines, neural networks, $k$-nearest neighbours\index{k-nearest neighbours@$k$-nearest neighbours}, clustering\index{clustering}, association rules\index{association rules}, sequence
+and time series models, and ensembles\index{ensemble} of any of them through segmentation\index{segmentation}. PMML documents are produced by
 converters for R, Python (sklearn2pmml), Spark, KNIME and commercial tools, and consumed by scoring
 engines such as JPMML \citep{jpmml}, by analytics platforms and by some databases.
 
@@ -674,7 +674,7 @@ JPMML on 2000 applicants: same decisions True, largest difference 0.0e+00
 The data dictionary lists only the fields that the model uses: the converter dropped the years in the
 job, which the tree ignores. The tree itself is stored as nested nodes, each with a predicate, and an
 engine evaluates the children of a node \emph{in order}, following the first whose predicate is true:
-a document that a person can read and audit, which links PMML with the interpretable models of
+a document that a person can read and audit, which links PMML with the interpretable\index{interpretability} models of
 \cref{sec:intmodels}. The JPMML engine, written in Java and independent of scikit-learn, first reproduces
 the verification records and then scores the 2000 applicants with exactly the same decisions and
 probabilities.
@@ -690,14 +690,14 @@ The DMG proposed a more expressive JSON-based successor, the Portable Format for
 
 The \emph{Open Neural Network Exchange} is a widely used open format for exchanging models.
 It was launched in 2017 by Facebook and Microsoft and is now an open-source project of the Linux
-Foundation \citep{onnx2019}. An ONNX model is a \emph{computation graph}, stored with Protocol Buffers:
+Foundation \citep{onnx2019}. An ONNX\index{ONNX} model is a \emph{computation graph}, stored with Protocol Buffers:
 named inputs and outputs, and nodes that apply standard \emph{operators}. Operators belong to versioned
 \emph{operator sets} (opsets): the default domain contains the operators of deep learning (convolutions,
 matrix products, activations), and the \texttt{ai.onnx.ml} domain the operators of classical machine
 learning (scalers, encoders, linear models, tree ensembles). A model declares the opsets it uses, and a
 runtime that supports them can execute it.
 
-Converters exist for most frameworks: skl2onnx for scikit-learn, onnxmltools for XGBoost, LightGBM and
+Converters exist for most frameworks: skl2onnx for scikit-learn, onnxmltools for XGBoost\index{XGBoost}, LightGBM and
 Spark, and the exporters of PyTorch and TensorFlow. ONNX Runtime \citep{onnxruntime2021} executes the
 models on CPUs and, through \emph{execution providers}, on GPUs and specialised accelerators, as well as
 in browsers (with WebAssembly and WebGPU) and on mobile devices; it also includes tools to quantise models
@@ -767,7 +767,7 @@ one request: scikit-learn 2.57 ms, ONNX Runtime 0.014 ms
 \end{pyoutput}
 
 \Cref{lst:onnx} exports a realistic pipeline: a column transformer that standardises two numeric features
-and one-hot encodes two categorical ones, followed by gradient boosting. The ONNX graph has one input per
+and one-hot encodes two categorical ones, followed by gradient boosting\index{gradient boosting}\index{boosting}. The ONNX graph has one input per
 column, and the operators show how each step was translated: \texttt{Scaler}, \texttt{OneHotEncoder},
 \texttt{Concat} and a \texttt{TreeEnsembleClassifier} from the \texttt{ai.onnx.ml} domain. ONNX Runtime
 reproduces every label, with probabilities that differ by $2\cdot10^{-7}$ because the exported graph
@@ -780,8 +780,8 @@ size, and the latency of a service must be measured end to end, under representa
 
 Exporting to ONNX has pitfalls of its own. Not every model or transformation has a converter (a custom
 Python function in the pipeline, for instance, cannot be translated), the 32-bit arithmetic can change a
-decision when a score is very close to a threshold, and the runtime must support the opsets that the model
-declares. As with PMML, every export should be checked against the original model on real data, as both
+decision when a score is very close to a threshold\index{threshold}, and the runtime must support the opsets that the model
+declares. As with PMML\index{PMML}, every export should be checked against the original model on real data, as both
 listings do.
 
 \subsection{Framework formats and packaging conventions}
@@ -791,8 +791,8 @@ predecessor, is deprecated and kept for existing systems), the SavedModel format
 devices, and Core ML for Apple devices. They support most of what their framework can do, within the operators and runtimes available, at the
 price of
 tying the production system to that ecosystem. \emph{Packaging conventions} solve a different problem.
-An MLflow Model \citep{zaharia2018accelerating}, for instance, is a directory that contains the model in
-one or several \emph{flavours} (scikit-learn, PyTorch, ONNX\dots), the description of its environment,
+An MLflow\index{MLflow} Model \citep{zaharia2018accelerating}, for instance, is a directory that contains the model in
+one or several \emph{flavours} (scikit-learn, PyTorch, ONNX\index{ONNX}\dots), the description of its environment,
 a \emph{signature} with the names and types of its inputs and outputs, and a generic Python interface, so
 that any MLflow model can be loaded and served in the same way. The choice between all these options
 follows from where the model must run, who must read it, and how much the production system can depend on
@@ -802,7 +802,7 @@ the training environment.
 \section{Web applications for models}\label{sec:webapps}
 
 Often the fastest way of putting a model in the hands of its users is a small web application.
-\emph{Shiny} \citep{shiny2012} builds interactive applications from code alone: a user interface of input
+\emph{Shiny\index{Shiny|textbf}} \citep{shiny2012} builds interactive applications from code alone: a user interface of input
 controls and outputs, and a server function that recomputes the outputs whenever the inputs they depend on
 change. Shiny was born in the R community, and Posit, the company that develops it, also maintains Shiny for
 Python \citep{shinypython2024}, which we use in this book; \cref{tab:shiny} lists its building blocks. Streamlit
@@ -876,7 +876,7 @@ def server(input, output, session):
 app = App(app_ui, server)                  # run it with: shiny run shiny_app.py
 \end{pylisting}
 
-Interactive applications can be tested automatically too (\cref{lst:shinytest}). A unit test checks the
+Interactive applications can be tested automatically too (\cref{lst:shinytest}). A unit test\index{testing!unit tests} checks the
 function that builds the answer. The application is an ASGI web application, so a test client can request
 its page without starting a server and check that the controls and the output are there. Testing the
 \emph{reactivity}, that the answer changes when a slider moves, needs a client that speaks Shiny's
@@ -947,7 +947,7 @@ test_shiny_app.py::test_output_follows_the_sliders PASSED                [100%]
 ============================== 3 passed in 1.65s ===============================
 \end{pyoutput}
 
-Such applications are ideal for demonstrations, internal tools and prototypes; products with many users need
+Such applications are ideal for demonstrations, internal tools and prototypes\index{prototypes and criticisms}; products with many users need
 the architecture of the rest of this unit.
 
 % =====================================================================
@@ -955,36 +955,36 @@ the architecture of the rest of this unit.
 
 A growing share of the models that reach production are not trained by the team that deploys them. An assistant
 that answers customers' questions, a tool that extracts fields from contracts or a system that summarises reports
-is usually built around a large language model trained by someone else. Deployment then shifts from shipping a
+is usually built around a large language model\index{large language model (LLM)} trained by someone else. Deployment then shifts from shipping a
 model to shipping everything around it: the instructions it receives, the information it is given, the checks on
 what it returns, and the infrastructure that serves it.
 
 \subsection{Where the model runs}
 
 Two decisions are separate: where the inference runs, and how the model is adapted. The simplest place is an
-\emph{external API}: no infrastructure, access to the most capable models, and a price per token processed; but the data leave the organisation, and the provider can change or retire
+\emph{external API\index{API|textbf}}: no infrastructure, access to the most capable models, and a price per token processed; but the data leave the organisation, and the provider can change or retire
 the model. The alternative is to \emph{host an open-weight model}, which gives control over the data, the version and the
 cost per request, at the price of running GPUs; serving engines batch the requests of many users and manage the memory
-of the model carefully to make this efficient \citep{kwon2023efficient}, and the quantisation of
+of the model carefully to make this efficient \citep{kwon2023efficient}, and the quantisation\index{quantisation} of
 \cref{sec:deployoptions} reduces the hardware needed. Independently of where it runs, the model can be
-used as it is, guided by prompts and retrieval, or \emph{fine-tuned}: a small model fine-tuned for one narrow task can be
+used as it is, guided by prompts\index{prompt} and retrieval, or \emph{fine-tuned\index{fine-tuning|textbf}}: a small model fine-tuned for one narrow task can be
 cheaper and faster than a large general one when the task is well defined, and fine-tuning can be combined with an API
 or with self-hosting. The choice involves the same
 trade-offs as the options of \cref{sec:deployoptions}, plus one more: whether the data may leave the organisation at all.
 
 \subsection{Prompts are code}
 
-The instructions given to the model, its \emph{prompt}, determine its behaviour as much as the weights of a classical
+The instructions given to the model, its \emph{prompt\index{prompt|textbf}}, determine its behaviour as much as the weights of a classical
 model determine its predictions. Prompts must therefore be treated like code: kept in templates under version control,
 reviewed, tested, and deployed through the same pipeline as everything else (\cref{sec:infrastructure}). A change of a
-single sentence in a prompt, or of the version of the model behind an API, is a new release, and it needs the tests and
-the cautious rollout of \cref{sec:safedeploy}.
+single sentence in a prompt, or of the version of the model behind an API\index{API}, is a new release, and it needs the tests and
+the cautious\index{cautious classifier} rollout of \cref{sec:safedeploy}.
 
 \subsection{Retrieval-augmented generation}
 
-A language model knows only what was in its training data, which is generic, possibly outdated, and does not include the
-documents of the organisation. \emph{Retrieval-augmented generation} (RAG) gives it that knowledge at the moment of answering
-\citep{lewis2020retrieval}: the documents are split into passages and indexed; for each question, a \emph{retriever} finds the
+A language model knows only what was in its training data\index{training set}, which is generic, possibly outdated, and does not include the
+documents of the organisation. \emph{Retrieval-augmented generation\index{retrieval-augmented generation (RAG)|textbf}} (RAG) gives it that knowledge at the moment of answering
+\citep{lewis2020retrieval}: the documents are split into passages and indexed; for each question, a \emph{retriever\index{retriever|textbf}} finds the
 most relevant passages, and the model is asked to answer using them (\cref{fig:rag}). Knowledge can be updated by updating the
 index, without retraining anything; answers can cite their sources; and the documents a user may see can be controlled. But the
 answer can be no better than the passages retrieved: if the retriever fails, the model either answers from its general knowledge,
@@ -1013,35 +1013,35 @@ which may be wrong, or invents an answer.
 
 \subsection{Guardrails, tests and security}
 
-\emph{Guardrails} are checks around the model. Before it, they detect personal data that should not be sent, or attempts to
+\emph{Guardrails\index{guardrails|textbf}} are checks around the model. Before it, they detect personal data that should not be sent, or attempts to
 manipulate the assistant; after it, they validate that the output has the expected format (for instance, that it parses as JSON
 against a schema), that it is supported by the retrieved passages, and that it contains nothing harmful. One of the most useful
 is a guardrail on the retrieval itself: when no passage is relevant enough, the assistant should say that it does not know, an
-application of the abstention of \cref{sec:cautious}.
+application of the abstention\index{abstention} of \cref{sec:cautious}.
 
 Testing an application whose outputs are free text is harder than testing a classifier, but the principles of
-\cref{sec:packaging} still apply. A \emph{test set} of realistic questions, with the passages that answer them and reference answers,
-allows the retrieval to be measured with ranking metrics (recall@$k$, the mean reciprocal rank) and the answers to be checked for
-correctness and for faithfulness to the passages. Checking free text automatically often uses another language model as a judge,
+\cref{sec:packaging} still apply. A \emph{test set\index{test set|textbf}} of realistic questions, with the passages that answer them and reference answers,
+allows the retrieval to be measured with ranking metrics (recall\index{recall}@$k$, the mean reciprocal rank\index{mean reciprocal rank}) and the answers to be checked for
+correctness and for faithfulness\index{faithfulness} to the passages. Checking free text automatically often uses another language model as a judge,
 which agrees reasonably well with human raters but has biases of its own, such as preferring longer answers or the answer
-presented first \citep{zheng2023judging}; frameworks package such metrics for RAG \citep{es2024ragas}. Every change of prompt,
+presented first \citep{zheng2023judging}; frameworks package such metrics for RAG\index{retrieval-augmented generation (RAG)} \citep{es2024ragas}. Every change of prompt\index{prompt},
 model or index should run the test set again in the delivery pipeline, as a regression test.
 
 Language model applications also have specific vulnerabilities \citep{owasp2025llm}. The most characteristic is \emph{prompt
-injection}: instructions hidden in the user's message, or in a document or web page that the application retrieves, which the
+injection\index{prompt injection|textbf}}: instructions hidden in the user's message, or in a document or web page that the application retrieves, which the
 model may obey \citep{greshake2023not}. Others are the disclosure of sensitive information present in the context and the
 \emph{excessive agency} of applications that let a model act (send e-mails, run code, make payments) with more permissions than
 the task requires. The defences combine guardrails, the principle of least privilege for every tool the model can use, and human
 confirmation of consequential actions.
 
 Finally, every token has a price and a latency. Caching the answers to frequent questions, streaming answers as they are generated,
-limiting the length of the context, and \emph{cascades} that try a small, cheap model first and call a large one only when needed
+limiting the length of the context, and \emph{cascades\index{cascading|textbf}} that try a small, cheap model first and call a large one only when needed
 (\cref{sec:cautious}) keep both under control.
 
 \subsection{Measuring the retriever}
 
 \Cref{lst:rag} evaluates the retrieval step of a small assistant for a bank, whose knowledge base has twelve passages, with twelve
-questions written as customers would write them, not with the words of the documents. Three lexical retrievers are compared: TF-IDF
+questions written as customers would write them, not with the words of the documents. Three lexical retrievers\index{retriever} are compared: TF-IDF\index{TF-IDF}
 on words, TF-IDF on character $n$-grams, which tolerates variations of words, and the average of both.
 
 \begin{pylisting}[label={lst:rag}]{Evaluating the retriever of a RAG application, and when to abstain}
@@ -1128,10 +1128,10 @@ best score: in-scope questions 0.09 to 0.42, out of scope 0.05 to 0.07
 \end{pyoutput}
 
 Retrieval on words puts the right passage first for only 58\% of the questions; character $n$-grams and the combination reach 67\%,
-and find the right passage among the first three for 92\% of them, with a mean reciprocal rank of 0.78. The failures share a cause:
+and find the right passage among the first three for 92\% of them, with a mean reciprocal rank\index{mean reciprocal rank} of 0.78. The failures share a cause:
 the question and the passage use different words for the same thing (``secret number'' and ``PIN'', ``send money'' and
-``transfer'', ``pay back'' and ``repaid''). This is why production systems use \emph{dense} retrievers, which compare embeddings
-learned to place paraphrases close together, often combined with lexical retrieval. The last lines show the abstention guardrail at
+``transfer'', ``pay back'' and ``repaid''). This is why production systems use \emph{dense} retrievers, which compare embeddings\index{embedding}
+learned to place paraphrases close together, often combined with lexical retrieval. The last lines show the abstention\index{abstention} guardrail\index{guardrails} at
 work: questions outside the scope of the bank score at most 0.07, while the in-scope questions score at least 0.09, so a threshold
 between them lets the assistant decline questions it cannot answer. The margin is narrow, and a threshold chosen on twelve questions
 must be validated on many more and monitored once the assistant is in use (\cref{sec:llmmonitor}).
@@ -1148,18 +1148,18 @@ depend on data as much as on code and accumulate their own kind of technical deb
 
 \subsection{From DevOps to ModelOps}
 
-\emph{ModelOps} is a set of practices for automating the operations that recur in data science
-projects: the model training pipeline, data management, version control, experiment tracking, testing
-and deployment \citep{dubovikov2019managing}; the broader term \emph{MLOps} is now more common
+\emph{ModelOps\index{ModelOps|textbf}} is a set of practices for automating the operations that recur in data science
+projects: the model training pipeline, data management, version control, experiment tracking\index{experiment tracking}, testing
+and deployment \citep{dubovikov2019managing}; the broader term \emph{MLOps\index{MLOps|textbf}} is now more common
 \citep{kreuzberger2023mlops}. Each of these tasks is easy in itself, but without automation teams waste
 time repeating them and projects suffer from the mistakes made along the way. The aim is to make
 projects reliable, experiments reproducible and deployments fast.
 
-Its closest relative is \emph{DevOps} (development operations), the set of activities that take
+Its closest relative is \emph{DevOps\index{DevOps|textbf}} (development operations), the set of activities that take
 software from its source code to a working product: checking the code for errors (typos, bad
 practices), building it for one or several target platforms, running tests that check that it works as
 required, packaging it and deploying the package. These steps are repetitive and error-prone, and
-\emph{continuous integration and continuous delivery} (CI/CD) states that they can and should be
+\emph{continuous integration\index{continuous integration|textbf} and continuous delivery} (CI/CD) states that they can and should be
 automated and run as often as possible \citep{humble2010continuous}: small, thoroughly tested updates
 are more reliable than large ones, and easier to revert. Once a change is pushed, a CI/CD server
 (Jenkins, GitLab CI/CD, GitHub Actions, Travis CI or CircleCI) launches the delivery pipeline. Writing
@@ -1167,7 +1167,7 @@ automated tests and defining the pipelines takes time, but afterwards the pipeli
 servers have become powerful enough to need specialists, the DevOps engineers, but many tools now take
 only a few clicks to set up, and most of their benefits apply to data science projects.
 
-The usual DevOps infrastructure has four components: version control (Git), a code collaboration
+The usual DevOps infrastructure has four components: version control (Git\index{Git}), a code collaboration
 platform (GitHub, GitLab), an automated testing framework for the language of the project, and a CI/CD
 server. It misses three features that are critical for data science:
 \begin{itemize}
@@ -1223,9 +1223,9 @@ the next.}
 
 \subsection{Managing code versions and quality}
 
-Source version control with Git is a mandatory component of any data science project, and platforms
+Source version control with Git\index{Git} is a mandatory component of any data science project, and platforms
 such as GitHub and GitLab provide ready-to-use Git servers, tools for code review and issue management,
-and integration with CI/CD \citep{chacon2014pro}. A branching model, such as GitFlow
+and integration with CI/CD\index{continuous integration} \citep{chacon2014pro}. A branching model, such as GitFlow
 \citep{driessen2010successful}, gives the whole team the same rules for creating features, releases and
 fixes. Python, the language of most data science projects, has a weaker tradition of static code
 analysis than compiled languages, but it has the tools: style checkers (Flake8 and its extensions),
@@ -1239,10 +1239,10 @@ rebuilt from its source code alone; a data science product cannot. We should the
 along with the code, and store and document not only the incoming data but also the intermediate data
 sets, which saves recomputing them (at the price of disk space).
 
-Git is ill suited to data. It records snapshots of the project as content-addressed objects (and may compress
+Git\index{Git} is ill suited to data. It records snapshots of the project as content-addressed objects (and may compress
 similar objects with deltas), which is perfect for source code; but every version of a large data file that
 changes often adds another large object, making repositories slow to clone and to maintain. For data it is simpler to store the entire file each time it changes. Git LFS (large file storage)
-keeps large files outside the repository and stores only pointers to them. \emph{DVC} (data version
+keeps large files outside the repository and stores only pointers to them. \emph{DVC\index{DVC|textbf}} (data version
 control, \citealp{dvc2024}) goes further: it identifies each data file by a hash of its contents, keeps
 small metafiles with those hashes in Git, stores the data themselves in remote storage (a server, a
 cloud bucket), and describes pipelines as graphs of stages with their commands, inputs and outputs
@@ -1283,7 +1283,7 @@ packages; pipenv, Poetry and similar tools create shareable environments with a 
 version. Conda is particularly popular in data science: it shares environments through an
 \texttt{environment.yml} file, provides the Anaconda distribution with many data science packages
 preinstalled and optimised, and installs non-Python dependencies such as the CUDA libraries needed to run
-deep networks on GPUs. Containers (\cref{sec:packaging}) isolate even more: the processes and the user space of the operating
+deep networks on GPUs. Containers\index{containers} (\cref{sec:packaging}) isolate even more: the processes and the user space of the operating
 system, while sharing the kernel of the host.
 
 \subsection{Tracking experiments}
@@ -1291,7 +1291,7 @@ system, while sharing the kernel of the host.
 Data scientists run many experiments: with features, with algorithms, with hyperparameters. Each must be
 reproducible in isolation, because results influence each other, and all the results must be recorded so
 that the team can compare variants and choose the best by its metrics. A simple file is enough to start: a
-spreadsheet or a CSV file, versioned in Git with the code, with one row per experiment and, at least, the
+spreadsheet or a CSV file, versioned in Git\index{Git} with the code, with one row per experiment and, at least, the
 columns of \cref{tab:tracking}.
 
 \begin{table}[htbp]
@@ -1388,14 +1388,14 @@ after changing one value: training data ddb8b87ecb
 \end{pyoutput}
 
 \Cref{lst:tracking} implements such a log. Each experiment records a \emph{fingerprint} of the data, a hash
-of its contents like those of DVC, so that changing a single value by $10^{-9}$ produces a different
+of its contents like those of DVC\index{DVC}, so that changing a single value by $10^{-9}$ produces a different
 fingerprint and the log can never silently mix results obtained on different data. When the team and the
 number of experiments grow, a file becomes cumbersome, and three open-source tools are popular, which are
-not mutually exclusive: \emph{Sacred} \citep{greff2017sacred}, a feature-packed tracker that records a wide
+not mutually exclusive: \emph{Sacred\index{Sacred|textbf}} \citep{greff2017sacred}, a feature-packed tracker that records a wide
 range of information (metrics, artefacts, logs, even the source code and the machine), locally through
-file-based observers or in shared storage such as MongoDB; \emph{MLflow} \citep{zaharia2018accelerating}, easy to integrate, usable locally or with a
-shared server, which also packages projects and serves models through an API; and \emph{DVC}, whose
-experiment tracking is basic but whose fully versioned, reproducible pipelines let any team member pull
+file-based observers or in shared storage such as MongoDB; \emph{MLflow\index{MLflow|textbf}} \citep{zaharia2018accelerating}, easy to integrate, usable locally or with a
+shared server, which also packages projects and serves models through an API\index{API}; and \emph{DVC}, whose
+experiment tracking\index{experiment tracking} is basic but whose fully versioned, reproducible pipelines let any team member pull
 code, data and pipelines and reproduce a result with one command.
 
 The fingerprint identifies the content of the data in this example; it is not a complete record of
@@ -1408,8 +1408,8 @@ split, the seeds, the environment and the resulting artefacts.
 Small changes in one part of a program can break another. Automated tests, written in a programming
 language, check that everything still works as often as we like, typically at every change; large projects
 have thousands of them, which CI servers run in parallel. Tests form a hierarchy (\cref{fig:pyramid}):
-\emph{unit tests} check individual functions and classes, such as a preprocessing method; \emph{integration
-tests} check that the components work together, for instance that all the steps of a pipeline finish
+\emph{unit tests\index{testing!unit tests|textbf}} check individual functions and classes, such as a preprocessing method; \emph{integration
+tests\index{testing!integration tests|textbf}} check that the components work together, for instance that all the steps of a pipeline finish
 successfully on a small sample; and \emph{end-to-end tests} check a major function of the whole system, such
 as training a model on the full data set.
 
@@ -1444,7 +1444,7 @@ science projects need tests of the \emph{data} (schemas, ranges, distributions) 
 a minimum performance with respect to a simple baseline, \emph{invariance} tests (the prediction must not
 change when an irrelevant attribute changes) and \emph{directional expectation} tests (the prediction must
 move in a known direction when a feature does), ideas borrowed from behavioural testing
-\citep{ribeiro2020beyond}. \emph{Property-based testing}, with libraries such as Hypothesis
+\citep{ribeiro2020beyond}. \emph{Property-based\index{testing!property-based|textbf} testing}, with libraries such as Hypothesis
 \citep{maciver2019hypothesis}, generates hundreds of random inputs to check that a property always holds.
 
 \begin{pylisting}[label={lst:pipelinelib}]{A small credit-scoring pipeline written to be tested}
@@ -1580,7 +1580,7 @@ median used to impute missing incomes), which is learned on the training data on
 model, so that a request receives the same answer alone or in a batch. The tests are: a unit test of the
 cleaning rule; a unit test that the imputation does not depend on the batch; a property-based test that,
 for random tables of ages, incomes and debts, the predictions are always valid probabilities; a data
-validation test of schema, finite values and ranges; a test that the model beats the
+validation\index{data validation} test of schema, finite values and ranges; a test that the model beats the
 majority-class baseline by five points; an invariance test that guards against identifiers leaking into
 the features; a directional test that a higher income never lowers the predicted probability of
 repaying; and an integration test of the whole pipeline on a sample with missing values.
@@ -1590,7 +1590,7 @@ repaying; and an integration test of the whole pipeline on a sample with missing
 There are three ways of deploying Python code. \emph{Plain scripts} copied to the server are the simplest,
 but they need a lot of manual preparation (installing every package, filling in configuration files) and
 are not recommended. \emph{Python packages}, defined with a \texttt{pyproject.toml} or \texttt{setup.py}
-file, are much more convenient, and tools such as PyScaffold provide templates. \emph{Docker images}
+file, are much more convenient, and tools such as PyScaffold provide templates. \emph{Docker\index{containers|textbf} images}
 \citep{merkel2014docker} package the code with all its dependencies, including the Python interpreter, data
 files and an operating system distribution, into an isolated, portable environment that runs on any Linux
 machine without the weight of a virtual machine. An image is built from the instructions of a
@@ -1612,7 +1612,7 @@ CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "4", "src.api:app"]
 
 \subsection{Continuous model training}
 
-The goal of applying CI/CD to data science is a \emph{continuous training} pipeline that produces new model
+The goal of applying CI/CD\index{continuous integration} to data science is a \emph{continuous training\index{continuous training|textbf}} pipeline that produces new model
 versions automatically, so that the team can examine the results of an experiment right after pushing a
 change and, if the automated tests pass and the quality reports are good, deploy the model to an online
 test environment. The pipeline has three parts (\cref{fig:cicd}): continuous integration (static code
@@ -1777,8 +1777,8 @@ models on the same examples with a paired measure of uncertainty (\cref{sec:stat
 the new model is better does not show that it is not worse.
 
 Once a new version passes the gate, it can be released gradually \citep{huyen2022designing}: in \emph{shadow
-mode}, it receives a copy of the production traffic but its predictions are not used; in a \emph{canary
-release}, it serves a small fraction of the users, growing if everything goes well; in an \emph{A/B test},
+mode\index{shadow mode|textbf}}, it receives a copy of the production traffic but its predictions are not used; in a \emph{canary\index{canary release|textbf}
+release}, it serves a small fraction of the users, growing if everything goes well; in an \emph{A/B test\index{A/B testing|textbf}},
 the old and the new version serve random halves of the users, and the decision is made on business metrics
 \citep{kohavi2020trustworthy}. Watching what happens after the release is the subject of Unit~6.
 
@@ -1795,15 +1795,15 @@ data scientists worked on them at the same time. The team assembled its infrastr
         project the same layout for code, notebooks, data, models and documentation, and integrated well with
         Anaconda environments; repeated code was moved into the project's package, and stable code into its
         source and scripts directories, with a single entry point to train a new model version;
-  \item \emph{data versioning}: DVC, with the company's internal file server as remote storage, and DVC
+  \item \emph{data versioning}: DVC\index{DVC}, with the company's internal file server as remote storage, and DVC
         pipelines to make every experiment reproducible;
-  \item \emph{experiment tracking}: an MLflow server with a shared database, so that every team member could
+  \item \emph{experiment tracking\index{experiment tracking|textbf}}: an MLflow\index{MLflow} server with a shared database, so that every team member could
         browse and compare the results of the models for the different plants;
-  \item \emph{notebooks in pipelines}: the team liked to prototype in Jupyter notebooks, and used papermill to
+  \item \emph{notebooks in pipelines}: the team liked to prototype\index{prototypes and criticisms} in Jupyter notebooks, and used papermill to
         execute them from the command line as steps of the DVC pipelines;
-  \item \emph{testing}: a suite of pytest tests, run by GitLab CI/CD on every commit;
-  \item \emph{serving and delivery}: the customer wanted a simple API, so the models were served with MLflow,
-        packaged with the code in Docker images built by GitLab CI/CD and pushed to a Docker registry.
+  \item \emph{testing}: a suite of pytest tests, run by GitLab CI/CD\index{continuous integration} on every commit;
+  \item \emph{serving and delivery}: the customer wanted a simple API\index{API}, so the models were served with MLflow,
+        packaged with the code in Docker\index{containers} images built by GitLab CI/CD and pushed to a Docker registry.
 \end{itemize}
 The resulting process had seven steps: make changes to the code; run pre-commit checks of code quality and
 style; run the tests in GitLab CI/CD; package the code and the trained models into a Docker image; push the
@@ -1850,34 +1850,34 @@ Packaging and deployment & Docker, Kubernetes, Ansible\\
 
 \begin{itemize}
   \item The deployment option follows from the requirements of latency, hardware, network, privacy, cost and
-        complexity. Streaming APIs answer each request when it arrives; batch jobs precompute predictions
+        complexity. Streaming APIs\index{API} answer each request when it arrives; batch jobs precompute predictions
         whose features are known in advance, much more efficiently; hybrid systems combine both at the price
         of complexity.
-  \item Client-side deployment removes servers and keeps data on the device, but requires small models:
-        quantisation, fewer features and distillation can shrink a model by orders of magnitude with little
+  \item Client-side\index{client-side deployment} deployment removes servers and keeps data on the device, but requires small models:
+        quantisation\index{quantisation}, fewer features and distillation\index{model distillation} can shrink a model by orders of magnitude with little
         loss of accuracy.
-  \item Federated learning trains a shared model from data that never leave the devices, and allows
+  \item Federated learning\index{federated learning} trains a shared model from data that never leave the devices, and allows
         personalised models; updates must still be protected.
-  \item Native serialisation ties production to the training environment and is unsafe with untrusted
-        files. PMML is a declarative, auditable standard, popular in regulated industries; ONNX, a widely used open format, also covers deep learning and runs fast on servers, browsers and phones.
+  \item Native serialisation\index{serialisation of models} ties production to the training environment and is unsafe with untrusted
+        files. PMML\index{PMML} is a declarative, auditable standard, popular in regulated industries; ONNX\index{ONNX}, a widely used open format, also covers deep learning and runs fast on servers, browsers and phones.
         Exported models must be checked against the originals.
-  \item ModelOps adapts DevOps to data science, adding data versioning, experiment tracking and tests of data
-        and models to version control, CI/CD, packaging and deployment.
-  \item Continuous training pipelines retrain and redeploy models automatically; data tests and quality gates
+  \item ModelOps\index{ModelOps} adapts DevOps\index{DevOps} to data science, adding data versioning, experiment tracking\index{experiment tracking} and tests of data
+        and models to version control, CI/CD\index{continuous integration}, packaging and deployment.
+  \item Continuous training\index{continuous training} pipelines retrain and redeploy models automatically; data tests and quality gates
         stop bad data and bad models from reaching production.
-  \item Applications built on large language models are deployed as prompts, retrieval and guardrails around a
-        model that runs behind an API or on the organisation's hardware. Prompts are code; the retriever can be
-        measured with ranking metrics; outputs need tests; and prompt injection needs specific defences.
+  \item Applications built on large language models\index{large language model (LLM)} are deployed as prompts\index{prompt}, retrieval and guardrails\index{guardrails} around a
+        model that runs behind an API or on the organisation's hardware. Prompts are code; the retriever\index{retriever} can be
+        measured with ranking metrics; outputs need tests; and prompt injection\index{prompt injection} needs specific defences.
 \end{itemize}
 
 \section*{Bibliographic notes}
 \phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
 \citet{ameisen2020building} covers the path from idea to deployed product, and \citet{huyen2022designing} the
-design of production machine learning systems. \citet{dubovikov2019managing} describes ModelOps in the context
-of managing data science teams, and \citet{kreuzberger2023mlops} survey MLOps. \citet{sculley2015hidden} and
+design of production machine learning systems. \citet{dubovikov2019managing} describes ModelOps\index{ModelOps} in the context
+of managing data science teams, and \citet{kreuzberger2023mlops} survey MLOps\index{MLOps}. \citet{sculley2015hidden} and
 \citet{paleyes2022challenges} are essential reading on what goes wrong in production. \citet{kairouz2021advances}
-review federated learning, and \citet{humble2010continuous} is the classical reference on continuous delivery.
+review federated learning\index{federated learning}, and \citet{humble2010continuous} is the classical reference on continuous delivery.
 
 \section*{Exercises}
 \phantomsection\addcontentsline{toc}{section}{Exercises}
@@ -1892,25 +1892,25 @@ review federated learning, and \citet{humble2010continuous} is the classical ref
         and what is the smallest number of servers whose idealised capacity exceeds the load?
 
   \item\label{exr5:batch} A model has a fixed cost of 8 ms per call plus 0.05 ms per example. Compute its
-        throughput with batches of 1 and of 1000 examples.
+        throughput\index{throughput} with batches of 1 and of 1000 examples.
   \item\label{exr5:quant} A neural network has 1.2 million parameters. How much memory do they need in 32-bit
         floating point, in 16-bit floating point and in 8-bit integers?
   \item\label{exr5:latency} Inference takes 120 ms on a phone and 15 ms on a server. The network round trip
         takes 80 ms, and the upload speed is 10 Mbit/s. Where should the model run if each request uploads a
         2 MB image? And if it uploads 20 kB of features?
   \item\label{exr5:fedavg} Three clients with 100, 300 and 600 examples return the values 0.2, 0.5 and 0.9 for a
-        parameter. What value does federated averaging assign to it?
+        parameter. What value does federated averaging\index{federated learning} assign to it?
   \item\label{exr5:privacy} Why is sending model updates instead of data not enough to guarantee privacy? Name two
         techniques that improve it.
   \item\label{exr5:format} Choose a format to move each model, and justify it: (a) a credit scoring model
-        that a regulator must audit and that runs in the bank's Java systems; (b) a gradient boosting model
+        that a regulator must audit and that runs in the bank's Java systems; (b) a gradient boosting\index{gradient boosting} model
         that must answer single requests in well under a millisecond; (c) an image classifier for Android
         phones and web browsers; (d) a model shared by two data scientists of the same team, who use the
         same environment.
-  \item\label{exr5:pickle} Why should a pickle file from an unknown source never be loaded? Why is a PMML
+  \item\label{exr5:pickle} Why should a pickle\index{serialisation of models} file from an unknown source never be loaded? Why is a PMML\index{PMML}
         file safer?
-  \item\label{exr5:dvc} Why is it a bad idea to commit a 2 GB CSV file that changes every day to Git? What does
-        DVC store in Git instead?
+  \item\label{exr5:dvc} Why is it a bad idea to commit a 2 GB CSV file that changes every day to Git\index{Git}? What does
+        DVC\index{DVC} store in Git instead?
   \item\label{exr5:tests} Classify as unit, integration or end-to-end test: (a) a function that parses dates
         returns the right value for ten formats; (b) the whole training pipeline runs on 1\% of the data and
         produces a model file; (c) the full pipeline is run on the complete data and the model reaches the
@@ -1920,12 +1920,12 @@ review federated learning, and \citet{humble2010continuous} is the classical ref
         (b) Is the improvement statistically supported if the new model is right and the old one wrong on 12
         examples and the opposite never happens? And if those counts are 112 and 100?
 
-  \item\label{exr5:order} Put these steps of a continuous training pipeline in order: train a new model, run the
-        unit tests, launch the new version, run data quality tests, package the model, fetch new data, test the
+  \item\label{exr5:order} Put these steps of a continuous training\index{continuous training} pipeline in order: train a new model, run the
+        unit tests\index{testing!unit tests}, launch the new version, run data quality tests, package the model, fetch new data, test the
         quality of the model.
-  \item\label{exr5:isolation} What does each of a virtual environment, a Conda environment and a Docker container
+  \item\label{exr5:isolation} What does each of a virtual environment, a Conda environment and a Docker\index{containers} container
         isolate?
-  \item\label{exr5:rag} A RAG assistant finds the right passage among the first three for 92\% of the questions of
+  \item\label{exr5:rag} A RAG\index{retrieval-augmented generation (RAG)} assistant finds the right passage among the first three for 92\% of the questions of
         its test set, yet users complain that many of its answers are wrong. Give three possible causes and how you would
         check each of them.
 \end{enumerate}
@@ -1934,11 +1934,11 @@ review federated learning, and \citet{humble2010continuous} is the classical ref
 \phantomsection\addcontentsline{toc}{section}{Solutions to selected exercises}
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
-  \item[\ref{exr5:choose}] (a) Server-side streaming: the location and the available drivers exist only at request
+  \item[\ref{exr5:choose}] (a) Server-side\index{server-side deployment} streaming: the location and the available drivers exist only at request
         time. (b) Batch: the features are known in advance and nobody needs the ranking before the morning.
-        (c) On device: low latency, offline use and private typing (possibly with federated learning).
+        (c) On device\index{client-side deployment}: low latency, offline use and private typing (possibly with federated learning\index{federated learning}).
         (d) On premises, on the hospital's own servers: the data cannot be sent to an external server.
-  \item[\ref{exr5:little}] $L=200\cdot0.05=10$ requests in the system on average (Little's law counts waiting requests
+  \item[\ref{exr5:little}] $L=200\cdot0.05=10$ requests in the system on average (Little's law\index{Little's law} counts waiting requests
         too). A worker serves about 20 requests per second and a server 80, so $200/80=2.5$: at least three
         servers, with an idealised utilisation of $200/240\approx0.83$. The margin for peaks, failures and tail
         latency is decided with a latency objective and a load test, not with Little's law.
@@ -1953,18 +1953,18 @@ review federated learning, and \citet{humble2010continuous} is the classical ref
   \item[\ref{exr5:privacy}] Updates are computed from the data, and an attacker can reconstruct training examples
         from them. Secure aggregation, so that the server sees only the sum of many updates, and differential
         privacy, which adds calibrated noise.
-  \item[\ref{exr5:format}] (a) PMML: declarative, readable and auditable, and scored by Java engines. (b) ONNX with
+  \item[\ref{exr5:format}] (a) PMML\index{PMML}: declarative, readable and auditable, and scored by Java engines. (b) ONNX\index{ONNX} with
         ONNX Runtime, which avoids the overhead of the Python pipeline at every call (\cref{lst:onnx}); whether it
         meets the budget must be checked with a representative benchmark on the target hardware. (c) ONNX, run
         by ONNX Runtime on Android and by ONNX Runtime Web in the browser, after checking that both support its
         operators; or a LiteRT model for Android plus a separate export for the browser, each with its runtime.
-        (d) joblib or pickle, with pinned versions, or an MLflow model.
+        (d) joblib\index{serialisation of models} or pickle, with pinned versions, or an MLflow\index{MLflow} model.
 
   \item[\ref{exr5:pickle}] Unpickling can call arbitrary functions chosen by whoever wrote the file, so it can
         execute any code on the machine. A PMML file only describes the model: an engine that implements the
         standard computes the predictions, and no code from the author of the file is run.
-  \item[\ref{exr5:dvc}] Git records snapshots, and every daily version of a 2 GB file adds another large object
-        (delta compression helps little with such files), so cloning and every operation slow down. DVC keeps a
+  \item[\ref{exr5:dvc}] Git\index{Git} records snapshots, and every daily version of a 2 GB file adds another large object
+        (delta compression helps little with such files), so cloning and every operation slow down. DVC\index{DVC} keeps a
         small reference to each version in Git and the data elsewhere, and its \texttt{dvc.lock} records which
         data produced which model.
 
@@ -1973,19 +1973,19 @@ review federated learning, and \citet{humble2010continuous} is the classical ref
         location, held fixed; the name of the street can encode the location, so changing it is not an
         irrelevant transformation.
   \item[\ref{exr5:gate}] (a) Yes: the difference is 0.006, twelve more correct predictions. (b) The answer depends on
-        the paired disagreements, not on the two accuracies. With 12 and 0, the exact McNemar test gives
+        the paired disagreements\index{diversity!disagreement}, not on the two accuracies. With 12 and 0, the exact McNemar\index{McNemar's test} test gives
         $p\approx0.0005$: evidence of a difference. With 112 and 100, $p\approx0.45$: no evidence. The standard error of
         one accuracy (about 0.008) is not that of the difference. And not rejecting equality does not show that
         the models are equivalent: a non-inferiority decision needs a margin fixed in advance.
 
-  \item[\ref{exr5:order}] Run the unit tests; fetch new data; run data quality tests; train a new model; test its
+  \item[\ref{exr5:order}] Run the unit tests\index{testing!unit tests}; fetch new data; run data quality tests; train a new model; test its
         quality; package the model; launch the new version.
   \item[\ref{exr5:isolation}] A virtual environment isolates the Python packages; a Conda environment also isolates
-        the Python version and non-Python libraries; a container isolates the whole user space of the operating
+        the Python version and non-Python libraries; a container\index{containers} isolates the whole user space of the operating
         system, including system libraries and configuration. A container shares the kernel of the host.
 
   \item[\ref{exr5:rag}] (1) The right passage is often not the first one (in \cref{lst:rag}, only 67\% at rank 1) and the
-        prompt includes too few passages: measure recall at the number of passages actually used. (2) The test set does not
+        prompt\index{prompt} includes too few passages: measure recall at the number of passages actually used. (2) The test set does not
         look like real questions: sample real questions from the logs and evaluate on them. (3) The model does not use the
         passages, or contradicts them: measure the groundedness of the answers on a sample, by people or with a validated
         judge. Outdated documents in the index are a fourth candidate.

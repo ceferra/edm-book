@@ -4,36 +4,36 @@
 % =====================================================================
 \chapter{Applications}\label{ch:applications}
 
-In 2015 Netflix estimated that about 80\% of the hours streamed on its service were influenced by its
+In 2015 Netflix\index{Netflix Prize} estimated that about 80\% of the hours streamed on its service were influenced by its
 recommendations, and that personalisation and recommendations saved it more than one billion dollars a year, mostly by keeping
 subscribers who would otherwise cancel \citep{gomezuribe2015netflix}. Few models have such a direct effect on the
-results of a company, and few show so clearly how evaluation, deployment and monitoring come together.
+results of a company, and few show so clearly how evaluation, deployment\index{deployment} and monitoring\index{monitoring} come together.
 
 The previous units built, evaluated, combined, deployed and monitored models in general. This last unit
 looks at two families of applications in which machine learning creates direct business value, and at a
-tool for putting models in the hands of their users. \emph{Recommender systems} suggest products, films,
+tool for putting models in the hands of their users. \emph{Recommender systems\index{recommender system|textbf}} suggest products, films,
 songs or people to each user according to their preferences, and they drive a large share of what is
-bought, watched and read online. \emph{Customer relationship management} (CRM) uses data about customers to
-decide whom to contact, with what and when; we will see how to design a marketing campaign with a
+bought, watched and read online. \emph{Customer relationship management\index{customer relationship management (CRM)|textbf}} (CRM) uses data about customers to
+decide whom to contact, with what and when; we will see how to design a marketing campaign\index{mailing campaign} with a
 probabilistic classifier and cost information, and why the customers most likely to buy are not
-necessarily the ones worth contacting. Finally, \emph{Shiny} turns a model into an interactive web
+necessarily the ones worth contacting. Finally, \emph{Shiny\index{Shiny|textbf}} turns a model into an interactive web
 application with a few lines of code. Many ideas from earlier units reappear: ranking metrics and costs
-(\cref{ch:evaluation}), causality (\cref{sec:causality}), experiments and bandits
+(\cref{ch:evaluation}), causality\index{causality} (\cref{sec:causality}), experiments and bandits\index{multi-armed bandit}
 (\cref{sec:abtesting,sec:bandits}) and web applications (\cref{sec:webapps}).
 
 \begin{objectives}
 After studying this unit you should be able to:
 \begin{itemize}
-  \item describe the main approaches to recommendation (collaborative filtering, content-based filtering and
+  \item describe the main approaches to recommendation (collaborative filtering\index{collaborative filtering}, content-based\index{content-based filtering} filtering and
         hybrids) and their strengths and weaknesses;
   \item compute user and item similarities and the recommendations of neighbourhood methods by hand, and
-        explain matrix factorisation;
+        explain matrix factorisation\index{matrix factorisation};
   \item evaluate recommenders for rating prediction and for top-$N$ recommendation, including measures beyond
-        accuracy such as coverage and novelty;
+        accuracy\index{accuracy} such as coverage\index{coverage} and novelty\index{novelty};
   \item design a targeted mailing campaign with a pilot sample, a probabilistic classifier, cumulative response
-        curves and profit curves;
-  \item explain uplift modelling and why it targets different customers than a response model;
-  \item build an interactive application with Shiny, using reactive expressions to avoid unnecessary computation,
+        curves and profit curves\index{profit curve};
+  \item explain uplift\index{uplift modelling} modelling and why it targets different customers than a response model;
+  \item build an interactive application with Shiny, using reactive\index{reactive programming} expressions to avoid unnecessary computation,
         and test it.
 \end{itemize}
 \end{objectives}
@@ -42,7 +42,7 @@ After studying this unit you should be able to:
 \section{Recommender systems}\label{sec:recsys}
 
 Imagine that you want to buy a new phone. You can compare technical features, or you can ask friends and
-other people who bought one. Recommender systems automate both strategies, and they are everywhere: films
+other people who bought one. Recommender systems\index{recommender system} automate both strategies, and they are everywhere: films
 and series on streaming platforms, songs and podcasts, products in online shops, hotels and restaurants,
 videos, apps, news, jobs and even partners on dating applications. Their input is usually a set of
 interactions between users and items, either \emph{explicit} (ratings, likes) or \emph{implicit} (purchases,
@@ -50,9 +50,9 @@ clicks, viewing time), which can be arranged as a large and very sparse \emph{us
 have interacted with a tiny fraction of the items. The main approaches (\cref{fig:rectaxonomy}) are
 \citep{aggarwal2016recommender,ricci2022recommender}:
 \begin{itemize}
-  \item \emph{collaborative filtering}, which learns from the user--item interactions alone, using
+  \item \emph{collaborative filtering\index{collaborative filtering|textbf}}, which learns from the user--item interactions alone, using
         similarities between users or between items, or models of their latent preferences;
-  \item \emph{content-based filtering}, which recommends items similar, in their attributes or descriptions, to
+  \item \emph{content-based\index{content-based filtering|textbf} filtering}, which recommends items similar, in their attributes or descriptions, to
         those the user liked;
   \item \emph{hybrid} systems, which combine both, as most large-scale recommenders do.
 \end{itemize}
@@ -81,9 +81,9 @@ have interacted with a tiny fraction of the items. The main approaches (\cref{fi
 % ---------------------------------------------------------------------
 \section{Collaborative filtering}\label{sec:cf}
 
-Collaborative filtering rests on a simple intuition: users who agreed in the past tend to agree in the future,
+Collaborative filtering\index{collaborative filtering} rests on a simple intuition: users who agreed in the past tend to agree in the future,
 so the opinions of users with tastes similar to mine are good predictors of what I will like
-\citep{resnick1994grouplens}. Two things must be defined: a measure of the similarity between users, and a way
+\citep{resnick1994grouplens}. Two things must be defined: a measure of the similarity\index{similarity measure} between users, and a way
 of combining the opinions of similar users into recommendations, weighted by their similarity
 \citep{segaran2007programming}.
 
@@ -93,15 +93,15 @@ Each user is a row of the rating matrix, a vector with many missing values, and 
 items that both have rated. \Cref{lst:ratingstoy} defines a small, made-up matrix of seven users and six films, and
 two classic measures:
 \begin{itemize}
-  \item a similarity derived from the \emph{Euclidean distance} between the two vectors of common ratings,
+  \item a similarity\index{similarity measure} derived from the \emph{Euclidean\index{Euclidean distance|textbf} distance} between the two vectors of common ratings,
         $\mathrm{sim}(u,v)=1/(1+d(u,v))$, which is 1 for identical ratings and decreases with the distance. Users
         become points in a space with one axis per item (\cref{fig:similarity}b). Because it adds up the
         differences, it also falls with the number of common items (a difference of one star gives 0.5 on one
         film and 0.24 on ten), so users with different overlaps are not directly comparable;
-  \item the \emph{Pearson correlation} of the common ratings, which measures their linear association after
+  \item the \emph{Pearson\index{Pearson correlation|textbf} correlation} of the common ratings, which measures their linear association after
         centring the ratings of each user, regardless of how generous each one is: a user who always gives one star more than another
-        has a correlation of 1 with them (\cref{fig:similarity}a). Other choices are the cosine of the rating
-        vectors, rank correlations (Spearman, Kendall) and, for binary interactions, the Jaccard index.
+        has a correlation of 1 with them (\cref{fig:similarity}a). Other choices are the cosine\index{cosine similarity} of the rating
+        vectors, rank correlations (Spearman\index{Spearman correlation}, Kendall) and, for binary interactions, the Jaccard index.
 \end{itemize}
 
 \begin{pylisting}[label={lst:ratingstoy}]{A small rating matrix and two similarity measures (file \texttt{ratings\_toy.py})}
@@ -152,7 +152,7 @@ rated it,
 \begin{equation}\label{eq:usercf}
   \hat r_{ui}=\frac{\sum_{v}\mathrm{sim}(u,v)\,r_{vi}}{\sum_{v}\mathrm{sim}(u,v)},
 \end{equation}
-where the sums run over the users with a positive similarity who rated $i$ (often only the $k$ most similar ones).
+where the sums run over the users with a positive similarity\index{similarity measure} who rated $i$ (often only the $k$ most similar ones).
 Dividing by the sum of the similarities of the users who rated \emph{that} item matters: otherwise films seen by many
 people would get high totals just for being popular. A refinement predicts deviations from each user's mean rating,
 $\hat r_{ui}=\bar r_u+\sum_v\mathrm{sim}(u,v)(r_{vi}-\bar r_v)/\sum_v|\mathrm{sim}(u,v)|$, which corrects for users who
@@ -200,24 +200,24 @@ Paris Love       5.78     2.61       2.22
 \cref{eq:usercf}: for each unseen film, the total of the similarity-weighted ratings, the sum of the similarities of the
 users who rated it, and their ratio. \emph{Heist Night} is the clear recommendation (3.95), and \emph{Paris Love}, loved
 by the users whose tastes are opposite to Ivo's, is the clear non-recommendation (2.22). The table also shows a weakness of
-the Pearson correlation: with only two films in common, it is always $+1$ or $-1$ when both users rated the two films differently
+the Pearson\index{Pearson correlation} correlation: with only two films in common, it is always $+1$ or $-1$ when both users rated the two films differently
 (Carla, David and Fran), whatever the ratings, because two points always lie on a line; it is undefined,
 and taken as 0 by the code, when a user gave both films the same rating. In practice, similarities computed on few common items are shrunk towards
 zero (\emph{significance weighting}), or a minimum number of common items is required.
 
 \subsection{Item-based collaborative filtering}\label{sec:itemcf}
 
-User-based filtering does not scale well: with millions of users, finding the neighbours of each user at request time is
+User-based\index{collaborative filtering!user-based} filtering does not scale well: with millions of users, finding the neighbours of each user at request time is
 expensive, and when the catalogue is large two users rarely have enough items in common to be compared reliably. The
 alternative is to compare \emph{items} instead of users: two films are similar if the users who rated both rated them
 alike, which is the same computation on the columns of the matrix instead of its rows. To recommend items to a user, we
-look for items similar to those the user rated, weighted by their similarity and by the user's ratings
+look for items similar to those the user rated, weighted by their similarity\index{similarity measure} and by the user's ratings
 \citep{sarwar2001item}. Similarities between items are more stable than similarities between users, because each item has
 many ratings and its audience changes slowly, so the item--item matrix can be precomputed offline and updated
 infrequently, which makes recommendation fast. This is how Amazon's recommendations worked at scale
 \citep{linden2003amazon}.
 
-A note on terminology: item-based filtering, which some texts call ``content-based'' because it relies on similarities
+A note on terminology: item-based\index{collaborative filtering!item-based} filtering, which some texts call ``content-based\index{content-based filtering}'' because it relies on similarities
 between items, is still \emph{collaborative}: the similarities come from the users' ratings, not from the items'
 attributes. Content-based filtering in the strict sense, which uses the descriptions of the items, is the subject of
 \cref{sec:contentbased}.
@@ -271,7 +271,7 @@ users who should be told about \emph{Silent Forest}.
 
 The choice between the two depends on the setting \citep{segaran2007programming}. Item-based filtering is faster at
 recommendation time but needs to store and update the item--item similarities, and it gives more robust results on sparse
-data sets, where similar users are hard to find (some services ask new users to rate a few items to bootstrap their
+data sets, where similar users are hard to find (some services ask new users to rate a few items to bootstrap\index{bootstrap} their
 profile). User-based filtering is often better in small and dynamic settings, and in social networks the information about
 friends can be exploited directly.
 
@@ -279,7 +279,7 @@ friends can be exploited directly.
 \section{Matrix factorisation and the Netflix Prize}\label{sec:mf}
 
 Neighbourhood methods are \emph{memory-based}: they keep the data and compute similarities. \emph{Model-based} methods
-learn a compact model of the preferences instead. The most influential is \emph{matrix factorisation}, which represents
+learn a compact model of the preferences instead. The most influential\index{influential instance} is \emph{matrix factorisation\index{matrix factorisation|textbf}}, which represents
 every user $u$ and every item $i$ by vectors $p_u$ and $q_i$ of $k$ latent factors (perhaps how much a film is a comedy,
 or how much a user likes comedies, although the factors are learned, not named) and predicts a rating from their dot
 product plus biases \citep{koren2009matrix}:
@@ -291,12 +291,12 @@ product plus biases \citep{koren2009matrix}:
 where $\mu$ is the global mean, $b_u$ and $b_i$ capture generous users and popular items, and the sum runs only over the
 observed ratings; each parameter is penalised once for every rating in which it takes part, as in the
 stochastic gradient updates of the listing. The parameters are fitted by stochastic gradient descent or by alternating least squares, and the
-regularisation $\lambda$ prevents the factors of users and items with few ratings from overfitting.
+regularisation $\lambda$ prevents the factors of users and items with few ratings from overfitting\index{overfitting}.
 
-Matrix factorisation came to prominence with the \emph{Netflix Prize}, a competition run by Netflix from 2006 to 2009
+Matrix factorisation came to prominence with the \emph{Netflix\index{Netflix Prize|textbf} Prize}, a competition run by Netflix from 2006 to 2009
 \citep{bennett2007netflix}. Netflix released 100,480,507 ratings (from 1 to 5 stars, with their dates) given by 480,189
-users to 17,770 films, and offered one million dollars to the first team that improved the error of its own recommender
-by 10\% in RMSE. The prize was won in 2009 by a team that blended hundreds of models, of which factorisation and neighbourhood
+users to 17,770 films, and offered one million dollars to the first team that improved the error of its own recommender\index{recommender system}
+by 10\% in RMSE\index{root mean squared error (RMSE)}. The prize was won in 2009 by a team that blended hundreds of models, of which factorisation and neighbourhood
 models were the core. The competition also left a lesson about privacy: although the data had been anonymised,
 researchers showed that users could be re-identified by matching their ratings with public reviews on the Internet Movie
 Database \citep{narayanan2008robust}, and a planned second competition was cancelled. Ratings reveal much about people,
@@ -403,24 +403,24 @@ matrix factorisation   RMSE 0.952
 
 \Cref{lst:recmodels} generates ratings for 600 users and 400 items from five latent tastes, with a realistic feature that
 matters later: users rate popular items, and items they expect to like, more often. \Cref{lst:ratingpred} holds out a random 20\%
-(after rounding) of each user's ratings and compares five predictors by their root mean squared error (\cref{ch:evaluation}). Predicting
+(after rounding) of each user's ratings and compares five predictors by their root mean squared error\index{mean squared error (MSE)} (\cref{ch:evaluation}). Predicting
 the global mean gives 1.064; adding user and item biases, 0.983; the neighbourhood methods and matrix
-factorisation, which model the interactions between users and items, improve further, to 0.962 (user-based),
-0.946 (item-based) and 0.952 (factorisation), an improvement over the biases of 2 to 4\%. In this single split
+factorisation, which model the interactions between users and items, improve further, to 0.962 (user-based\index{collaborative filtering!user-based}),
+0.946 (item-based\index{collaborative filtering!item-based}) and 0.952 (factorisation), an improvement over the biases of 2 to 4\%. In this single split
 of a small data set, and without giving each method a comparable tuning budget, neighbours and factorisation are on a par; on large data sets factorisation scales better,
 and the best systems combine both.
 
 % ---------------------------------------------------------------------
 \section{Content-based and hybrid recommenders}\label{sec:contentbased}
 
-Collaborative filtering needs interactions, which creates the \emph{cold start} problem: a new item that nobody has
-rated cannot be recommended, and a new user with no history cannot receive personalised recommendations. Content-based
+Collaborative filtering\index{collaborative filtering} needs interactions, which creates the \emph{cold start\index{cold start|textbf}} problem: a new item that nobody has
+rated cannot be recommended, and a new user with no history cannot receive personalised recommendations. Content-based\index{content-based filtering}
 filtering avoids the first problem by describing items by their attributes (genre, director, price, brand) or by their
 text, and recommending items whose descriptions resemble those of the items the user liked
-\citep{pazzani2007content}. Texts are usually represented with TF-IDF weights \citep{salton1988term}, in which a term
+\citep{pazzani2007content}. Texts are usually represented with TF-IDF\index{TF-IDF} weights \citep{salton1988term}, in which a term
 counts more the more often it appears in the item's description and the fewer items it appears in; a user's
-\emph{profile} is a weighted combination of the descriptions of the items they rated, and items are ranked by their similarity to that
-profile (the cosine, or the dot product, which gives the same order for a fixed profile).
+\emph{profile} is a weighted combination of the descriptions of the items they rated, and items are ranked by their similarity\index{similarity measure} to that
+profile (the cosine\index{cosine similarity}, or the dot product, which gives the same order for a fixed profile).
 
 \begin{pylisting}[label={lst:catalogue}]{Descriptions of a small catalogue of films (file \texttt{content\_items.py})}
 """Descriptions of a small catalogue of films, for content-based recommendation."""
@@ -485,7 +485,7 @@ a large vocabulary the TF-IDF matrix must stay sparse (\texttt{toarray()} is fin
 solves the cold start of new \emph{items} that have a description, but a new \emph{user} still needs some preferences,
 explicit or inferred, to be personalised.
 
-\emph{Hybrid} recommenders combine both families to get the best of each \citep{burke2002hybrid}: by \emph{weighting} the
+\emph{Hybrid} recommenders\index{recommender system} combine both families to get the best of each \citep{burke2002hybrid}: by \emph{weighting} the
 scores of several recommenders, by \emph{switching} between them (content-based for new items or users, collaborative once
 there are enough interactions), or by \emph{combining features}, adding item attributes and user information to a
 collaborative model. Large commercial systems are hybrids, often with several stages: a fast stage that retrieves a few
@@ -494,21 +494,21 @@ hundred candidates from millions of items, and a slower model that ranks them us
 % ---------------------------------------------------------------------
 \section{Evaluating recommenders}\label{sec:receval}
 
-Recommenders can be evaluated in two ways \citep{herlocker2004evaluating}. When the task is to \emph{predict ratings}, the
-errors of the predicted ratings on held-out data are measured with the RMSE or the mean absolute error, as in
+Recommenders\index{recommender system} can be evaluated in two ways \citep{herlocker2004evaluating}. When the task is to \emph{predict ratings}, the
+errors of the predicted ratings on held-out data are measured with the RMSE\index{root mean squared error (RMSE)} or the mean absolute error\index{mean absolute error (MAE)}, as in
 \cref{lst:ratingpred}. But users never see predicted ratings: they see a short list of recommendations. The task is then
 \emph{top-$N$ recommendation}, a ranking problem (\cref{sec:other}), measured with:
 \begin{itemize}
-  \item \emph{precision@$N$}: the fraction of the $N$ recommended items that are relevant (for instance, held-out items the
+  \item \emph{precision\index{precision|textbf}@$N$}: the fraction of the $N$ recommended items that are relevant (for instance, held-out items the
         user rated highly);
-  \item \emph{recall@$N$}: the fraction of the user's relevant items that appear among the $N$ recommendations;
-  \item \emph{NDCG@$N$}, which rewards relevant items more when they are near the top of the list, discounting each position
+  \item \emph{recall\index{recall|textbf}@$N$}: the fraction of the user's relevant items that appear among the $N$ recommendations;
+  \item \emph{NDCG\index{NDCG|textbf}@$N$}, which rewards relevant items more when they are near the top of the list, discounting each position
         by $1/\log_2(\text{position}+1)$, and normalises by the best possible list \citep{jarvelin2002cumulated}.
 \end{itemize}
 Accuracy is not everything. A recommender that suggests the same bestsellers to everybody may be accurate and still useless,
-so measures \emph{beyond accuracy} complement it \citep{kaminskas2016diversity}: \emph{coverage}, the share of the catalogue
-that is ever recommended; \emph{novelty}, how unknown the recommended items are (measured, for instance, by
-$-\log_2$ of their popularity); \emph{diversity} within each list; and \emph{serendipity}, recommending relevant items that the
+so measures \emph{beyond accuracy\index{accuracy|textbf}} complement it \citep{kaminskas2016diversity}: \emph{coverage\index{coverage|textbf}}, the share of the catalogue
+that is ever recommended; \emph{novelty\index{novelty|textbf}}, how unknown the recommended items are (measured, for instance, by
+$-\log_2$ of their popularity); \emph{diversity\index{diversity|textbf}} within each list; and \emph{serendipity}, recommending relevant items that the
 user would not have found alone.
 
 \begin{pylisting}[label={lst:topn}]{Top-10 recommendation: accuracy, coverage and novelty}
@@ -581,8 +581,8 @@ item co-occurrence    0.079  0.262  0.204      9.5%      6.2      0.622
 \end{pyoutput}
 
 \Cref{lst:topn} and \cref{fig:receval} compare four recommenders on the data of \cref{lst:recmodels}: random items, the most
-popular items, the unseen items with the highest ratings predicted by matrix factorisation, and items that co-occur with the
-user's items (a cosine similarity between items computed on \emph{who rated what}, ignoring the rating values). The positives are the held-out ratings of 4 or more: precision, recall and NDCG are
+popular items, the unseen items with the highest ratings predicted by matrix factorisation\index{matrix factorisation}, and items that co-occur with the
+user's items (a cosine\index{cosine similarity} similarity\index{similarity measure} between items computed on \emph{who rated what}, ignoring the rating values). The positives are the held-out ratings of 4 or more: precision, recall and NDCG are
 averaged over the 591 users who have at least one, while coverage and novelty use the lists of all 600 users (coverage also depends on the number of users and the length
 of the lists, so it can be compared only under the same protocol),
 and novelty measures the rarity of the recommended items in the observed data. Because the program
@@ -594,7 +594,7 @@ would rate each recommended film 4 or more, an oracle that no real system has. T
         catalogue \citep{cremonesi2010performance};
   \item \emph{what is measured matters}: matrix factorisation, trained to predict the observed ratings, reaches only 0.035,
         half the observed precision of the popularity baseline. But this precision counts as relevant only the items that
-        the user rated highly in the test data, and every unrated item as a failure. The ratings are \emph{missing not at
+        the user rated highly in the test data\index{test set}, and every unrated item as a failure. The ratings are \emph{missing not at
         random}: users rate the items they choose to see, so the metric also rewards reproducing the process that decides
         what is observed \citep{steck2010training,schnabel2016recommendations}. The oracle column tells another story: the
         users would like the recommendations of matrix factorisation most often (0.698, against 0.622 for co-occurrence
@@ -617,7 +617,7 @@ recovered; recommending in the future calls for a split by time, and new users o
 Offline evaluation has a deeper limitation: it measures how well a recommender predicts what users did when they were shown the
 recommendations of the \emph{previous} system. A recommender that suggests something users had never been exposed to cannot get
 credit for it offline. The final judge is an online experiment (\cref{sec:abtesting}), and because recommendation is a sequence of
-decisions with feedback, contextual bandits (\cref{sec:bandits}) and off-policy evaluation (\cref{lst:ips}) are natural tools.
+decisions with feedback, contextual bandits\index{multi-armed bandit!contextual}\index{multi-armed bandit} (\cref{sec:bandits}) and off-policy\index{off-policy evaluation} evaluation (\cref{lst:ips}) are natural tools.
 Recommenders also shape the data they learn from: by showing popular items, they make them more popular, and they can narrow what
 each user sees, the \emph{filter bubble}. These feedback loops can increase the homogeneity of what users consume while reducing
 the value of the recommendations \citep{chaney2018algorithmic}, which is one more reason to monitor recommenders beyond their
@@ -626,7 +626,7 @@ accuracy (\cref{ch:monitoring}).
 % =====================================================================
 \section{Customer relationship management}\label{sec:crm}
 
-\emph{Customer relationship management} is the process by which an organisation manages its interactions with its
+\emph{Customer relationship management\index{customer relationship management (CRM)|textbf}} is the process by which an organisation manages its interactions with its
 customers, past, present and potential, using the data it collects about them through every channel: purchases, the
 website, the phone, e-mail, social media. Data science turns those data into decisions that improve the relationship
 and the business \citep{provost2013data}: whom to target to acquire new customers, what to offer to existing ones
@@ -639,7 +639,7 @@ there may be no history at all).
 
 \subsection{The expected value of a decision}
 
-Most CRM decisions have the same structure: for each customer, decide whether to act (send an offer, call, give a
+Most CRM\index{customer relationship management (CRM)} decisions have the same structure: for each customer, decide whether to act (send an offer, call, give a
 discount) given a probability estimated by a model and the costs and benefits of each outcome. If contacting a customer
 costs $c$, a positive response brings a margin $m$, and the sale would not happen without the contact (so that its
 whole margin is due to the contact), contacting them is worth it when the expected value is positive,
@@ -648,30 +648,30 @@ whole margin is due to the contact), contacting them is worth it when the expect
   \quad\Longleftrightarrow\quad
   p(\text{response}\mid x)>\frac{c}{m},
 \end{equation}
-which is the cost-sensitive threshold of \cref{sec:costs} again. If customers may buy anyway, what matters is the increase
-caused by the contact: contact when $m\,[P(Y(1)=1\mid x)-P(Y(0)=1\mid x)]>c$, the uplift of \cref{sec:uplift}. Applying
-the rule customer by customer requires calibrated probabilities (\cref{sec:calibration}): a model that ranks customers
-well but overestimates their probabilities will contact too many of them. A profit curve computed on labelled
-validation data, as below, uses only the ranking and needs no calibration, but it needs representative data and an
+which is the cost-sensitive\index{cost-sensitive learning} threshold\index{threshold} of \cref{sec:costs} again. If customers may buy anyway, what matters is the increase
+caused by the contact: contact when $m\,[P(Y(1)=1\mid x)-P(Y(0)=1\mid x)]>c$, the uplift\index{uplift modelling} of \cref{sec:uplift}. Applying
+the rule customer by customer requires calibrated\index{calibration} probabilities (\cref{sec:calibration}): a model that ranks customers
+well but overestimates their probabilities will contact too many of them. A profit curve\index{profit curve} computed on labelled
+validation data\index{validation set}, as below, uses only the ranking and needs no calibration, but it needs representative data and an
 estimate of its uncertainty.
 
 \subsection{Designing a mailing campaign}
 
 Consider a company that sells by catalogue and wants to promote a new product among the customers in its database. Sending
 the advertisement to everybody is usually unprofitable. Data science can predict how each customer will respond and use the
-predictions to design the campaign \citep{ling1998data}:
+predictions to design the campaign\index{mailing campaign} \citep{ling1998data}:
 \begin{enumerate}
   \item select a random and sufficiently large sample of customers (a \emph{pilot});
   \item send them the advertisement;
   \item after some time, label each customer of the pilot with 1 if they bought the product and 0 otherwise;
   \item train a probabilistic classifier on the labelled pilot, which estimates the probability that each customer responds;
   \item rank the customers by that probability and draw the \emph{cumulative response curve}, also called the \emph{gains
-        chart}: the share of all the responses obtained as a function of the share of customers contacted;
-  \item add the costs and benefits to obtain a \emph{profit curve}, and choose how many customers to contact.
+        chart\index{cumulative gains chart|textbf}}: the share of all the responses obtained as a function of the share of customers contacted;
+  \item add the costs and benefits to obtain a \emph{profit curve\index{profit curve|textbf}}, and choose how many customers to contact.
 \end{enumerate}
 The pilot must be random: only then are its responses a fair sample of how all customers would respond, the same argument
-as the holdout of \cref{lst:holdout}. Part of the pilot is kept aside to draw the curves, so that the model is not
-evaluated on its own training data. The same validation data are then used to choose how many customers to
+as the holdout\index{hold-out} of \cref{lst:holdout}. Part of the pilot is kept aside to draw the curves, so that the model is not
+evaluated on its own training data\index{training set}. The same validation data\index{validation set} are then used to choose how many customers to
 mail, so the reported maximum is still a development estimate: the chosen model and cutoff should be assessed on
 an independent sample, or with a resampling design that repeats the whole selection. The features must describe
 the customers before the contact, and the responses must be counted over a completed response window.
@@ -757,10 +757,10 @@ config 2: mail the top 70% (62,909 customers), 76,372 EUR on validation
 
 \Cref{lst:crmdata} creates a database of 100,000 customers whose probability of buying depends on their recency, frequency,
 monetary value, age and channel. In \cref{lst:mailing}, a pilot of 10,000 customers responds at a rate of 6.9\%. A gradient
-boosting model trained on half of the pilot has an AUC of 0.740 on the other half (a measure of its ranking, not of the calibration of its
+boosting\index{gradient boosting}\index{boosting} model trained on half of the pilot has an AUC\index{area under the ROC curve (AUC)} of 0.740 on the other half (a measure of its ranking, not of the calibration of its
 probabilities), and its gains are substantial
 (\cref{fig:campaign}a): mailing the 10\% of customers with the highest scores captures 29\% of all the responses, a
-\emph{lift} of 2.9 over mailing at random, and mailing the top half captures 82\% of them.
+\emph{lift\index{lift|textbf}} of 2.9 over mailing at random, and mailing the top half captures 82\% of them.
 
 The profit curve depends on the costs. The listing compares two configurations:
 \begin{itemize}
@@ -788,12 +788,12 @@ not launching, and the dots mark the decisions selected on the same data.}
 
 \subsection{Uplift modelling: whom to contact, not who will buy}\label{sec:uplift}
 
-The campaign above targets the customers most likely to buy \emph{after receiving the brochure}. But some of them would
+The campaign\index{mailing campaign} above targets the customers most likely to buy \emph{after receiving the brochure}. But some of them would
 have bought anyway, and the brochure was wasted on them. What matters is the effect of the contact, the difference between
 the probability of buying if contacted and if not contacted, which is a causal quantity (\cref{sec:causality}). Customers
 fall into four groups \citep{radcliffe2011real}:
 \begin{itemize}
-  \item \emph{persuadables}, who buy only if contacted: the only group in which the campaign creates sales (whether they pay for the contact
+  \item \emph{persuadables\index{uplift modelling!persuadables and sleeping dogs|textbf}}, who buy only if contacted: the only group in which the campaign creates sales (whether they pay for the contact
         is another question);
   \item \emph{sure things}, who buy whether contacted or not: contacting them wastes money;
   \item \emph{lost causes}, who do not buy either way;
@@ -804,14 +804,14 @@ These types are defined by the two potential outcomes of the same customer (\cre
 which is ever observed, so the type of an individual cannot be identified: a population made of half sure things
 and half lost causes and another made of half persuadables and half sleeping dogs have the same average effect,
 zero. What data can reveal are segments of customers with positive or negative average effects.
-A response model ranks sure things and persuadables at the top, and sleeping dogs too if they buy often. \emph{Uplift
+A response model ranks sure things and persuadables at the top, and sleeping dogs too if they buy often. \emph{Uplift\index{uplift modelling|textbf}
 modelling} estimates the effect instead,
 \begin{equation}
   \tau(x)=\E\bigl[Y(1)-Y(0)\mid X=x\bigr],
 \end{equation}
 the conditional average treatment effect of the contact; in a randomised campaign it equals the
 difference between the response rates of contacted and non-contacted customers with features $x$, which is why it needs data from a randomised campaign, in which a random control
-group was not contacted, exactly like an A/B test (\cref{sec:abtesting}). The simplest method trains two models, one on the
+group was not contacted, exactly like an A/B test\index{A/B testing} (\cref{sec:abtesting}). The simplest method trains two models, one on the
 contacted customers and one on the control group, and subtracts their predictions; other methods transform the target so
 that a single model can be used \citep{jaskowski2012uplift}, or build trees that split directly on differences in uplift
 \citep{radcliffe2011real,gutierrez2017causal}. Because the effect of the contact on an individual customer is never observed,
@@ -872,7 +872,7 @@ The uplift model creates 32.8 extra sales per 1000 contacts, four times as many 
 targets in the positive-effect segment and 1\% in the negative one (\cref{fig:uplift}). A real campaign does not know
 these true effects, but its randomised design allows them to be \emph{estimated}: comparing the contacted and the
 control customers among those selected by each ranking gives +13.9, $-12.5$ and +43.8 extra sales per 1000 contacts,
-with 95\% confidence intervals from $-8.1$ to +35.9, from $-41.1$ to +16.0 and from +21.0 to +66.5; only the effect of
+with 95\% confidence intervals\index{confidence interval} from $-8.1$ to +35.9, from $-41.1$ to +16.0 and from +21.0 to +66.5; only the effect of
 the uplift model is clearly positive. Whether it pays is another question: with a margin of 30~EUR and 1.50~EUR per
 brochure, 32.8 extra sales per 1000 contacts bring $30\cdot0.0328-1.50\approx-0.52$~EUR per contact. At a 20\% contact
 rate, even uplift targeting has a negative expected profit at these prices, and the right decision would be not to launch, or to contact fewer customers
@@ -896,16 +896,16 @@ second one is worth paying for.
 \section{Interactive applications with Shiny}\label{sec:shinyapps}
 
 A model is only useful if the people who must act on it can use it. A marketing manager will not run a Python script to
-decide how many brochures to send, but will happily move a slider in a web page and watch the profit curve change.
-\emph{Shiny} builds such interactive web applications from code alone \citep{shiny2012,wickham2021mastering}. It was born in the
+decide how many brochures to send, but will happily move a slider in a web page and watch the profit curve\index{profit curve} change.
+\emph{Shiny\index{Shiny|textbf}} builds such interactive web applications from code alone \citep{shiny2012,wickham2021mastering}. It was born in the
 R community, where RStudio (now Posit) released it as open source in 2012, and Posit also maintains Shiny for Python
 \citep{shinypython2024}, which we use here (\cref{tab:shiny}). It communicates with the browser through WebSockets, is built on
-a \emph{reactive programming} model, and can be extended with custom inputs and outputs. We introduced it in
+a \emph{reactive\index{reactive programming|textbf} programming} model, and can be extended with custom inputs and outputs. We introduced it in
 \cref{sec:webapps}; here we look at how it works.
 
 \subsection{The parts of an application}
 
-A Shiny application has three components: a \emph{user interface} object, which defines the layout and appearance of the
+A Shiny\index{Shiny} application has three components: a \emph{user interface} object, which defines the layout and appearance of the
 application; a \emph{server function}, which contains the instructions to build its outputs; and a call that creates the
 application from the pair, \texttt{App(app\_ui, server)}. The three usually live in a single file, \texttt{app.py}, which is
 launched with \texttt{shiny run app.py}; adding \texttt{-{}-reload} restarts the application whenever the code is saved, which is
@@ -923,8 +923,8 @@ server how to build it.
 
 \subsection{Reactivity}\label{sec:reactivity}
 
-The server never says \emph{when} to recompute an output. An output becomes \emph{reactive} as soon as the code that builds
-it reads the value of an input: Shiny records the dependency and, whenever that input changes, re-runs the code and sends the
+The server never says \emph{when} to recompute an output. An output becomes \emph{reactive\index{reactive programming|textbf}} as soon as the code that builds
+it reads the value of an input: Shiny\index{Shiny} records the dependency and, whenever that input changes, re-runs the code and sends the
 new output to the browser. The dependencies form a \emph{reactive graph} (\cref{fig:reactivegraph}).
 
 Re-running too much makes applications slow. If an output reads a data set from a remote service and then plots it on a
@@ -1049,10 +1049,10 @@ user 1 sees: Total of the first 1000 products: 500500
 
 \subsection{The campaign planner}
 
-\Cref{lst:crmapp} turns the mailing campaign of \cref{sec:crm} into an application, including the model selector that is a
-classic exercise: the user chooses a model (a decision tree, a random forest or nearest neighbours) and the three costs, and sees
-the cumulative response curve, the profit curve and a sentence with the best decision. The data are loaded once, outside the server.
-Training and scoring happen in the reactive expression \texttt{ranked()}, which depends only on the chosen model, so moving a cost
+\Cref{lst:crmapp} turns the mailing\index{mailing campaign} campaign of \cref{sec:crm} into an application, including the model selector that is a
+classic exercise: the user chooses a model (a decision tree\index{decision tree}, a random forest\index{random forest} or nearest neighbours\index{k-nearest neighbours@$k$-nearest neighbours}) and the three costs, and sees
+the cumulative response curve, the profit curve\index{profit curve} and a sentence with the best decision. The data are loaded once, outside the server.
+Training and scoring happen in the reactive\index{reactive programming} expression \texttt{ranked()}, which depends only on the chosen model, so moving a cost
 slider redraws the profit curve and updates the sentence without retraining anything. Each session has its own
 \texttt{ranked()}, which caches the current result until the model changes: returning to a model chosen before trains it
 again (a cache keyed by the model and the version of the data would avoid it), and training inside the reactive
@@ -1159,7 +1159,7 @@ with Playwright, can check, together with both plots. The helper that reads the 
 and a time limit stops a regression from blocking the test run forever: the blocking read runs in a worker thread with a
 timeout, which works on any operating system and in any thread (an alarm signal works only on Unix, in the main thread,
 and replaces the handler of the whole process). The test client speaks the internal protocol of
-Shiny, which may change between versions, so the requirements file pins them (here Shiny 1.8.0, Starlette 1.7.0 and
+Shiny\index{Shiny}, which may change between versions, so the requirements file pins them (here Shiny 1.8.0, Starlette 1.7.0 and
 pytest 9.1.1).
 
 \begin{pylisting}[label={lst:crmtest}]{Testing the planner: profit, page, and reactive caching (file \texttt{test\_crm\_app.py}; run it with \texttt{pytest})}
@@ -1233,83 +1233,83 @@ PASSED
 
 \subsection{Sharing applications}
 
-There are several ways of sharing a Shiny for Python application. The simplest is to share its code, for instance in a Git
-repository: users install the packages listed in its requirements file and launch it with \texttt{shiny run}. \emph{Shinylive}
+There are several ways of sharing a Shiny\index{Shiny} for Python application. The simplest is to share its code, for instance in a Git\index{Git}
+repository: users install the packages listed in its requirements file and launch it with \texttt{shiny run}. \emph{Shinylive\index{Shinylive|textbf}}
 goes further: it exports the application to a set of static files that run entirely in the user's browser, with Python compiled to
 WebAssembly, so that it can be published on any web server, or even shared as a link, with no Python server behind it; the price is
 that the code and the data travel to the browser, and not every package is available. To host the application as a web service that
-anyone can open, it can be deployed to \emph{Posit Connect Cloud}, Posit's hosting service, for instance
+anyone can open, it can be deployed to \emph{Posit Connect Cloud\index{Posit Connect Cloud|textbf}}, Posit's hosting service, for instance
 directly from a Git repository with a requirements file, or to \emph{Posit Connect}, its platform for an organisation's
 own infrastructure, which adds authentication, encrypted connections and administration tools. Posit is migrating
 its older service, shinyapps.io, to Connect Cloud during 2027 \citep{posit2026connectcloud}, so new applications should
-follow the current deployment documentation; or it can be packaged in a container and run like any other web service (\cref{sec:packaging}).
+follow the current deployment documentation; or it can be packaged in a container\index{containers} and run like any other web service (\cref{sec:packaging}).
 
 % =====================================================================
 \section{Summary}\label{sec:summary7}
 
 \begin{itemize}
-  \item Recommender systems suggest items from interactions (collaborative filtering), from item descriptions (content-based
+  \item Recommender systems\index{recommender system} suggest items from interactions (collaborative filtering\index{collaborative filtering}), from item descriptions (content-based\index{content-based filtering}
         filtering) or from both (hybrids).
-  \item User-based collaborative filtering predicts ratings as similarity-weighted averages of the ratings of similar users;
-        item-based filtering compares items instead, which is more stable and scales better. Similarities computed on few common
+  \item User-based\index{collaborative filtering!user-based} collaborative filtering predicts ratings as similarity\index{similarity measure}-weighted averages of the ratings of similar users;
+        item-based\index{collaborative filtering!item-based} filtering compares items instead, which is more stable and scales better. Similarities computed on few common
         items are unreliable.
-  \item Matrix factorisation represents users and items by latent factors; it was central to the Netflix Prize, whose data also
+  \item Matrix factorisation\index{matrix factorisation} represents users and items by latent factors; it was central to the Netflix\index{Netflix Prize} Prize, whose data also
         showed that anonymised ratings can identify people.
-  \item Content-based filtering solves the cold start of new items and gives explainable recommendations, but tends to
+  \item Content-based filtering solves the cold start\index{cold start} of new items and gives explainable\index{explainability} recommendations, but tends to
         overspecialise.
   \item Rating errors evaluate rating prediction, and ranking metrics evaluate recommendation lists; the candidate set, the
         relevance labels and the process that decides what is observed must be stated, because ratings are missing not
-        at random. Coverage, novelty and diversity complement accuracy, popularity is a strong baseline, and online
+        at random. Coverage\index{coverage}, novelty\index{novelty} and diversity\index{diversity} complement accuracy, popularity is a strong baseline, and online
         experiments have the final word.
-  \item In CRM, decisions follow the expected incremental value of acting, which combines the change that the action causes
-        with its costs and benefits; not acting is always one of the options. A mailing campaign is designed with a random pilot, a probabilistic classifier, a cumulative response curve and a
-        profit curve, whose optimum depends on the costs.
-  \item Uplift modelling targets the customers whose behaviour the action changes; a response model can do worse than random by
-        targeting sure things and sleeping dogs.
-  \item Shiny builds interactive applications from a user interface and a reactive server; reactive expressions cache expensive
+  \item In CRM\index{customer relationship management (CRM)}, decisions follow the expected incremental value of acting, which combines the change that the action causes
+        with its costs and benefits; not acting is always one of the options. A mailing\index{mailing campaign} campaign is designed with a random pilot, a probabilistic classifier, a cumulative response curve and a
+        profit curve\index{profit curve}, whose optimum depends on the costs.
+  \item Uplift\index{uplift modelling} modelling targets the customers whose behaviour the action changes; a response model can do worse than random by
+        targeting sure things\index{uplift modelling!persuadables and sleeping dogs} and sleeping dogs.
+  \item Shiny\index{Shiny} builds interactive applications from a user interface and a reactive\index{reactive programming} server; reactive expressions cache expensive
         computations, and the placement of code determines how often it runs.
 \end{itemize}
 
 \section*{Bibliographic notes}
 \phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
-\citet{segaran2007programming} is a practical introduction to collaborative filtering, and \citet{aggarwal2016recommender} and
-\citet{ricci2022recommender} cover recommender systems in depth. \citet{koren2009matrix} explain matrix factorisation as used in the
-Netflix Prize, \citet{herlocker2004evaluating} the evaluation of collaborative filtering, and \citet{kaminskas2016diversity} the measures
-beyond accuracy. \citet{provost2013data} present the expected value framework, cumulative response and profit curves for business
-problems, and \citet{gutierrez2017causal} review uplift modelling. \citet{wickham2021mastering} is the reference on Shiny and its reactive
+\citet{segaran2007programming} is a practical introduction to collaborative filtering\index{collaborative filtering}, and \citet{aggarwal2016recommender} and
+\citet{ricci2022recommender} cover recommender systems\index{recommender system} in depth. \citet{koren2009matrix} explain matrix factorisation\index{matrix factorisation} as used in the
+Netflix\index{Netflix Prize} Prize, \citet{herlocker2004evaluating} the evaluation of collaborative filtering, and \citet{kaminskas2016diversity} the measures
+beyond accuracy. \citet{provost2013data} present the expected value framework, cumulative response and profit curves\index{profit curve} for business
+problems, and \citet{gutierrez2017causal} review uplift\index{uplift modelling} modelling. \citet{wickham2021mastering} is the reference on Shiny\index{Shiny} and its reactive\index{reactive programming}
 model.
 
 \section*{Exercises}
 \phantomsection\addcontentsline{toc}{section}{Exercises}
 
 \begin{enumerate}[label=\textbf{7.\arabic*},ref=7.\arabic*,leftmargin=*,itemsep=6pt]
-  \item\label{exr7:euclid} Two users rated three common films (4, 2, 5) and (5, 1, 3). Compute their Euclidean-based similarity.
-  \item\label{exr7:pearson} Why is the Pearson correlation of two users with exactly two films in common always $+1$ or $-1$ when each
+  \item\label{exr7:euclid} Two users rated three common films (4, 2, 5) and (5, 1, 3). Compute their Euclidean\index{Euclidean distance}-based similarity\index{similarity measure}.
+  \item\label{exr7:pearson} Why is the Pearson\index{Pearson correlation} correlation of two users with exactly two films in common always $+1$ or $-1$ when each
         of them rated the two films differently? What can be
         done about it?
   \item\label{exr7:predict} Three users have similarities 0.9, 0.5 and $-0.3$ with you and rated a film 4, 2 and 5. Predict your rating with
         \cref{eq:usercf}.
-  \item\label{exr7:scale} An online shop has 10 million customers and 50,000 products. Would you use user-based or item-based collaborative
-        filtering, and what would you precompute?
-  \item\label{exr7:params} How many parameters has a matrix factorisation with $k=50$ factors and biases on the Netflix Prize data? Compare
+  \item\label{exr7:scale} An online shop has 10 million customers and 50,000 products. Would you use user-based\index{collaborative filtering!user-based} or item-based\index{collaborative filtering!item-based} collaborative
+        filtering\index{collaborative filtering}, and what would you precompute?
+  \item\label{exr7:params} How many parameters has a matrix factorisation\index{matrix factorisation} with $k=50$ factors and biases on the Netflix\index{Netflix Prize} Prize data? Compare
         them with the number of ratings.
   \item\label{exr7:metrics} A top-5 list has relevant items in positions 1 and 4, and the user has 3 relevant items in total. Compute
-        precision@5, recall@5 and NDCG@5.
+        precision@5, recall@5 and NDCG\index{NDCG}@5.
   \item\label{exr7:cold} How would you recommend items to a user who has just registered? And recommend an item added today?
   \item\label{exr7:tfidf} With the classical formula $\mathrm{idf}(t)=\log(n/\mathrm{df}(t))$, what weight does a term that appears in the
         description of every item receive? How does this differ from the default of scikit-learn's \texttt{TfidfVectorizer}?
   \item\label{exr7:campaign} A company has 100,000 customers, 5\% of whom would buy. The top 20\% of a model's ranking contains half of the
-        buyers. With the costs of configuration 1, compare the profit of mailing the top 20\% with that of mailing everyone.
+        buyers. With the costs of configuration 1, compare the profit of mailing\index{mailing campaign} the top 20\% with that of mailing everyone.
   \item\label{exr7:threshold} Using \cref{eq:expectedvalue}, compute the probability above which a customer is worth contacting in each
         configuration of \cref{lst:mailing}. How does this explain why the second configuration mails more customers?
-  \item\label{exr7:lift} The response rate of the pilot is 6.9\% and the top 10\% has a lift of 2.9. What is the response rate in the top
+  \item\label{exr7:lift} The response rate of the pilot is 6.9\% and the top 10\% has a lift\index{lift} of 2.9. What is the response rate in the top
         10\%?
   \item\label{exr7:groups} For each pair (buys if contacted, buys if not contacted) $\in\{0,1\}^2$, name the group of customers. Which group
         should never be contacted?
-  \item\label{exr7:upliftcalc} Among the customers ranked highest by an uplift model, 1000 were contacted at random and 1000 were kept as a
+  \item\label{exr7:upliftcalc} Among the customers ranked highest by an uplift\index{uplift modelling} model, 1000 were contacted at random and 1000 were kept as a
         control: 80 of the contacted and 50 of the controls bought. Estimate the uplift and the extra sales per 1000 contacts.
-  \item\label{exr7:place} In a Shiny application, where would you put the code that reads a 2~GB data set, the code that creates each user's
+  \item\label{exr7:place} In a Shiny\index{Shiny} application, where would you put the code that reads a 2~GB data set, the code that creates each user's
         shopping basket, and the code that filters the data by the dates chosen in a widget?
   \item\label{exr7:graph} In the planner of \cref{lst:crmapp}, which outputs are recomputed when the margin changes, and which when the model
         changes? How many times is a model trained if a user drags the margin slider through 50 values?
@@ -1318,7 +1318,7 @@ model.
   \item\label{exr7:integrated} (An integrated case.) Using the randomised campaign of \cref{lst:uplift}, with a margin of
         30~EUR and 1.50~EUR per contact: (a) compare not launching with contacting the top customers of the response model
         and of the uplift model, in expected \emph{incremental} profit; (b) choose the model and the share of customers to
-        contact on validation data, and estimate the profit of the chosen policy on a separate test set, with an interval;
+        contact on validation data\index{validation set}, and estimate the profit of the chosen policy on a separate test set, with an interval;
         (c) check in the planner of \cref{lst:crmapp} that changing the costs updates the decision without retraining.
 \end{enumerate}
 
@@ -1326,22 +1326,22 @@ model.
 \phantomsection\addcontentsline{toc}{section}{Solutions}
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
-  \item[\ref{exr7:euclid}] $d=\sqrt{1^2+1^2+2^2}=\sqrt6\approx2.45$, so the similarity is $1/(1+2.45)\approx0.29$.
+  \item[\ref{exr7:euclid}] $d=\sqrt{1^2+1^2+2^2}=\sqrt6\approx2.45$, so the similarity\index{similarity measure} is $1/(1+2.45)\approx0.29$.
   \item[\ref{exr7:pearson}] Two points always lie exactly on a line, increasing or decreasing, so the correlation is $\pm1$ whatever the
         ratings (or undefined if a user gave both films the same rating). Require a minimum number of common items, or shrink the
         similarity towards 0 by a factor such as $\min(n,50)/50$, where $n$ is the number of common items.
   \item[\ref{exr7:predict}] Only positive similarities are used: $(0.9\cdot4+0.5\cdot2)/(0.9+0.5)=4.6/1.4\approx3.29$.
-  \item[\ref{exr7:scale}] Item-based: the item--item similarities (for each product, its few hundred most similar products) are
+  \item[\ref{exr7:scale}] Item-based\index{collaborative filtering!item-based}: the item--item similarities (for each product, its few hundred most similar products) are
         precomputed offline and updated, say, daily; at request time, the recommendations combine the similar items of the products in
         the customer's history, which is fast. Comparing each customer with 10 million others at request time would be too slow. A dense $50{,}000\times50{,}000$ matrix
         of 4-byte similarities would take 10~GB; keeping only a few hundred neighbours per product keeps it small.
   \item[\ref{exr7:params}] $(480{,}189+17{,}770)\cdot50\approx24.9$ million factors, plus about 0.5 million biases: some 25 million parameters
         for 100 million ratings, which is why regularisation is essential.
   \item[\ref{exr7:metrics}] Precision@5 $=2/5=0.4$; recall@5 $=2/3\approx0.67$. $\mathrm{DCG}=1/\log_22+1/\log_25=1+0.431=1.431$; the ideal list has the
-        three relevant items first, $\mathrm{IDCG}=1+1/\log_23+1/\log_24=2.131$; NDCG@5 $=1.431/2.131\approx0.67$.
+        three relevant items first, $\mathrm{IDCG}=1+1/\log_23+1/\log_24=2.131$; NDCG\index{NDCG}@5 $=1.431/2.131\approx0.67$.
   \item[\ref{exr7:cold}] New user: recommend popular or highly rated items, possibly by segment (country, device), ask for a few ratings or
-        preferences at registration, and switch to personalised recommendations as interactions arrive (or use a bandit). New item: use its
-        content (attributes, description) with a content-based or hybrid model, and give it some exposure to collect interactions. A content-based recommender personalises for a user only once some of
+        preferences at registration, and switch to personalised recommendations as interactions arrive (or use a bandit\index{multi-armed bandit}). New item: use its
+        content (attributes, description) with a content-based\index{content-based filtering} or hybrid model, and give it some exposure to collect interactions. A content-based recommender\index{recommender system} personalises for a user only once some of
         their preferences are known, explicitly or from their first interactions.
   \item[\ref{exr7:tfidf}] The classical IDF is $\log1=0$: a term that every item has does not distinguish any item. The default of
         scikit-learn, $\log\frac{1+n}{1+\mathrm{df}}+1$, gives it an IDF of 1, so it is not removed automatically, although
@@ -1349,19 +1349,19 @@ model.
   \item[\ref{exr7:campaign}] Top 20\%: 20,000 brochures and 2,500 sales: $2{,}500\cdot30-20{,}000\cdot1.5-10{,}000=35{,}000$~EUR, if these sales happen only because of the brochure. Everyone: 5,000
         sales: $150{,}000-150{,}000-10{,}000=-10{,}000$~EUR.
   \item[\ref{exr7:threshold}] $1.50/30=0.05$ and $0.80/25=0.032$. With the second configuration it pays to contact customers with a lower
-        probability of responding, who are further down the ranking, so the optimal campaign is larger. The fixed cost of launching does not change these marginal thresholds: it only decides
+        probability of responding, who are further down the ranking, so the optimal campaign\index{mailing campaign} is larger. The fixed cost of launching does not change these marginal thresholds: it only decides
         whether the campaign is launched at all.
   \item[\ref{exr7:lift}] $2.9\cdot6.9\%\approx20\%$.
-  \item[\ref{exr7:groups}] (1,0) persuadables, (1,1) sure things, (0,0) lost causes, (0,1) sleeping dogs, whom contacting can only harm. Individual types are
+  \item[\ref{exr7:groups}] (1,0) persuadables\index{uplift modelling!persuadables and sleeping dogs}, (1,1) sure things, (0,0) lost causes, (0,1) sleeping dogs, whom contacting can only harm. Individual types are
         never observed, so in practice one avoids segments with a negative average effect.
   \item[\ref{exr7:upliftcalc}] $80/1000-50/1000=0.03$: about 30 extra sales per 1000 contacts. With 1000 treated and 1000 controls, the standard
-        error is $\sqrt{0.08\cdot0.92/1000+0.05\cdot0.95/1000}\approx0.011$, so an approximate 95\% interval for the uplift goes
+        error is $\sqrt{0.08\cdot0.92/1000+0.05\cdot0.95/1000}\approx0.011$, so an approximate 95\% interval for the uplift\index{uplift modelling} goes
         from 0.0084 to 0.0516.
   \item[\ref{exr7:place}] Reading the data set: at the top of the application, outside the server, so that it runs once
         per Python process (each worker or replica loads its own copy). The basket: inside the
-        server function, outside the render functions, once per session. The filtering by dates: in a reactive expression (or render function)
+        server function, outside the render functions, once per session. The filtering by dates: in a reactive\index{reactive programming} expression (or render function)
         that reads the date widget, since it must be recomputed when the dates change.
-  \item[\ref{exr7:graph}] The margin affects the profit curve and the summary; the model affects all three outputs, through \texttt{ranked()}.
+  \item[\ref{exr7:graph}] The margin affects the profit curve\index{profit curve} and the summary; the model affects all three outputs, through \texttt{ranked()}.
         Dragging the margin through 50 values trains no additional model (one was trained when the session
         opened): the reactive expression returns its cached value.
   \item[\ref{exr7:privacy}] By matching the dates and ratings of a few films with public reviews on other sites: few people rate the same rare

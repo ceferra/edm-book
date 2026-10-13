@@ -16,3 +16,5 @@
 !orig/**/*.pdf
 !figures/cover/*.pdf
 !figures/cover/cover.png
+!figures/cover/kdp-cover.pdf
+!figures/cover/back-art.png

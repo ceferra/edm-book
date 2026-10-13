@@ -7,7 +7,7 @@
 Data scientists automate other people's work. It is fair to ask how much of their own work can be
 automated, and the question is no longer academic. A decade ago, a typical project began with days of
 writing code to load and clean the data, followed by more days of trying models and tuning them by hand.
-Today an AutoML system can search hundreds of pipelines overnight, and a large language model can write the
+Today an AutoML\index{AutoML} system can search hundreds of pipelines overnight, and a large language model\index{large language model (LLM)}\index{language model} can write the
 code of a whole analysis from a sentence such as ``predict which customers are going to leave, and tell me
 why''. Does this make data scientists unnecessary, or does it change what they do?
 
@@ -15,13 +15,13 @@ This unit argues for the second answer. Some steps of a project, such as tuning 
 model, are already done almost entirely by machines; others, such as understanding what the client really
 needs, remain stubbornly human. Between the two lies a wide range of techniques: systems that search for the
 best pipeline (automated machine learning), algorithms that learn from previous learning experiences
-(metalearning), methods that synthesise programs from examples (inductive and genetic programming), large
+(metalearning\index{metalearning}), methods that synthesise programs from examples (inductive and genetic programming\index{genetic programming}), large
 language models that act as assistants and agents throughout the process, techniques that discover how an
-organisation actually works from its event logs (process mining), and software robots that carry out
-repetitive tasks on a computer (robotic process automation).
+organisation actually works from its event logs\index{event log} (process mining\index{process mining}), and software robots that carry out
+repetitive tasks on a computer (robotic process automation\index{robotic process automation (RPA)}).
 
 A theme recurs in all of them: automation moves the work of the data scientist from \emph{doing} to
-\emph{specifying} and \emph{checking}. A search over a thousand models overfits the validation data; a program
+\emph{specifying} and \emph{checking}. A search over a thousand models overfits\index{overfitting} the validation data\index{validation set}; a program
 induced from three examples can generalise in the wrong way; an assistant can write code that runs without a
 single error and is wrong. Knowing what to ask for, and how to check what comes back, is what this unit, and
 the evaluation methods of the whole book, are about.
@@ -30,17 +30,17 @@ the evaluation methods of the whole book, are about.
 After studying this unit you should be able to:
 \begin{itemize}
   \item explain which steps of a data science project can be automated, and to what extent;
-  \item describe the main tools for automated data wrangling, exploration and feature engineering;
-  \item formulate automated machine learning as a combined algorithm selection and hyperparameter
-        optimisation problem, compare grid search, random search and Bayesian optimisation, and
+  \item describe the main tools for automated data wrangling\index{data wrangling}, exploration and feature engineering\index{feature engineering};
+  \item formulate automated machine learning as a combined algorithm selection\index{algorithm selection} and hyperparameter
+        optimisation\index{hyperparameter optimisation} problem, compare grid search\index{grid search}, random search\index{random search} and Bayesian optimisation\index{Bayesian optimisation}, and
         evaluate AutoML systems without fooling yourself;
   \item explain metalearning and use meta-features to select algorithms;
-  \item present the basics of inductive programming (logic and functional) and of genetic
-        programming, and the role of inductive bias and domain-specific languages;
+  \item present the basics of inductive programming\index{inductive programming} (logic and functional) and of genetic
+        programming, and the role of inductive bias\index{inductive bias} and domain-specific languages\index{domain-specific language};
   \item use large language models as data science assistants and agents, knowing their risks, and
         verify automatically the code they propose;
   \item discover, check and analyse processes from event logs with process mining;
-  \item illustrate robotic and intelligent process automation with examples.
+  \item illustrate robotic and intelligent process automation\index{intelligent process automation} with examples.
 \end{itemize}
 \end{objectives}
 
@@ -50,13 +50,13 @@ After studying this unit you should be able to:
 \subsection{Data science processes}
 
 To decide what can be automated we first need a description of what a data science project
-involves. The most widely used one is CRISP-DM, the Cross-Industry Standard Process for Data
+involves. The most widely used one is CRISP-DM\index{CRISP-DM}, the Cross-Industry Standard Process for Data
 Mining, defined in 1999 by a consortium of companies \citep{chapman2000crisp,wirth2000crisp}. It
 divides a project into six phases, shown in \cref{fig:crispdm} of Unit~1: \emph{business understanding} (what is the
 problem and what would a solution be worth?), \emph{data understanding} (what data are available
 and what is their quality?), \emph{data preparation} (selecting, cleaning, integrating and
 transforming the data), \emph{modelling}, \emph{evaluation} (does the model meet the business
-objectives?) and \emph{deployment}. The phases are not a linear sequence: the
+objectives?) and \emph{deployment\index{deployment|textbf}}. The phases are not a linear sequence: the
 project often goes back to a previous phase, and it is iterative, since deployment and evaluation
 usually raise new questions.
 
@@ -70,11 +70,11 @@ trajectory view is useful here because automation does not affect all activities
 
 \subsection{Automated machine learning and automated data science}
 
-Two terms are often confused. \emph{Automated machine learning} (AutoML) automates the construction of
+Two terms are often confused. \emph{Automated machine learning\index{AutoML|textbf}} (AutoML) automates the construction of
 a model: the selection of algorithms, the optimisation of their hyperparameters and, in many systems,
-the engineering and selection of features. \emph{Automated data science} is broader: it attempts to
+the engineering and selection of features. \emph{Automated data science\index{automated data science|textbf}} is broader: it attempts to
 automate any portion of the data science process, and includes AutoML together with tools that
-eliminate repetitive tasks, such as running experiments, wrangling data, engineering features or
+eliminate repetitive tasks, such as running experiments, wrangling\index{data wrangling} data, engineering features or
 generating reports.
 
 \subsection{What can be automated?}
@@ -112,7 +112,7 @@ often the knowledge must be rebuilt in the production systems (Unit~5)\\
 
 \subsection{Data wrangling}
 
-\emph{Data wrangling} is the preparation of raw data for analysis. It takes a large part of the time
+\emph{Data wrangling\index{data wrangling|textbf}} is the preparation of raw data for analysis. It takes a large part of the time
 of most projects, the tools of the later stages do not work with messy data, and many data scientists
 consider it the least enjoyable part of their work. It involves three groups of tasks
 \citep{rahm2000data}:
@@ -124,9 +124,9 @@ consider it the least enjoyable part of their work. It involves three groups of 
   \item \emph{data quality}: \emph{canonicalisation} (converting entities, such as dates, addresses
         or names, into a standard representation), handling \emph{missing data} (detecting,
         understanding and imputing missing values), detecting \emph{anomalies} (with supervised,
-        unsupervised or semi-supervised methods) and detecting \emph{non-stationarity}, that is,
+        unsupervised or semi-supervised\index{semi-supervised learning} methods) and detecting \emph{non-stationarity}, that is,
         changes over time, for instance with change point detection \citep{aminikhanghahi2017survey};
-  \item \emph{feature engineering}: binning (to reduce the effect of small observation errors), log
+  \item \emph{feature engineering\index{feature engineering|textbf}}: binning (to reduce the effect of small observation errors), log
         transforms (to make skewed distributions more symmetric), one-hot encoding (to turn a
         categorical column into binary flags), grouping operations (so that each instance is
         represented by one row), feature splits (extracting the useful parts of a column, such as the
@@ -136,10 +136,10 @@ consider it the least enjoyable part of their work. It involves three groups of 
 The importance of wrangling has motivated many tools, beyond the classical extract--transform--load
 (ETL) software. OpenRefine works with messy data: cleaning it, transforming it from one format into
 another, and extending it with web services and external data. Trifacta Wrangler, a descendant of
-the Wrangler research prototype \citep{kandel2011wrangler}, is a desktop application to transform data
-for later analysis and visualisation. Flash Fill, in Microsoft Excel, fills a column automatically when
-it finds a pattern in a few examples typed by the user; it is based on inductive programming over a
-domain-specific language for string manipulation, which reduces the search space enormously
+the Wrangler research prototype\index{prototypes and criticisms} \citep{kandel2011wrangler}, is a desktop application to transform data
+for later analysis and visualisation. Flash Fill\index{Flash Fill}, in Microsoft Excel, fills a column automatically when
+it finds a pattern in a few examples typed by the user; it is based on inductive programming\index{inductive programming} over a
+domain-specific language\index{domain-specific language} for string manipulation, which reduces the search space enormously
 (\cref{sec:indprog}), and FlashExtract extracts data from semi-structured documents in the same way
 \citep{gulwani2011automating,le2014flashextract}. Libraries for Python (such as Dora, datacleaner,
 scrubadub, which removes personally identifiable information, and Arrow, for dates and times) and R
@@ -158,19 +158,19 @@ graphics and decide what they mean.
 
 \subsection{Automated feature engineering}
 
-\emph{Feature engineering} constructs new features from the original data, and \emph{automated} feature
+\emph{Feature engineering\index{feature engineering|textbf}} constructs new features from the original data, and \emph{automated} feature
 engineering generates many candidate features from which the best can be selected. The best known
-method is \emph{deep feature synthesis} \citep{kanter2015deep}, implemented in the featuretools library.
+method is \emph{deep feature synthesis\index{deep feature synthesis|textbf}} \citep{kanter2015deep}, implemented in the featuretools library.
 It works on relational data: following the relationships between tables, it applies
 \emph{aggregation primitives} (count, sum, mean, maximum, minimum, standard deviation\dots) to the
 records of a child table that belong to each record of the parent table, \emph{transform primitives}
 (the month of a date, the absolute value\dots) to individual columns, and \emph{where clauses} to
-restrict the aggregations to subsets of interest; stacking primitives produces ``deep'' features such
+restrict the aggregations to subsets of interest; stacking\index{stacking} primitives produces ``deep'' features such
 as the mean of the monthly maximum.
 
 \Cref{lst:dfs} implements one level of deep feature synthesis. A company wants to predict which of its
 2000 customers will leave; the customer table contains only their age and whether they have a premium
-plan, while a second table records their transactions. The age and the plan are useless (AUC 0.480,
+plan, while a second table records their transactions. The age and the plan are useless (AUC\index{area under the ROC curve (AUC)} 0.480,
 no better than chance), but 13 automatically synthesised features, such as the mean amount of a
 customer's transactions or the number of days since the last one, raise the AUC to 0.783. As
 \cref{tab:automation} warns, generated features do not understand the data, and with many of them
@@ -225,7 +225,7 @@ with synthesized features  AUC = 0.783
 % =====================================================================
 \section{Automated machine learning}\label{sec:automl}
 
-AutoML provides tools to build a competitive model from the training data with minimal human
+AutoML\index{AutoML} provides tools to build a competitive model from the training data\index{training set} with minimal human
 effort and machine learning expertise \citep{hutter2019automated,zoller2021benchmark}. The results can
 be impressive: in 2019, a commercial AutoML system finished second in a Kaggle hackathon against
 teams of data scientists. \Cref{fig:automlpipe} shows the parts of the modelling pipeline that AutoML
@@ -254,8 +254,8 @@ configurations guided by the evaluation results.}
 
 \subsection{The CASH problem}
 
-\citet{thornton2013auto} formalised AutoML as the \emph{combined algorithm selection and
-hyperparameter optimisation} (CASH) problem. Given a set of algorithms $\mathcal{A}$, each algorithm
+\citet{thornton2013auto} formalised AutoML\index{AutoML} as the \emph{combined algorithm selection\index{algorithm selection|textbf} and
+hyperparameter optimisation\index{hyperparameter optimisation|textbf}} (CASH\index{CASH problem}) problem. Given a set of algorithms $\mathcal{A}$, each algorithm
 $A\in\mathcal{A}$ with a hyperparameter space $\Lambda_A$, and a training set split into $k$ pairs of
 training and validation folds, find
 \begin{equation}\label{eq:cash}
@@ -272,15 +272,15 @@ training models.
 
 The simplest strategies treat the objective as a black box:
 \begin{itemize}
-  \item \emph{grid search} evaluates every combination of a few values per hyperparameter. Its cost
+  \item \emph{grid search\index{grid search|textbf}} evaluates every combination of a few values per hyperparameter. Its cost
         grows exponentially with the number of hyperparameters, and if only some of them matter it
         wastes most evaluations: a $3\times3$ grid tries only three distinct values of each one;
-  \item \emph{random search} samples configurations at random. With the same budget it tries a new
+  \item \emph{random search\index{random search|textbf}} samples configurations at random. With the same budget it tries a new
         value of every hyperparameter at each evaluation, which makes it more efficient than grid
         search when few hyperparameters matter, as is usually the case \citep{bergstra2012random}.
 \end{itemize}
-\emph{Bayesian optimisation} uses the results so far to decide where to look next
-\citep{jones1998efficient,snoek2012practical}. It fits a probabilistic \emph{surrogate model} of the
+\emph{Bayesian optimisation\index{Bayesian optimisation|textbf}} uses the results so far to decide where to look next
+\citep{jones1998efficient,snoek2012practical}. It fits a probabilistic \emph{surrogate\index{global surrogate|textbf} model} of the
 objective, typically a Gaussian process, which gives for each candidate configuration $z$ a predicted
 mean $\mu(z)$ and an uncertainty $\sigma(z)$, and chooses the candidate that maximises an
 \emph{acquisition function} that balances exploitation (high predicted mean) and exploration (high
@@ -291,8 +291,8 @@ $f^\star$:
   u=\frac{\mu(z)-f^\star}{\sigma(z)},
 \end{equation}
 where $\Phi$ and $\varphi$ are the standard normal distribution and density functions. Other surrogates
-handle the structured spaces of CASH better: random forests in SMAC \citep{hutter2011sequential} and
-tree-structured Parzen estimators in TPE \citep{bergstra2011algorithms}. \emph{Multi-fidelity} methods
+handle the structured spaces of CASH\index{CASH problem} better: random forests\index{random forest} in SMAC \citep{hutter2011sequential} and
+tree-structured Parzen estimators in TPE \citep{bergstra2011algorithms}. \emph{Multi-fidelity\index{fidelity|textbf}} methods
 save time by evaluating many configurations cheaply (on a subsample, or with few iterations) and
 spending more only on the promising ones: \emph{successive halving} repeatedly keeps the best fraction
 $1/\eta$ of the configurations and multiplies their budget by $\eta$ \citep{jamieson2016non}, and
@@ -347,8 +347,8 @@ Bayesian optimisation  best accuracy 0.855 (evaluation 25) at C=10^0.35, gamma=1
 \end{pyoutput}
 
 \Cref{lst:hpo} tunes the regularisation parameter $C$ and the kernel width $\gamma$ of an RBF support
-vector machine with 25 evaluations of 3-fold cross-validation each. Grid search ($5\times5$) finds an
-accuracy of 0.852, random search 0.845 and Bayesian optimisation, which starts with five random
+vector machine with 25 evaluations of 3-fold cross-validation\index{cross-validation} each. Grid search ($5\times5$) finds an
+accuracy\index{accuracy} of 0.852, random search 0.845 and Bayesian optimisation, which starts with five random
 points and then follows the expected improvement, 0.855. A single run is anecdotal, so
 \cref{fig:hpo} repeats the comparison 20 times on a precomputed $26\times26$ grid of the same space.
 Only 2.7\% of the space is within one point of the best accuracy (0.855), and the good region is a
@@ -369,12 +369,12 @@ function of the number of evaluations (mean and interquartile range over 20 runs
 \subsection{AutoML systems}
 
 Many systems combine these ingredients (\cref{tab:automlsystems}). Auto-WEKA \citep{thornton2013auto}
-introduced CASH with Bayesian optimisation over the algorithms of WEKA. Auto-sklearn
+introduced CASH\index{CASH problem} with Bayesian optimisation\index{Bayesian optimisation} over the algorithms of WEKA. Auto-sklearn
 \citep{feurer2015efficient} applies the same idea to scikit-learn and adds two improvements:
-metalearning to start the search from configurations that worked on similar data sets
-(\cref{sec:metalearning}), and an ensemble of the models found during the search, built with
+metalearning\index{metalearning} to start the search from configurations that worked on similar data sets
+(\cref{sec:metalearning}), and an ensemble\index{ensemble} of the models found during the search, built with
 ensemble selection \citep{caruana2004ensemble}. TPOT \citep{olson2016evaluation} evolves whole pipelines with
-genetic programming. H2O AutoML \citep{ledell2020h2o} trains many models with random search and combines
+genetic programming\index{genetic programming}. H2O AutoML\index{AutoML} \citep{ledell2020h2o} trains many models with random search\index{random search} and combines
 them in stacked ensembles. AutoKeras \citep{jin2019autokeras} searches neural network architectures.
 Commercial cloud services offer AutoML with minimal effort, at a price and as a black box.
 
@@ -403,7 +403,7 @@ that the time budget and the data set matter as much as the system.
 
 \subsection{Evaluating AutoML without fooling yourself}
 
-An AutoML system is itself a learning algorithm: it uses data to choose a model. Therefore the
+An AutoML\index{AutoML} system is itself a learning algorithm: it uses data to choose a model. Therefore the
 validation score of the configuration it selects is an \emph{optimistic} estimate of its performance,
 for the same reason as in \cref{sec:protocols}: among many configurations, the one with the best
 validation score is partly the luckiest. The more configurations are evaluated, the larger the
@@ -466,14 +466,14 @@ best test accuracy of any configuration: 0.928
 \end{pyoutput}
 
 \Cref{lst:cash} and \cref{fig:optimism} make the effect visible. Two hundred random configurations of
-five algorithms (logistic regression, $k$-nearest neighbours, decision trees, random forests and SVMs,
+five algorithms (logistic regression\index{logistic regression}, $k$-nearest neighbours\index{k-nearest neighbours@$k$-nearest neighbours}, decision trees\index{decision tree}, random forests and SVMs,
 with their hyperparameters) are evaluated with 5-fold cross-validation on 300 training examples, and
 on 2000 test examples that the search never sees. As the budget grows, the cross-validation accuracy of
 the winner rises from 0.839 to 0.950, but its test accuracy only from 0.837 to 0.925: with 200
 configurations the optimism is 2.5 points. The search is still useful (the selected configuration is
 close to the best one, 0.928), but its own score must not be reported as the expected performance. The
 remedy is the one of \cref{sec:protocols}: evaluate the whole AutoML process, including the search, on
-data it has not used, with a separate test set or nested cross-validation.
+data it has not used, with a separate test set\index{test set} or nested cross-validation\index{cross-validation!nested}.
 
 \begin{figure}[htbp]
 \centering
@@ -487,20 +487,20 @@ repetitions).}
 % =====================================================================
 \section{Metalearning}\label{sec:metalearning}
 
-\emph{Metalearning} applies learning algorithms to metadata about machine learning experiments, to
+\emph{Metalearning\index{metalearning|textbf}} applies learning algorithms to metadata about machine learning experiments, to
 understand how learning can become flexible and, ultimately, to learn the learning process itself:
 \emph{learning to learn} \citep{brazdil2022metalearning,vanschoren2018meta}. Within machine learning
 the term also covers algorithms that learn from the outputs of other algorithms, such as the
-meta-learner of stacking (\cref{sec:hybrid}).
+meta-learner of stacking\index{stacking} (\cref{sec:hybrid}).
 
-The classical formulation is the \emph{algorithm selection problem} \citep{rice1976algorithm}: given a
+The classical formulation is the \emph{algorithm selection\index{algorithm selection|textbf} problem} \citep{rice1976algorithm}: given a
 new data set, which algorithm will perform best on it? Each data set from previous experiments is
 described by \emph{meta-features}, and a \emph{meta-model} learns to map them to the best algorithm (or
 to the expected performance of each one). Meta-features can be simple (number of examples, features
-and classes), statistical (correlations, skewness, class imbalance), information-theoretic (class
-entropy, mutual information) or \emph{landmarkers}, the performance of fast, simple algorithms such as
-a decision stump or a linear discriminant \citep{pfahringer2000meta}. Metalearning is used to recommend
-algorithms, to start the hyperparameter search of AutoML systems from configurations that worked on
+and classes), statistical (correlations, skewness, class imbalance\index{class imbalance}), information-theoretic (class
+entropy, mutual information) or \emph{landmarkers\index{landmarker|textbf}}, the performance of fast, simple algorithms such as
+a decision stump\index{decision stump} or a linear discriminant \citep{pfahringer2000meta}. Metalearning is used to recommend
+algorithms, to start the hyperparameter search of AutoML\index{AutoML} systems from configurations that worked on
 similar data sets, and, in deep learning, to train models that adapt quickly to new tasks from a few
 examples \citep{finn2017model}.
 
@@ -597,9 +597,9 @@ the meta-learned choice and of an oracle that always knows the better one.}
 
 Yet the mean accuracy of the meta-learned choice (0.8613) is the same as that of always choosing the
 forest. The reason is instructive: the forest is rarely much worse than the logistic regression (its
-mean \emph{regret}, the accuracy lost against the better algorithm, is 0.0034), so even an oracle could
+mean \emph{regret\index{regret|textbf}}, the accuracy lost against the better algorithm, is 0.0034), so even an oracle could
 only gain 0.0033 on average, and the cases the meta-model gets right are those where the difference is
-smallest. What the meta-model does achieve is to choose the simpler, more interpretable model on 16
+smallest. What the meta-model does achieve is to choose the simpler, more interpretable\index{interpretability} model on 16
 tasks at no cost in \emph{mean} accuracy (the logistic regression is worse than the forest on some of
 those tasks and better on others). Note also what is being measured: leave-one-task-out tests how well
 the meta-model predicts the cross-validation winner of an unseen task; evaluating the whole selection
@@ -612,21 +612,21 @@ for tabular data.
 % =====================================================================
 \section{Inductive programming}\label{sec:indprog}
 
-\emph{Inductive programming} (IP) is an interdisciplinary area of artificial intelligence and
+\emph{Inductive programming\index{inductive programming|textbf}} (IP) is an interdisciplinary area of artificial intelligence and
 cognitive science that studies the automatic synthesis of computer programs from examples and
-background knowledge, typically a set of existing functions
+background knowledge\index{background knowledge}, typically a set of existing functions
 \citep{kitzelmann2009inductive,gulwani2015inductive}. Like all inductive inference, it generalises from
 observations by identifying general patterns, but the hypotheses it produces are programs, which are
 expressive, recursive if needed, and readable. IP is usually addressed from two perspectives:
-\emph{inductive logic programming}, in the logic paradigm, and \emph{inductive functional programming},
-in the functional paradigm. \emph{Programming by example} (PbE) is the part of IP in which the
+\emph{inductive logic programming\index{inductive logic programming|textbf}}, in the logic paradigm, and \emph{inductive functional programming\index{inductive functional programming|textbf}},
+in the functional paradigm. \emph{Programming by example\index{programming by example|textbf}} (PbE) is the part of IP in which the
 specification is a set of input--output examples, and it can automate many data manipulation tasks:
 extracting terms from texts, transforming data formats, and so on.
 
 \subsection{Inductive logic programming}
 
-Inductive logic programming (ILP) uses logic programs as a uniform representation for the examples,
-the background knowledge and the hypotheses \citep{muggleton1991inductive,muggleton1994inductive}. Given
+Inductive logic programming\index{inductive logic programming} (ILP) uses logic programs as a uniform representation for the examples,
+the background knowledge\index{background knowledge} and the hypotheses \citep{muggleton1991inductive,muggleton1994inductive}. Given
 positive examples $E^+$, negative examples $E^-$ and background knowledge $B$, an ILP system derives a
 hypothesis $H$, a logic program, that together with $B$ entails all the positive examples and none of
 the negative ones:
@@ -705,7 +705,7 @@ that is, a train goes east if it has a short car with a roof.
 
 \subsection{Inductive functional programming}
 
-Inductive functional programming (IFP) expresses knowledge as functions. In the trains problem, a train
+Inductive functional programming\index{inductive functional programming} (IFP) expresses knowledge as functions. In the trains problem, a train
 becomes a list of tuples, \texttt{type Train = [Car]} with \texttt{type Car = (Shape, Length, Roof,
 Wheels, Load)}, and the target is a function \texttt{eastbound :: Train -> Bool} specified by examples
 such as \texttt{eastbound [(Rect, Short, Peak, 2, (Tria, 1)), \dots] = True}. Systems such as
@@ -714,7 +714,7 @@ of background functions, in order of increasing size, and return the first ones 
 examples.
 
 \Cref{lst:ifp} does the same for a tiny problem, a number sequence given by the examples $6\mapsto14$,
-$3\mapsto8$, $5\mapsto12$ and $2\mapsto6$. With the background knowledge $\{x,1,2,+,\times\}$ it
+$3\mapsto8$, $5\mapsto12$ and $2\mapsto6$. With the background knowledge\index{background knowledge} $\{x,1,2,+,\times\}$ it
 enumerates programs by the number of functions they use. No program with zero or one function fits;
 among the 216 programs with two functions, 14 are consistent with the examples, such as
 $x+(x+2)$ or, written differently, $2(x+1)$, and all of them predict 10 for the input 4. The listing also
@@ -758,7 +758,7 @@ for input 4 they output 10
 
 \subsection{Inductive bias}
 
-The choice of the functions in the background knowledge is a form of \emph{inductive bias}, the set of
+The choice of the functions in the background knowledge\index{background knowledge} is a form of \emph{inductive bias\index{inductive bias|textbf}}, the set of
 assumptions a learning system makes to prefer some hypotheses over others. How many candidate programs there are
 depends on the grammar: a sequence of $d$ choices among $b$ functions has $b^d$ possibilities, while the
 ordered binary expressions with $k$ operator nodes, $b$ binary operators and $l$ terminals number
@@ -766,7 +766,7 @@ $C_k\,b^k\,l^{k+1}$, where the Catalan number $C_k=\binom{2k}{k}/(k+1)$ counts t
 operators and three terminals this gives the 3, 18, 216, 3240 and 54,432 expressions of \cref{lst:ifp}).
 Either way, the space grows exponentially with the size of the programs. Two kinds of bias keep the search tractable:
 \begin{itemize}
-  \item \emph{language bias} restricts the hypothesis space, that is, which programs can be induced (the
+  \item \emph{language bias\index{language bias|textbf}} restricts the hypothesis space, that is, which programs can be induced (the
         background functions, the maximum length, the types);
   \item \emph{search bias} determines how the space is explored, that is, which programs are
         constructed first (by size, by a probability distribution, by a heuristic).
@@ -776,9 +776,9 @@ getting the right bias for each task \citep{contrerasochando2019automated,contre
 
 \subsection{Programming by example and domain-specific languages}
 
-\emph{Domain-specific languages} (DSLs) are languages specialised for a particular domain, such as
+\emph{Domain-specific languages\index{domain-specific language|textbf}} (DSLs) are languages specialised for a particular domain, such as
 string processing or number formatting. Inducing programs in a small DSL reduces the search space
-considerably, which is what made inductive programming practical for end users. Flash Fill in Excel
+considerably, which is what made inductive programming\index{inductive programming} practical for end users. Flash Fill\index{Flash Fill} in Excel
 \citep{gulwani2011automating} induces string transformations in a DSL of substrings, positions and
 concatenations from one or two examples typed in a spreadsheet, and similar features appear in other
 spreadsheets and programming environments. Inductive programming is opening a promising path for the
@@ -869,10 +869,10 @@ ones. From two examples it learns to extract first names, from one example to tu
 format, and from two examples to build initials. The listing also exposes the two classical problems of
 PbE:
 \begin{itemize}
-  \item \emph{ambiguity}: several programs fit the examples and disagree on new inputs. For the first
+  \item \emph{ambiguity\index{ambiguity decomposition|textbf}}: several programs fit the examples and disagree on new inputs. For the first
         names, ``the first word'' and ``the penultimate word'' fit both examples, and give different
         answers for a person with two first names, such as \texttt{Maria Jose Ramirez};
-  \item \emph{language bias}: the domain of \texttt{ana.gil@upv.es} is learned as the penultimate and
+  \item \emph{language bias\index{language bias|textbf}}: the domain of \texttt{ana.gil@upv.es} is learned as the penultimate and
         last words, so \texttt{cferri@dsic.upv.es} becomes \texttt{upv.es}, because the DSL cannot express
         ``everything after the @''. And the bias cuts both ways: in a first version of the listing,
         constants could contain digits, and the shortest program for the date hard-coded \texttt{"-2"}
@@ -884,20 +884,20 @@ doubt.
 
 \subsection{Language models as inductive programmers}
 
-\emph{Language models} estimate the probability $p(y\mid x)$ of a sequence of characters or words $y$
+\emph{Language models\index{language model|textbf}} estimate the probability $p(y\mid x)$ of a sequence of characters or words $y$
 following another sequence $x$. Built with large attention-based (transformer) architectures
 \citep{vaswani2017attention} and trained on huge amounts of text and code, systems such as GPT-3 turned
-out to be \emph{few-shot learners} \citep{brown2020language}: given a prompt with a few examples, they
+out to be \emph{few-shot learners} \citep{brown2020language}: given a prompt\index{prompt} with a few examples, they
 continue the pattern. They have shown remarkable extrapolations from short prompts in mathematical
 problem solving, question answering, language understanding and code generation
 \citep{chen2021evaluating}.
 
-This makes them a promising tool for data wrangling \citep{jaimovitch2023can}. They infer transformations
+This makes them a promising tool for data wrangling\index{data wrangling} \citep{jaimovitch2023can}. They infer transformations
 from very few examples, as in the prompt
 \begin{center}
 \texttt{input: 23/12/2021, output: 12-23-2021 \quad input: 05/01/2022, output:}
 \end{center}
-and they bring a wide range of background knowledge without being told: we do not need to say that
+and they bring a wide range of background knowledge\index{background knowledge} without being told: we do not need to say that
 \texttt{23/12/2021} is a date, or that \texttt{Cesar Ferri} is a person's name whose first word is the
 first name. Hints in the prompt make few-shot learning more effective, and even \emph{zero-shot}
 learning is possible: ``The conversion of 23/12/2021 into US format is:''. A prompt such as
@@ -913,18 +913,18 @@ do for the rest of the data science process.
 % =====================================================================
 \section{Genetic programming}\label{sec:gp}
 
-\emph{Genetic programming} (GP) evolves computer programs \citep{koza1992genetic,poli2008field}. Inspired
+\emph{Genetic programming\index{genetic programming|textbf}} (GP) evolves computer programs \citep{koza1992genetic,poli2008field}. Inspired
 by natural evolution, it is a heuristic search for an optimal, or at least suitable, program in the
 space of all programs, starting from a random population of programs and applying three operations:
 \begin{itemize}
   \item \emph{selection}: individuals are chosen to reproduce probabilistically, so that better programs
         have a higher chance of being selected (for instance, by \emph{tournament}: the best of a few
         individuals taken at random);
-  \item \emph{crossover}: two selected programs are combined, typically by replacing a random part of
+  \item \emph{crossover\index{genetic programming!crossover|textbf}}: two selected programs are combined, typically by replacing a random part of
         one of them by a random part of the other;
-  \item \emph{mutation}: a random part of a program is replaced by a new random part.
+  \item \emph{mutation\index{genetic programming!mutation|textbf}}: a random part of a program is replaced by a new random part.
 \end{itemize}
-The rates at which these operators are applied determine the diversity of the population. The idea is
+The rates at which these operators are applied determine the diversity\index{diversity} of the population. The idea is
 old: Alan Turing already suggested, in 1950, that a learning machine could be found by a process
 analogous to evolution \citep{turing1950computing}.
 
@@ -979,10 +979,10 @@ whole second parent (or any of its subtrees), producing a child that neither par
 \end{algorithmic}
 \end{algorithm}
 
-\Cref{alg:gp} summarises the method. \Cref{lst:gp} applies it to \emph{symbolic regression}: from 200
+\Cref{alg:gp} summarises the method. \Cref{lst:gp} applies it to \emph{symbolic regression\index{symbolic regression|textbf}}: from 200
 points of a hidden function of two variables, find a formula for it. The functions are $+$, $-$ and
-$\times$, the terminals $x$, $y$, 1, 2 and 3, the fitness is the mean squared error, and the population
-has 300 programs, with tournament selection, subtree crossover, occasional mutation, elitism and a
+$\times$, the terminals $x$, $y$, 1, 2 and 3, the fitness\index{fitness} is the mean squared error\index{mean squared error (MSE)}, and the population
+has 300 programs, with tournament selection, subtree crossover, occasional mutation, elitism\index{genetic programming!elitism} and a
 maximum depth to limit \emph{bloat} (the tendency of programs to grow without improving). In generation
 11 the best program, $((y\cdot2+(x-y))\cdot x)-3$, has zero error; simplified, it is exactly the hidden
 function $x^2+xy-3$ (\cref{fig:gpevo}). Evolution proceeds by jumps: the best error stays at 4.0 from generation 2 to generation 10,
@@ -1082,7 +1082,7 @@ GP has been used for automatic programming and code generation, symbolic regress
 rediscovery of physical laws from data, \citealp{schmidt2009distilling}), feature selection and
 construction, the design of antennas that flew on a NASA mission \citep{hornby2006automated}, photonic
 crystals, optical and quantum computing systems and other inventions, and to play games such as chess,
-backgammon and video games. It also powers AutoML systems such as TPOT, whose individuals are whole
+backgammon and video games. It also powers AutoML\index{AutoML} systems such as TPOT, whose individuals are whole
 pipelines. Its weaknesses are the cost of evaluating many programs, the bloat of the evolved programs,
 which often need simplification to be readable, and overfitting, since a flexible enough program can fit
 the noise in the data: the protocols of \cref{sec:protocols} apply to evolved programs as to any other
@@ -1096,7 +1096,7 @@ amounts of text and code, and then tuned to follow instructions, they became gen
 write programs in Python or SQL from a description in natural language, know the conventions of the main
 libraries, explain code and results, and are now built into notebooks and development environments. For data
 science this changes the interface more than anything else: what used to require knowing pandas or scikit-learn
-can be asked for in a sentence, a step further in the direction of programming by example (\cref{sec:indprog}).
+can be asked for in a sentence, a step further in the direction of programming by example\index{programming by example} (\cref{sec:indprog}).
 Two questions follow: which parts of the data science process do they automate, and how can the results be
 trusted?
 
@@ -1151,10 +1151,10 @@ competition in six \citep{chan2024mlebench}.
 
 Language models are not the only new route to automation. \emph{Tabular foundation models} are transformers pre-trained on
 millions of synthetic data sets to make predictions for a new data set in a single forward pass: the training examples are
-given as context, and there is no training or hyperparameter tuning at all \citep{hollmann2023tabpfn,hollmann2025accurate}. On
-small data sets they compete with carefully tuned gradient boosting. None of these systems makes the evaluation protocols of
-\cref{ch:evaluation} obsolete. An agent that tries hundreds of ideas against the same validation data overfits it exactly as
-AutoML does (\cref{sec:automl}), and its final score must be checked on data it has never seen.
+given as context, and there is no training or hyperparameter tuning\index{hyperparameter optimisation} at all \citep{hollmann2023tabpfn,hollmann2025accurate}. On
+small data sets they compete with carefully tuned gradient boosting\index{gradient boosting}\index{boosting}. None of these systems makes the evaluation protocols\index{evaluation protocol} of
+\cref{ch:evaluation} obsolete. An agent that tries hundreds of ideas against the same validation data\index{validation set} overfits it exactly as
+AutoML\index{AutoML} does (\cref{sec:automl}), and its final score must be checked on data it has never seen.
 
 \subsection{Risks}
 
@@ -1162,35 +1162,35 @@ The risks of using language models for data science go beyond ordinary programmi
 \begin{itemize}
   \item \emph{hallucinations}: columns, functions, parameters or statistics that do not exist, presented with the same
         confidence as those that do;
-  \item \emph{silent errors}: code that runs and produces plausible numbers but is wrong, because of a leakage of the target, a
+  \item \emph{silent errors}: code that runs and produces plausible numbers but is wrong, because of a leakage\index{data leakage} of the target, a
         join that duplicates rows, a filter that drops a group, or the wrong aggregation. These are the most dangerous, because
         nothing signals them;
-  \item \emph{memorisation and contamination}: models have seen popular data sets such as Iris or Titanic during their training,
+  \item \emph{memorisation and contamination\index{contamination of benchmarks|textbf}}: models have seen popular data sets such as Iris or Titanic during their training,
         and can reproduce them, so their performance on them overestimates what they would do on new data
         \citep{bordt2024elephants};
   \item \emph{privacy and confidentiality}: sending data to an external service may break data protection rules or contracts;
         models that run on the organisation's own machines avoid it;
   \item \emph{security}: generated code must be executed in isolation, without access to credentials or the network, and data
         can contain text that the model reads as instructions (a cell of a spreadsheet that says ``ignore the previous
-        instructions and\dots''), an attack known as \emph{prompt injection};
+        instructions and\dots''), an attack known as \emph{prompt\index{prompt|textbf} injection\index{prompt injection|textbf}};
   \item \emph{reproducibility and cost}: answers vary between runs and between versions of a model, so prompts, model versions and
-        outputs must be logged like any other experiment (\cref{sec:infrastructure}), and every call has a price and a latency;
+        outputs must be logged like any other experiment (\cref{sec:infrastructure}), and every call has a price and a latency\index{latency};
   \item \emph{over-reliance}: accepting outputs without understanding them, and losing the skills needed to judge them.
 \end{itemize}
 
 \subsection{Verifying what an assistant proposes}\label{sec:llmverify}
 
 The output of an assistant should be treated like code from an unknown contributor: useful, but not trusted until checked.
-Many checks can be automated. \Cref{lst:assistant} builds a small verification harness around the most common request in
-feature engineering, ``propose a feature to predict default''. Each proposal is executed on a copy of the data \emph{without the
-target column}, so that any feature that uses the target fails; the harness enforces an \emph{append-only} contract (the original feature
+Many checks can be automated. \Cref{lst:assistant} builds a small verification harness\index{verification harness} around the most common request in
+feature engineering\index{feature engineering}, ``propose a feature to predict default''. Each proposal is executed on a copy of the data \emph{without the
+target column}, so that any feature that uses the target fails; the harness enforces an \emph{append-only\index{append-only contract|textbf}} contract (the original feature
 columns, their values, the row order and the index must remain unchanged: checking the index alone is insufficient, because
 sorting and resetting the index can silently attach features to the wrong labels) and checks that a new column was created;
 and it accepts the feature only if it improves the cross-validated AUC by at least 0.005, a practical screening margin rather
 than evidence that the gain exceeds sampling noise. Repeated feature selection uses the same validation information, so the
 final procedure must be assessed on independent data or with an outer evaluation loop; and features that learn statistics
 from the data must be fitted inside each fold, because removing the target column prevents direct access to it, not every
-form of leakage. When the code fails, the error message is fed back, as an agent would do, together with the
+form of leakage\index{data leakage}. When the code fails, the error message is fed back, as an agent would do, together with the
 list of available columns.
 
 \begin{pylisting}[label={lst:assistant}]{Verifying the features proposed by an assistant before accepting them}
@@ -1295,7 +1295,7 @@ had the leaky feature been accepted, the AUC would have been 0.909
 \end{pyoutput}
 
 In the listing, the assistant is simulated by a fixed list of answers, typical of what language models propose, so that the
-results are reproducible; connecting the loop to a real model only requires replacing the list by a function that sends a prompt
+results are reproducible; connecting the loop to a real model only requires replacing the list by a function that sends a prompt\index{prompt}
 (the task, the columns and the feedback) to the model and returns its code. The harness accepts the debt-to-income ratio, which
 raises the AUC from 0.805 to 0.815. It rejects a feature built on columns that do not exist, and the corrected proposal that
 follows the feedback adds nothing. It rejects the average default rate of each postcode, which uses the target: had it been
@@ -1320,7 +1320,7 @@ and judge every improvement on data that took no part in choosing it.
 % =====================================================================
 \section{Process mining}\label{sec:procmining}
 
-\emph{Process mining} is a family of techniques that analyse operational processes based on event logs
+\emph{Process mining\index{process mining|textbf}} is a family of techniques that analyse operational processes based on event logs\index{event log}
 \citep{vanderaalst2012process,vanderaalst2016process}. They use event data to discover what people,
 machines and organisations are really doing, as opposed to what they are supposed to be doing, and the
 insights can be used to identify and address performance and compliance problems. It is also a key
@@ -1328,7 +1328,7 @@ step towards automating processes: before a process can be automated, it must be
 
 \subsection{Event logs}
 
-Process mining starts from an \emph{event log}, a collection of events recorded by an information
+Process mining\index{process mining} starts from an \emph{event log\index{event log|textbf}}, a collection of events recorded by an information
 system. Each event refers to a process instance, called a \emph{case} (an order, a patient, a claim), to
 an \emph{activity} (what happened), and to a \emph{timestamp}; it often includes other attributes, such
 as the \emph{resource} (the person or machine that performed the activity) or a cost. The sequence of
@@ -1389,23 +1389,23 @@ random time, and checking the ticket is the slowest.
 
 \subsection{Process discovery}
 
-There are three main process mining tasks:
+There are three main process mining\index{process mining} tasks:
 \begin{itemize}
-  \item \emph{discovery}: induce a process model from the event log, without any a priori information;
-  \item \emph{conformance checking}: compare an existing model with the event log to find, locate and
+  \item \emph{discovery}: induce a process model from the event log\index{event log}, without any a priori information;
+  \item \emph{conformance checking\index{conformance checking|textbf}}: compare an existing model with the event log to find, locate and
         explain the discrepancies between them;
   \item \emph{enhancement}: extend or improve a model with information from the log, for instance with
-        the times at which activities are executed, to find bottlenecks (throughput analysis).
+        the times at which activities are executed, to find bottlenecks (throughput\index{throughput} analysis).
 \end{itemize}
-The simplest discovered model is the \emph{directly-follows graph} (DFG): one node per activity and an
+The simplest discovered model is the \emph{directly-follows\index{directly-follows graph|textbf} graph} (DFG): one node per activity and an
 edge from $a$ to $b$ whenever $b$ directly follows $a$ in some trace, annotated with its frequency
 (\cref{fig:dfg}). It is easy to compute and to read, but it confuses concurrency with loops: since $b$
 and $d$ occur in both orders, the DFG has edges in both directions between them.
 
-The \emph{alpha algorithm} \citep{vanderaalst2004workflow} goes further and produces a Petri net, a model
+The \emph{alpha algorithm\index{alpha algorithm|textbf}} \citep{vanderaalst2004workflow} goes further and produces a Petri net\index{Petri net}, a model
 with \emph{transitions} (the activities), \emph{places} (the conditions between them) and \emph{tokens}
 (the state). From the directly-follows relation $a>b$ it derives three relations between activities:
-\emph{causality} $a\rightarrow b$ if $a>b$ and not $b>a$; \emph{parallelism} $a\parallel b$ if $a>b$ and
+\emph{causality\index{causality|textbf}} $a\rightarrow b$ if $a>b$ and not $b>a$; \emph{parallelism} $a\parallel b$ if $a>b$ and
 $b>a$; and \emph{choice} $a\#b$ if neither. Every pair of sets of activities $(A,B)$ such that every
 activity of $A$ causes every activity of $B$, and the activities within $A$ and within $B$ are in choice,
 can be a place; the algorithm keeps the maximal pairs, and adds a source place before the first
@@ -1546,12 +1546,12 @@ commercial products.
 
 \subsection{Conformance checking}
 
-Conformance checking measures how well a model and a log agree. \emph{Token-based replay}
-\citep{rozinat2008conformance} plays each trace on the Petri net, firing the transition of each event: a
+Conformance checking\index{conformance checking} measures how well a model and a log agree. \emph{Token-based replay\index{token replay|textbf}}
+\citep{rozinat2008conformance} plays each trace on the Petri net\index{Petri net}, firing the transition of each event: a
 transition consumes a token from each of its input places and produces one in each of its output places.
 If an input place is empty, the event did not respect the model, and a \emph{missing} token is created to
 continue; tokens left in the net at the end are \emph{remaining}. With $p$, $c$, $m$ and $r$ the produced,
-consumed, missing and remaining tokens over the whole log, the \emph{fitness} is
+consumed, missing and remaining tokens over the whole log, the \emph{fitness\index{fitness|textbf}} is
 \begin{equation}\label{eq:fitness}
   \mathrm{fitness}=\frac12\Bigl(1-\frac{m}{c}\Bigr)+\frac12\Bigl(1-\frac{r}{p}\Bigr),
 \end{equation}
@@ -1604,14 +1604,14 @@ consecutive recorded events: with completion events only, they mix service, wait
 concurrent activities (and our simple generator accumulates its timestamps sequentially, even where the
 net allows concurrency), so they point to where to look rather than measuring service durations. In this
 simulation the ticket check is slow by construction, so speeding it up, or starting it earlier, would
-shorten the whole process. Process mining tools also
+shorten the whole process. Process mining\index{process mining} tools also
 show the frequency of each variant, the workload of each resource, and the evolution of performance over
-time, which links process mining with the monitoring of Unit~6.
+time, which links process mining with the monitoring\index{monitoring} of Unit~6.
 
 % =====================================================================
 \section{Robotic process automation}\label{sec:rpa}
 
-\emph{Robotic process automation} (RPA) tries to free people from the simple and repetitive tasks of
+\emph{Robotic process automation\index{robotic process automation (RPA)|textbf}} (RPA) tries to free people from the simple and repetitive tasks of
 their daily work \citep{vanderaalst2018robotic,syed2020robotic}. It develops software agents, called
 \emph{robots}, that mimic people performing business tasks on their computers: filling in forms,
 processing the invoices received by e-mail, correcting mistakes in databases, copying data from one
@@ -1622,9 +1622,9 @@ interface changes.
 
 \subsection{From RPA to intelligent process automation}
 
-Most RPA systems rely on explicitly encoded rules and configurations. Applying artificial intelligence
-can be a significant breakthrough: \emph{intelligent process automation} (IPA) aims to generalise RPA by
-providing the tools to create complex workflows with minimal user intervention. The IEEE describes it as
+Most RPA\index{robotic process automation (RPA)} systems rely on explicitly encoded rules and configurations. Applying artificial intelligence
+can be a significant breakthrough: \emph{intelligent process automation\index{intelligent process automation|textbf}} (IPA) aims to generalise RPA by
+providing the tools to create complex workflows with minimal user intervention\index{intervention}. The IEEE describes it as
 a preconfigured software instance that combines business rules, experience-based context determination
 logic and decision criteria to initiate and execute multiple interrelated human and automated processes
 in a dynamic context \citep{ieee2017ipa}. A key step is the formalisation of workflows (the interaction
@@ -1632,13 +1632,13 @@ between the actions of the user, software and data artefacts) in a formal langua
 simulate and execute them; the actions and events can be captured with GUI automation tools such as
 Sikuli, which locates interface elements from screenshots \citep{yeh2009sikuli}. Discovering which
 routines are worth automating from logs of user interactions is the goal of \emph{robotic process
-mining} \citep{leno2021robotic}, which brings together the two halves of this section.
+mining\index{process mining|textbf}} \citep{leno2021robotic}, which brings together the two halves of this section.
 
 \citet{ferreira2020evaluation} define IPA as a combination of four tasks between three representations of
 a process (\cref{fig:ipa}): \emph{Demo2text} describes in natural language a demonstration of a user
 executing an activity; \emph{Demo2process} turns a demonstration into a program that can re-execute it;
 \emph{Text2process} generates the process from a description of the activity, which is program synthesis
-and inductive programming (\cref{sec:indprog}); and \emph{Process2text} describes in natural language a
+and inductive programming\index{inductive programming} (\cref{sec:indprog}); and \emph{Process2text} describes in natural language a
 process that is already implemented.
 
 \begin{figure}[htbp]
@@ -1660,11 +1660,11 @@ process that is already implemented.
 
 \subsection{Two software robots}
 
-In a visual RPA tool such as UiPath, a robot is built by recording or assembling activities. A robot that
+In a visual RPA\index{robotic process automation (RPA)} tool such as UiPath, a robot is built by recording or assembling activities. A robot that
 collects the prices of a product category from an online shop, for instance, is defined in a few steps:
 create a new process; open the web page of the category in the browser; use the data extraction wizard to
 select an example of each field (the brand, the name and the price of a product), from which the tool
-infers the rest of the table, which is programming by example again; indicate the link to the next page,
+infers the rest of the table, which is programming by example\index{programming by example} again; indicate the link to the next page,
 so that the robot goes through all of them; and add an activity that writes the extracted table to a CSV
 file. Then run it.
 
@@ -1672,7 +1672,7 @@ The same logic can be written in a few lines of code. \Cref{lst:rpa} is a robot 
 received by e-mail, extracts the supplier, the invoice number, the date and the amount, canonicalises
 dates written in three formats and amounts written with European and English separators, and books the
 invoices that pass the business rules. The cases it cannot handle, an invoice without a number and one
-above the approval limit, are delegated to a person: as with the delegating classifiers of
+above the approval limit, are delegated to a person: as with the delegating\index{delegation} classifiers of
 \cref{sec:cautious}, a good automation knows its limits. Each message is handled on its own, so an error in one does not stop the others; missing
 fields, impossible dates (31 February) and unsupported amounts or currencies are delegated too, and the
 output is written as proper CSV (the supplier ``Acme, SL'' contains a comma). The robot only prepares
@@ -1782,36 +1782,36 @@ format checks (acceptance and rejection tests):
   \item The steps of a data science project are automatable in very different degrees: modelling
         almost completely, data preparation and exploration partially, problem analysis and
         communication hardly at all.
-  \item Data wrangling, exploratory analysis and feature engineering have many tools; deep feature
-        synthesis generates features from relational data automatically.
-  \item AutoML solves the combined algorithm selection and hyperparameter optimisation problem with
-        random search, Bayesian optimisation, multi-fidelity or evolutionary methods. The score of the
+  \item Data wrangling\index{data wrangling}, exploratory analysis and feature engineering\index{feature engineering} have many tools; deep feature
+        synthesis\index{deep feature synthesis} generates features from relational data automatically.
+  \item AutoML\index{AutoML} solves the combined algorithm selection\index{algorithm selection} and hyperparameter optimisation\index{hyperparameter optimisation} problem with
+        random search\index{random search}, Bayesian optimisation\index{Bayesian optimisation}, multi-fidelity\index{fidelity} or evolutionary methods. The score of the
         selected configuration is optimistic, so the whole search must be evaluated on unseen data.
-  \item Metalearning learns from previous experiments, for instance to select algorithms from
+  \item Metalearning\index{metalearning} learns from previous experiments, for instance to select algorithms from
         meta-features; its value is bounded by how complementary the candidate algorithms are.
-  \item Inductive programming synthesises programs from examples and background knowledge, in logic or
-        functional languages; inductive bias and domain-specific languages make the search tractable,
+  \item Inductive programming\index{inductive programming} synthesises programs from examples and background knowledge\index{background knowledge}, in logic or
+        functional languages; inductive bias\index{inductive bias} and domain-specific languages\index{domain-specific language} make the search tractable,
         and language models now act as few-shot inductive programmers.
-  \item Large language models assist at every stage of a project and, as agents, carry out whole analyses;
-        because their code can be plausible and wrong (hallucinated columns, leakage, silently dropped rows),
+  \item Large language models\index{large language model (LLM)} assist at every stage of a project and, as agents, carry out whole analyses;
+        because their code can be plausible and wrong (hallucinated columns, leakage\index{data leakage}, silently dropped rows),
         it must be verified automatically: isolated execution, invariants and held-out evaluation.
-  \item Genetic programming evolves programs, represented as trees, by selection, crossover and
-        mutation.
-  \item Process mining discovers, checks and enhances process models from event logs; robotic and
-        intelligent process automation build software robots that perform repetitive tasks.
+  \item Genetic programming\index{genetic programming} evolves programs, represented as trees, by selection, crossover\index{genetic programming!crossover} and
+        mutation\index{genetic programming!mutation}.
+  \item Process mining\index{process mining} discovers, checks and enhances process models from event logs\index{event log}; robotic and
+        intelligent process automation\index{intelligent process automation} build software robots that perform repetitive tasks.
 \end{itemize}
 
 \section*{Bibliographic notes}
 \phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
-\citet{martinezplumed2021crisp} review data science processes from CRISP-DM to data science trajectories.
-\citet{hutter2019automated} is the standard reference on AutoML, and \citet{zoller2021benchmark} survey and
-benchmark AutoML frameworks; \citet{brazdil2022metalearning} cover metalearning in depth.
-\citet{gulwani2015inductive} present inductive programming and its applications to end users, and
-\citet{jaimovitch2023can} study language models for data wrangling. \citet{debie2022automating} discuss what automating
-data science means, and \citet{tornede2024automl} the opportunities and risks of large language models for AutoML. \citet{poli2008field} is a free field
-guide to genetic programming. \citet{vanderaalst2016process} is the reference book on process mining, and
-\citet{syed2020robotic} review the themes and challenges of RPA.
+\citet{martinezplumed2021crisp} review data science processes from CRISP-DM\index{CRISP-DM} to data science trajectories.
+\citet{hutter2019automated} is the standard reference on AutoML\index{AutoML}, and \citet{zoller2021benchmark} survey and
+benchmark AutoML frameworks; \citet{brazdil2022metalearning} cover metalearning\index{metalearning} in depth.
+\citet{gulwani2015inductive} present inductive programming\index{inductive programming} and its applications to end users, and
+\citet{jaimovitch2023can} study language models for data wrangling\index{data wrangling}. \citet{debie2022automating} discuss what automating
+data science\index{automated data science} means, and \citet{tornede2024automl} the opportunities and risks of large language models\index{large language model (LLM)} for AutoML. \citet{poli2008field} is a free field
+guide to genetic programming\index{genetic programming}. \citet{vanderaalst2016process} is the reference book on process mining\index{process mining}, and
+\citet{syed2020robotic} review the themes and challenges of RPA\index{robotic process automation (RPA)}.
 
 \section*{Exercises}
 \phantomsection\addcontentsline{toc}{section}{Exercises}
@@ -1819,7 +1819,7 @@ guide to genetic programming. \citet{vanderaalst2016process} is the reference bo
 \begin{enumerate}[label=\textbf{4.\arabic*},ref=4.\arabic*,leftmargin=*,itemsep=6pt]
   \item\label{exr4:grid} A budget of nine evaluations is spent on two hyperparameters, only one of which
         matters. How many distinct values of the important hyperparameter does a $3\times3$ grid try? And
-        random search?
+        random search\index{random search}?
   \item\label{exr4:ei} The best accuracy found so far is $f^\star=0.86$. A Gaussian process predicts
         $\mu=0.85$, $\sigma=0.02$ for configuration $z_1$ and $\mu=0.80$, $\sigma=0.06$ for $z_2$. Compute
         the expected improvement of both (\cref{eq:ei}). Which one is evaluated next, and why?
@@ -1828,7 +1828,7 @@ guide to genetic programming. \citet{vanderaalst2016process} is the reference bo
         total budget with evaluating the 81 configurations with the final budget.
   \item\label{exr4:optimism} In \cref{lst:cash}, with 200 configurations the winner has a cross-validation
         accuracy of 0.950 and a test accuracy of 0.925. Explain the difference and design a protocol that
-        gives an honest estimate of the performance of the AutoML process.
+        gives an honest estimate of the performance of the AutoML\index{AutoML} process.
   \item\label{exr4:meta} Compute the following meta-features of a data set with 1000 examples, 20 features
         and classes of 900 and 100 examples: $\log_{10}n$, $\log_{10}d$, $n/d$, the minority fraction and
         the class entropy (in bits).
@@ -1838,25 +1838,25 @@ guide to genetic programming. \citet{vanderaalst2016process} is the reference bo
   \item\label{exr4:bias} How many sequences of $d=4$ functions can be formed with $b=5$ and with $b=20$
         background functions? How many ordered binary expressions with four operator nodes are there with
         those numbers of binary operators and three terminals (use $C_4=14$)? What does this tell you about
-        the value of domain-specific languages?
+        the value of domain-specific languages\index{domain-specific language}?
   \item\label{exr4:pbe} With the DSL of \cref{lst:pbe}, write a program for the example
         \texttt{Ferri, Cesar} $\mapsto$ \texttt{C. Ferri}. Find the four shortest programs consistent with this single
         example and their outputs for \texttt{Garcia Lopez, Juan Jose}.
   \item\label{exr4:cross} In \cref{fig:gptrees}, which child results from replacing the leaf 3 of the second
         parent by the subtree $x\times x$ of the first?
-  \item\label{exr4:alpha} Apply the alpha algorithm to the log $L=\{abcd, acbd, aed\}$: compute the
-        relations $\rightarrow$, $\parallel$ and $\#$ and the places of the Petri net.
+  \item\label{exr4:alpha} Apply the alpha algorithm\index{alpha algorithm} to the log $L=\{abcd, acbd, aed\}$: compute the
+        relations $\rightarrow$, $\parallel$ and $\#$ and the places of the Petri net\index{Petri net}.
   \item\label{exr4:replay} Replay the trace $abd$ on the net of Exercise~\ref{exr4:alpha} and compute its
-        fitness.
-  \item\label{exr4:rpa} Classify each scenario as RPA or IPA: (a) a robot copies the fields of a web form
+        fitness\index{fitness}.
+  \item\label{exr4:rpa} Classify each scenario as RPA\index{robotic process automation (RPA)} or IPA\index{intelligent process automation}: (a) a robot copies the fields of a web form
         into the accounting system following fixed rules; (b) a system watches an employee process a few
         claims and learns a program that processes new ones; (c) a system writes, from the code of a robot,
         a description of what it does for the auditors.
-  \item\label{exr4:prompt} Write a few-shot prompt that asks a language model to turn dates such as
+  \item\label{exr4:prompt} Write a few-shot prompt\index{prompt} that asks a language model to turn dates such as
         \texttt{23/12/2021} into \texttt{Dec 23, 2021}. How would you check the outputs before applying the
         transformation to a column of a million dates?
   \item\label{exr4:llmstage} Choose two stages of \cref{tab:llmstages}. For each, describe a task you would
-        delegate to a language model assistant and an automatic check you would apply to its output.
+        delegate\index{delegation} to a language model assistant and an automatic check you would apply to its output.
   \item\label{exr4:verify} Which check of \cref{lst:assistant} catches each proposal? (a)
         \texttt{df["x"] = df["balance"] / df["limit"]} on a table without those columns; (b) the default rate of
         each customer's branch, computed on the whole table; (c) code that removes the customers with a missing
@@ -1870,7 +1870,7 @@ guide to genetic programming. \citet{vanderaalst2016process} is the reference bo
 \phantomsection\addcontentsline{toc}{section}{Solutions to selected exercises}
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
-  \item[\ref{exr4:grid}] The grid tries 3 values of each hyperparameter; random search tries 9 different
+  \item[\ref{exr4:grid}] The grid tries 3 values of each hyperparameter; random search\index{random search} tries 9 different
         values of each (with probability 1 for continuous ranges), so it explores the important one three
         times more finely.
   \item[\ref{exr4:ei}] For $z_1$, $u=-0.5$ and $\mathrm{EI}=0.02\,[-0.5\cdot0.3085+0.3521]=0.0040$. For $z_2$,
@@ -1880,7 +1880,7 @@ guide to genetic programming. \citet{vanderaalst2016process} is the reference bo
         $81r$, in total $405r$, against $81\cdot81r=6561r$, sixteen times more.
   \item[\ref{exr4:optimism}] The winner is the configuration with the highest cross-validation score among
         200, partly by luck, so its score is biased upwards. Evaluate the whole search with nested
-        cross-validation, or run it on a training set and report the score of the final model on a
+        cross-validation\index{cross-validation!nested}, or run it on a training set and report the score of the final model on a
         separate test set that the search never uses.
   \item[\ref{exr4:meta}] $\log_{10}n=3$, $\log_{10}d=1.30$, $n/d=50$, minority fraction 0.1, and entropy
         $-0.9\log_20.9-0.1\log_20.1=0.469$ bits.
@@ -1889,7 +1889,7 @@ guide to genetic programming. \citet{vanderaalst2016process} is the reference bo
   \item[\ref{exr4:bias}] Sequences: $5^4=625$ and $20^4=160{,}000$. Expressions: $C_4\,b^4\,3^5$, that is
         $14\cdot625\cdot243=2{,}126{,}250$ and $14\cdot160{,}000\cdot243=544{,}320{,}000$. The count depends on the
         grammar, but in every case a small, specialised set of functions keeps the space small enough to
-        search, which is what DSLs provide.
+        search, which is what DSLs\index{domain-specific language} provide.
   \item[\ref{exr4:pbe}] The program \texttt{initial(word,1)} + \texttt{". "} + \texttt{token(word,0)}. Eight programs are consistent with the example. The four shortest combine
         \texttt{initial(word,1)} or \texttt{initial(word,-1)} with \texttt{token(word,0)} or
         \texttt{token(word,-2)}; for the new input they give \texttt{L. Garcia}, \texttt{L. Juan},
@@ -1903,9 +1903,9 @@ guide to genetic programming. \citet{vanderaalst2016process} is the reference bo
         $(\{b,e\},\{d\})$, $(\{c,e\},\{d\})$, plus the source place before $a$ and the sink place after $d$.
   \item[\ref{exr4:replay}] $a$ consumes the start token and produces two; $b$ consumes one and produces one;
         $d$ needs tokens in $(\{b,e\},\{d\})$, present, and $(\{c,e\},\{d\})$, missing; finally the end token is
-        consumed. $p=5$, $c=5$, $m=1$, $r=1$ (the token for $c$), so the fitness is
+        consumed. $p=5$, $c=5$, $m=1$, $r=1$ (the token for $c$), so the fitness\index{fitness} is
         $\frac12(1-\frac15)+\frac12(1-\frac15)=0.8$.
-  \item[\ref{exr4:rpa}] (a) RPA. (b) IPA (Demo2process). (c) IPA (Process2text).
+  \item[\ref{exr4:rpa}] (a) RPA\index{robotic process automation (RPA)}. (b) IPA\index{intelligent process automation} (Demo2process). (c) IPA (Process2text).
   \item[\ref{exr4:prompt}] For instance: \texttt{input: 23/12/2021, output: Dec 23, 2021; input: 05/01/2022,
         output: Jan 5, 2022; input: 31/07/2023, output:}. Check the outputs on held-out examples with known
         answers, validate their format with a regular expression, and compare the parsed dates with the
@@ -1915,10 +1915,10 @@ guide to genetic programming. \citet{vanderaalst2016process} is the reference bo
         hand. Modelling: ask for a pipeline, and check that the preprocessing is fitted inside the cross-validation
         and that the model beats a simple baseline on held-out data.
   \item[\ref{exr4:verify}] (a) Running the code: the columns do not exist (a hallucination). (b) Running it without the
-        target: the default rate uses the target (leakage). (c) The invariant on the rows. (d) The minimum gain: an
+        target: the default rate uses the target (leakage\index{data leakage}). (c) The invariant on the rows. (d) The minimum gain: an
         improvement of 0.001 is within the noise of cross-validation.
   \item[\ref{exr4:memorise}] The data set is very likely in its training data, so it may have memorised it
-        (contamination); and texts about the Titanic describe its patterns (women and children first, the classes of the
+        (contamination\index{contamination of benchmarks}); and texts about the Titanic describe its patterns (women and children first, the classes of the
         cabins). A fair evaluation uses data the model cannot have seen, such as recent or private data, or a perturbed
         version of the data set, and compares the model with a classifier trained on the same information.
 \end{description}

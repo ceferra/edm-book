@@ -39,3 +39,8 @@ for ch, outname in CHAPTERS.items():
     (root / "chapters").mkdir(exist_ok=True)
     (root / "chapters" / f"{outname}.tex").write_text("\n".join(lines) + "\n", encoding="utf-8")
     print("assembled", outname, len(lines), "lines")
+
+
+# the subject index: insert \index entries into the assembled chapters
+import subprocess as _sp, sys as _sys
+_sp.run([_sys.executable, str(pathlib.Path(__file__).parent / "add_index.py")], check=True)

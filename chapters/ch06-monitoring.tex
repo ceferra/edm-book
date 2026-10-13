@@ -13,33 +13,33 @@ closed its home-buying business, which bought houses at prices proposed by its m
 with the changes of the market; it wrote down hundreds of millions of dollars and cut about a quarter of its workforce
 \citep{zillow2021q3}.
 
-Deployment is not the end of a model's life but the beginning of its most dangerous part. The world
-that produced the training data keeps changing: customers change their habits, fraudsters change
+Deployment\index{deployment} is not the end of a model's life but the beginning of its most dangerous part. The world
+that produced the training data\index{training set} keeps changing: customers change their habits, fraudsters change
 their tricks, sensors are replaced, a pandemic changes what people buy. A model that was accurate
 when it was validated can degrade silently, without any error message, because it keeps producing
 predictions with the same confidence. This unit is about noticing and reacting. It covers what to
-monitor in a deployed model; the theory and practice of \emph{dataset shift}, the changes in the data
+monitor in a deployed model; the theory and practice of \emph{dataset shift\index{dataset shift|textbf}}, the changes in the data
 that make models stale, and how to detect them with and without labels; how to adapt models to
-shift, from retraining strategies to the correction of covariate and label shift, domain adaptation
-and transfer learning; and how to replace a model safely, with shadow deployments, A/B tests and
-multi-armed bandits \citep{ameisen2020building,huyen2022designing}.
+shift, from retraining strategies to the correction of covariate and label shift\index{label shift}, domain adaptation\index{domain adaptation}
+and transfer learning\index{transfer learning}; and how to replace a model safely, with shadow deployments\index{shadow mode}, A/B tests\index{A/B testing} and
+multi-armed bandits\index{multi-armed bandit} \citep{ameisen2020building,huyen2022designing}.
 
 \begin{objectives}
 After studying this unit you should be able to:
 \begin{itemize}
   \item decide what to monitor in a deployed model (service, data, predictions, performance and
         business metrics) and evaluate a model whose actions hide the ground truth;
-  \item define and recognise the types of dataset shift (covariate shift, prior or label shift, and
-        concept drift) and their temporal patterns;
-  \item detect data drift without labels (statistical tests, the population stability index and domain
-        classifiers) and concept drift with labels (DDM and Page--Hinkley);
+  \item define and recognise the types of dataset shift (covariate shift\index{covariate shift}, prior or label shift, and
+        concept drift\index{concept drift}) and their temporal patterns;
+  \item detect data drift\index{data drift} without labels (statistical tests, the population stability index\index{population stability index (PSI)} and domain
+        classifiers\index{domain classifier}) and concept drift with labels (DDM\index{drift detection method (DDM)} and Page--Hinkley\index{Page--Hinkley test});
   \item choose a retraining strategy, correct label shift and estimate class proportions, and correct
-        covariate shift with importance weights;
-  \item explain domain adaptation and transfer learning, and apply simple methods such as CORAL,
+        covariate shift with importance weights\index{importance weighting};
+  \item explain domain adaptation and transfer learning, and apply simple methods such as CORAL\index{CORAL},
         feature augmentation and regularisation towards a source model;
   \item deploy updates safely with shadow mode, canaries and A/B tests, size an experiment, avoid the
-        peeking trap, and use multi-armed bandits.
-  \item monitor applications built on large language models: costs, quality without labels, drift of the
+        peeking\index{peeking} trap, and use multi-armed bandits.
+  \item monitor applications built on large language models\index{large language model (LLM)}\index{language model}: costs, quality without labels, drift of the
         questions and changes of the model;
 \end{itemize}
 \end{objectives}
@@ -48,14 +48,14 @@ After studying this unit you should be able to:
 \section{Why monitor models?}\label{sec:whymonitor}
 
 Once a model is deployed, its performance must be monitored like that of any other software system;
-but a model can fail in ways that ordinary software cannot. When monitoring a model we must answer three
+but a model can fail in ways that ordinary software cannot. When monitoring\index{monitoring} a model we must answer three
 questions: why we monitor it, how, and what actions the monitoring should drive. There are four main
 reasons:
 \begin{itemize}
   \item \emph{to keep the model fresh}: most models need to be updated regularly to maintain their
         performance, and monitoring tells us when a model is no longer fresh and must be retrained. If we
-        estimate the accuracy of a recommender from the implicit feedback of its users (whether they
-        click on the recommendations), we can retrain it as soon as that accuracy drops below a threshold;
+        estimate the accuracy\index{accuracy} of a recommender\index{recommender system} from the implicit feedback of its users (whether they
+        click on the recommendations), we can retrain it as soon as that accuracy drops below a threshold\index{threshold};
         and before redeploying, we must check that the new model is better (\cref{sec:safedeploy});
   \item \emph{to detect abuse}: in fraud detection or abuse prevention, some users actively try to defeat
         the model (\cref{sec:adversarial}), and monitoring is the way to notice attacks and estimate their
@@ -64,7 +64,7 @@ reasons:
         production than in training, or a change in an upstream system do not crash the model; it simply
         keeps predicting, worse. The incident of \cref{lst:ct}, a week whose labels were lost, is a typical
         example;
-  \item \emph{to comply with the law}: for high-risk systems, the AI Act requires providers to monitor their
+  \item \emph{to comply with the law}: for high-risk\index{AI Act!high-risk systems} systems, the AI Act\index{AI Act} requires providers to monitor their
         performance after deployment and to report serious incidents (\cref{sec:aiact}).
 \end{itemize}
 
@@ -100,11 +100,11 @@ the upper levels are closer to what we care about but are often delayed or hard 
 
 \paragraph{Service metrics} The average time it takes to process a request, the proportion of requests
 that fail, and the resources available (memory, processor) are useful in any production service, and
-allow problems to be fixed before many users are affected. For models, the tail of the latency
+allow problems to be fixed before many users are affected. For models, the tail of the latency\index{latency}
 distribution matters most (\cref{sec:deployoptions}).
 
 \paragraph{Input data and predictions} A model becomes stale when the distribution of its data changes.
-Both the inputs and the outputs can change. Changes in the inputs, often called \emph{feature drift} or
+Both the inputs and the outputs can change. Changes in the inputs, often called \emph{feature drift\index{data drift|textbf}} or
 \emph{data drift}, are the easiest to track: monitoring can start with summary statistics, such as the mean,
 variance and missing rate of the key features, and continue with the methods of \cref{sec:detectshift}.
 The distribution of the predictions (the share of each class, the distribution of the scores) is also
@@ -119,14 +119,14 @@ from observing them: once a transaction is blocked as fraudulent, we never learn
 Having access only to a skewed sample of the true distribution makes it impossible to evaluate the model
 correctly, and it biases the data for the next model too (a feedback loop, \cref{sec:fairness}).
 
-\emph{Counterfactual evaluation} estimates what would have happened had the model not acted
+\emph{Counterfactual\index{counterfactual|textbf} evaluation\index{counterfactual holdout|textbf}} estimates what would have happened had the model not acted
 \citep{bottou2013counterfactual}. The simplest way is to withhold the model's action on a small random
-subset of the cases, a \emph{holdout}: the outcomes of those cases are observed whatever the model
-predicted, so they form an unbiased sample on which precision and recall can be estimated.
+subset of the cases, a \emph{holdout\index{hold-out|textbf}}: the outcomes of those cases are observed whatever the model
+predicted, so they form an unbiased sample on which precision\index{precision} and recall\index{recall} can be estimated.
 \Cref{lst:holdout} simulates a fraud model that blocks transactions. Among the transactions we can observe,
 the fraud rate is 2.6\%, about half of the true 4.6\%, because the model removed many frauds from view. The
 2\% holdout estimates the fraud rate (4.3\%), the precision (0.346, against a true 0.361) and the recall
-(0.455, against 0.481), with confidence intervals that contain the true values. The price is explicit: 80
+(0.455, against 0.481), with confidence intervals\index{confidence interval} that contain the true values. The price is explicit: 80
 frauds that the model would have stopped were let through. In some domains, such as medicine, acting at
 random on a subset of patients is not acceptable, and this approach cannot be used.
 
@@ -187,7 +187,7 @@ global average can hide a group for which the model has collapsed. Every alert s
 \section{Dataset shift}\label{sec:shift}
 
 Almost everything in this book has assumed that the data on which a model is evaluated and used come
-from the same distribution as the data on which it was trained. \emph{Dataset shift} is the situation in
+from the same distribution as the data on which it was trained. \emph{Dataset shift\index{dataset shift|textbf}} is the situation in
 which this is not true \citep{quinonero2009dataset,morenotorres2012unifying}. In deployment it is the rule,
 not the exception, and the different ways in which the distribution can change have different
 consequences and different remedies.
@@ -202,15 +202,15 @@ two ways,
 \end{equation}
 and the types of shift are defined by which factors change and which stay the same:
 \begin{itemize}
-  \item \emph{covariate shift}: the distribution of the features changes, $p_s(x)\neq p_t(x)$, but the
+  \item \emph{covariate shift\index{covariate shift|textbf}}: the distribution of the features changes, $p_s(x)\neq p_t(x)$, but the
         relationship between features and target does not, $p_s(y\mid x)=p_t(y\mid x)$. A credit model
         trained mostly on young applicants and used for all ages, when the relation between income and
         default is the same at every age, suffers covariate shift;
-  \item \emph{prior probability shift}, or \emph{label shift}: the class proportions change,
+  \item \emph{prior probability shift\index{label shift|textbf}}, or \emph{label shift}: the class proportions change,
         $p_s(y)\neq p_t(y)$, but the distribution of the features within each class does not,
         $p_s(x\mid y)=p_t(x\mid y)$. A diagnostic model trained when 5\% of patients had a disease and used
         during an epidemic, when 30\% have it with the same symptoms, suffers label shift;
-  \item \emph{concept shift}, or \emph{concept drift}: the relationship itself changes,
+  \item \emph{concept shift}, or \emph{concept drift\index{concept drift|textbf}}: the relationship itself changes,
         $p_s(y\mid x)\neq p_t(y\mid x)$. Spammers rewrite their messages, so words that indicated spam
         no longer do; a change in the law makes a previously legal transaction fraudulent.
 \end{itemize}
@@ -226,7 +226,7 @@ population, as in \cref{lst:holdout}) and changes in measurement (a new sensor, 
 which create shift where the world has not changed at all.
 
 \Cref{fig:shifttypes} shows the three types on a two-class problem, together with the accuracy of a
-logistic regression trained on the original data. Under covariate shift the model remains correct: its
+logistic regression\index{logistic regression} trained on the original data. Under covariate shift the model remains correct: its
 family contains the true boundary, and the accuracy even rises (from 0.85 to 0.88) because the new inputs lie
 in an easier region. Under label shift the accuracy hardly changes (0.84), but the model is no longer the
 best it could be: its probabilities are miscalibrated, and moving the threshold to account for the new
@@ -246,7 +246,7 @@ boundary (d). Titles give the accuracy of the original model.}
 when the characteristics of a loan determine whether it is repaid), the mechanism $p(y\mid x)$ tends to be
 stable and the distribution of the causes $p(x)$ is what changes: covariate shift. When the target causes the
 features ($Y\rightarrow X$, as when a disease causes symptoms, or a digit causes the image a person writes), the
-mechanism $p(x\mid y)$ is the stable part and the prevalence $p(y)$ changes: label shift. This is why label
+mechanism $p(x\mid y)$ is the stable part and the prevalence\index{prevalence} $p(y)$ changes: label shift. This is why label
 shift is natural in diagnosis and covariate shift in prediction from causes; but these are hypotheses to
 justify, not consequences guaranteed by the direction of the arrows, since stability depends on which
 mechanisms actually change.
@@ -255,7 +255,7 @@ mechanisms actually change.
 (\cref{fig:driftpatterns}): \emph{sudden} drift replaces a concept by another at once (a new regulation);
 \emph{gradual} drift alternates between the old and the new concept, with the new one becoming more frequent
 (customers slowly adopting a new product); \emph{incremental} drift moves continuously through intermediate
-concepts (a sensor that degrades); and \emph{recurring} drift brings back concepts seen before (seasons,
+concepts (a sensor that degrades); and \emph{recurring\index{concept drift!recurring|textbf}} drift brings back concepts seen before (seasons,
 weekdays and weekends). Recurring concepts suggest keeping old models instead of discarding them.
 
 \begin{figure}[htbp]
@@ -276,10 +276,10 @@ labels usually arrive late.
 
 \paragraph{Univariate monitoring} The simplest approach compares the distribution of each feature in a
 \emph{reference} window (for instance, the training data or the first month in production) with a
-\emph{current} window. For numerical features, the two-sample \emph{Kolmogorov--Smirnov} test uses the largest
+\emph{current} window. For numerical features, the two-sample \emph{Kolmogorov--Smirnov\index{Kolmogorov--Smirnov test|textbf}} test uses the largest
 distance between the two empirical distribution functions, $D=\sup_x|F_{\text{ref}}(x)-F_{\text{cur}}(x)|$; for
 categorical features, a $\chi^2$ test compares the frequencies. In credit scoring, the \emph{population
-stability index} is a long-standing practice \citep{siddiqi2006credit}: with the proportions $e_i$ of the
+stability index\index{population stability index (PSI)|textbf}} is a long-standing practice \citep{siddiqi2006credit}: with the proportions $e_i$ of the
 reference data and $a_i$ of the current data in each of $B$ bins (usually the deciles of the reference),
 \begin{equation}\label{eq:psi}
   \mathrm{PSI}=\sum_{i=1}^{B}\,(a_i-e_i)\,\ln\frac{a_i}{e_i},
@@ -291,13 +291,13 @@ changes to another constant can fall in a single bin and give a PSI of 0, so con
 missing values need their own checks.
 
 \paragraph{Multivariate monitoring} Univariate monitors can miss changes in the \emph{relations} between
-features. A general alternative is the \emph{domain classifier}, also known as a classifier two-sample test
+features. A general alternative is the \emph{domain classifier\index{domain classifier|textbf}}, also known as a classifier two-sample test
 \citep{lopezpaz2017revisiting}: label the reference examples 0 and the current ones 1, train a classifier, and
-measure with cross-validation how well it separates them. An AUC close to 0.5 means that this classifier, with this sample,
+measure with cross-validation\index{cross-validation} how well it separates them. An AUC\index{area under the ROC curve (AUC)} close to 0.5 means that this classifier, with this sample,
 cannot tell the two windows apart, which does not prove that their distributions are equal; higher values
 indicate a detectable change, though neither a universal measure of distance nor, by themselves, a loss of
 predictive performance, and the classifier itself
-tells which features changed (through its feature importances, \cref{sec:agnostic}). For a suitable class of
+tells which features changed (through its feature importances\index{feature importance}, \cref{sec:agnostic}). For a suitable class of
 classifiers, its accuracy is also related to the divergence between domains that appears in the bound on the
 error of a model trained on one domain and used on the other \citep{bendavid2010theory}; the AUC of a particular
 classifier is a diagnostic, not that divergence. Kernel two-sample tests based on the maximum mean discrepancy
@@ -354,7 +354,7 @@ correlation 0.8 -> -0.8   0.025 (9.7e-02)   0.006     0.892
 
 \Cref{lst:datadrift} compares the three monitors on windows of 5000 examples with three features, the first two
 correlated. Without drift, all of them stay quiet. A shift of the mean of one feature by 0.1 standard deviations
-is \emph{statistically significant} for the Kolmogorov--Smirnov test ($p=4\cdot10^{-6}$), but its PSI is 0.013 and
+is \emph{statistically significant\index{statistical significance|textbf}} for the Kolmogorov--Smirnov test ($p=4\cdot10^{-6}$), but its PSI is 0.013 and
 the domain classifier barely notices it (AUC 0.515): with large windows, tests detect changes too small to
 matter, so their $p$-values must not be read as measures of importance. A shift of half a standard deviation is
 caught by all of them (PSI 0.24, AUC 0.70), and so is a change of the variance of the third feature. But when the
@@ -367,23 +367,23 @@ Some practical advice applies to all these monitors. Monitoring many features wi
 alarms by chance, so thresholds must account for multiple testing or be set from the variation observed in
 periods known to be stable. In high dimensions, it is often more effective to monitor a few summaries: the
 predictions of the model, a low-dimensional projection of the inputs, or the output of a domain classifier
-\citep{rabanser2019failing}. And under label shift, the distribution of the predicted labels together with the
-confusion matrix measured on validation data allows the new class proportions to be estimated without labels
+\citep{rabanser2019failing}. And under label shift\index{label shift}, the distribution of the predicted labels together with the
+confusion matrix\index{confusion matrix} measured on validation data\index{validation set} allows the new class proportions to be estimated without labels
 \citep{lipton2018detecting}, a problem we return to in \cref{sec:labelshift}.
 
 \subsection{With labels: concept drift}
 
-When the true outcomes arrive, we can watch the errors of the model directly. Concept drift detectors monitor
+When the true outcomes arrive, we can watch the errors of the model directly. Concept drift\index{concept drift} detectors monitor
 the stream of errors and signal when its rate increases significantly
 \citep{gama2014survey,lu2019learning}:
 \begin{itemize}
-  \item the \emph{drift detection method} (DDM, \citealp{gama2004learning}) treats the errors as Bernoulli
-        trials. After $i$ examples, the error rate is $p_i$ with standard deviation
+  \item the \emph{drift detection method\index{drift detection method (DDM)|textbf}} (DDM, \citealp{gama2004learning}) treats the errors as Bernoulli
+        trials. After $i$ examples, the error rate\index{error rate} is $p_i$ with standard deviation
         $s_i=\sqrt{p_i(1-p_i)/i}$. The detector remembers the moment at which $p_i+s_i$ was smallest, with
         values $p_{\min}$ and $s_{\min}$, and enters a \emph{warning} level when $p_i+s_i>p_{\min}+2s_{\min}$
         and a \emph{drift} level when $p_i+s_i>p_{\min}+3s_{\min}$. The examples received since the warning
         are the natural training set for a new model;
-  \item the \emph{Page--Hinkley test} \citep{page1954continuous}, a sequential test for a change in the mean,
+  \item the \emph{Page--Hinkley\index{Page--Hinkley test|textbf} test} \citep{page1954continuous}, a sequential test\index{sequential testing} for a change in the mean,
         accumulates the deviation of each observation from the mean available at that moment,
         $m_t=m_{t-1}+x_t-\bar x_t-\delta$, where $\bar x_t$ is the mean of the first $t$ observations and
         $\delta$ the magnitude of change that is tolerated, and signals an increase when $m_t-\min_{j\leq t}m_j$
@@ -497,15 +497,15 @@ Page-Hinkley       0.863     0.870      0.853       0.867    2040, 4442, 5248
 suddenly at $t=2000$ (the boundary rotates by 90 degrees) and incrementally between $t=4000$ and 5000 (it rotates
 continuously by another 60 degrees). The evaluation is \emph{prequential}: each example is first predicted and then used for
 learning once its label arrives. Four strategies are compared: a static model, which falls to an accuracy of
-0.51 after the sudden drift and 0.30 at the end; a sliding window, which retrains every 50 examples on the last
+0.51 after the sudden drift\index{concept drift!sudden} and 0.30 at the end; a sliding window, which retrains every 50 examples on the last
 300; and two adaptive windows, which retrain every 50 examples on all the data since the last change detected by
 DDM or by Page--Hinkley. Both detectors signal the sudden drift within 40 to 46 examples. In the stable period
 the adaptive windows use more data than the sliding window and are slightly better (0.870 against 0.865); after
-the sudden drift they recover slightly better too (0.856 and 0.853 against 0.851); during the incremental drift they
+the sudden drift they recover slightly better too (0.856 and 0.853 against 0.851); during the incremental drift\index{concept drift!incremental} they
 signal two changes each but lag behind the sliding window, which forgets continuously (0.863 and 0.867 against
 0.873). Overall the three adaptive strategies are tied at 0.86, but only the detectors tell a person that
 something changed, and when. An alarm signals a change in \emph{performance}: by itself it does not identify
-a change of $p(y\mid x)$, which a covariate shift towards regions where the model is worse, problems with
+a change of $p(y\mid x)$, which a covariate shift\index{covariate shift} towards regions where the model is worse, problems with
 the labels or changes in the predictor can also cause, and a change of concept that leaves the aggregated
 error unchanged goes unnoticed.
 
@@ -539,15 +539,15 @@ the data available: labelled data from the new situation, unlabelled data only, 
 The most common response is to retrain the model with recent data. Several strategies are used in practice, often
 combined \citep{gama2014survey,lu2019learning}:
 \begin{itemize}
-  \item \emph{periodic retraining} (every night, every week), simple and predictable, as in the continuous training
+  \item \emph{periodic retraining} (every night, every week), simple and predictable, as in the continuous training\index{continuous training}
         pipeline of \cref{sec:infrastructure}; its period should match the speed at which the data change;
   \item \emph{triggered retraining}, when a monitor or a detector signals a change, which saves computation in
-        stable periods and reacts quickly to sudden drift (\cref{lst:conceptdrift});
+        stable periods and reacts quickly to sudden drift\index{concept drift!sudden} (\cref{lst:conceptdrift});
   \item \emph{windowing}: training only on the most recent data, with a fixed window or an adaptive one such as
         ADWIN; and \emph{weighting}, which keeps all the data but gives older examples less weight, for instance an
         exponentially decaying one;
-  \item \emph{ensembles} that add models trained on recent data and remove or downweight those that perform poorly,
-        which can also keep the models of recurring concepts (\cref{ch:hybrid});
+  \item \emph{ensembles\index{ensemble|textbf}} that add models trained on recent data and remove or downweight those that perform poorly,
+        which can also keep the models of recurring\index{concept drift!recurring} concepts (\cref{ch:hybrid});
   \item \emph{online learning}, which updates the model with each new example: stochastic gradient descent for
         linear models and neural networks, or Hoeffding trees for data streams \citep{domingos2000mining}.
 \end{itemize}
@@ -556,7 +556,7 @@ unlabelled data from the new situation, provided we know which kind of shift has
 
 \subsection{Correcting label shift and estimating class proportions}\label{sec:labelshift}
 
-Under label shift the class-conditional distributions $p(x\mid y)$ are unchanged, so a probabilistic classifier
+Under label shift\index{label shift} the class-conditional distributions $p(x\mid y)$ are unchanged, so a probabilistic classifier
 trained on the source can be corrected with Bayes' theorem once the new class priors are known: the new posterior is
 proportional to the old one multiplied by the ratio of priors,
 \begin{equation}\label{eq:priorcorrection}
@@ -564,20 +564,20 @@ proportional to the old one multiplied by the ratio of priors,
 \end{equation}
 where $\pi_s$ and $\pi_t$ are the class proportions in the source and in the target. The difficulty is that the new
 proportions are unknown. Estimating them from unlabelled data is a learning task in its own right, called
-\emph{quantification} \citep{forman2008quantifying,gonzalez2017review}. The main methods are:
+\emph{quantification\index{quantification|textbf}} \citep{forman2008quantifying,gonzalez2017review}. The main methods are:
 \begin{itemize}
-  \item \emph{classify and count} (CC): the proportion of examples that the classifier assigns to each class. It is
+  \item \emph{classify and count\index{classify and count|textbf}} (CC): the proportion of examples that the classifier assigns to each class. It is
         biased, because the errors of the classifier do not cancel when the proportions change;
-  \item \emph{adjusted classify and count} (ACC): corrects CC with the true and false positive rates of the
+  \item \emph{adjusted classify and count} (ACC): corrects CC with the true and false positive rates\index{false positive rate} of the
         classifier, estimated on the source by cross-validation: $\hat\pi=(\mathrm{CC}-\FPR)/(\TPR-\FPR)$;
   \item \emph{probabilistic classify and count} (PCC): the average predicted probability, which works when the
-        probabilities are calibrated for the target, and its adjusted variants \citep{bella2010quantification};
+        probabilities are calibrated\index{calibration} for the target, and its adjusted variants \citep{bella2010quantification};
   \item the \emph{EM algorithm} of \citet{saerens2002adjusting}: start with $\pi_t=\pi_s$, correct the posteriors with
         \cref{eq:priorcorrection}, re-estimate $\pi_t$ as the average corrected posterior, and repeat until convergence.
         It estimates the new priors and corrects the posteriors at the same time.
 \end{itemize}
 These corrections rest on assumptions: stable class-conditional distributions, an informative and stable
-confusion matrix for ACC (it needs $\TPR\neq\FPR$, and a nearly singular matrix in the multiclass case makes it
+confusion matrix\index{confusion matrix} for ACC (it needs $\TPR\neq\FPR$, and a nearly singular matrix in the multiclass case makes it
 unstable), and probabilities that represent the source posteriors for PCC and EM. When the counts are not
 informative, ACC can even fall outside $[0,1]$ (with $\mathrm{CC}=0.05$, $\TPR=0.8$ and $\FPR=0.1$ it gives $-0.07$),
 and such estimates must be reported as infeasible rather than silently clipped.
@@ -638,11 +638,11 @@ adjusted by EM    accuracy 0.906   Brier 0.0724   log loss 0.2484
 are positive. Classify and count estimates 28.4\% and probabilistic classify and count 35.2\%, both far off, because
 the classifier was trained for a world with 50\% positives. The adjusted count (9.9\%) and EM (10.4\%) are close to the
 truth. Correcting the posteriors with the prior estimated by EM, without a single label from the new situation, raises
-the accuracy from 0.771 to 0.906 and halves the Brier score and the log loss (\cref{sec:scoring}).
+the accuracy from 0.771 to 0.906 and halves the Brier score\index{Brier score} and the log loss\index{log loss} (\cref{sec:scoring}).
 
 \subsection{Correcting covariate shift}
 
-Under covariate shift $p(y\mid x)$ is unchanged, so why should a model trained on the source fail? If the model can
+Under covariate shift\index{covariate shift} $p(y\mid x)$ is unchanged, so why should a model trained on the source fail? If the model can
 represent the true relationship and has enough data everywhere, it does not, as \cref{fig:shifttypes}b showed. But
 models are always approximations, and training spends their capacity on the regions where the \emph{training} data are
 dense, which may not be where the deployment data are. The remedy is \emph{importance weighting}
@@ -653,7 +653,7 @@ dense, which may not be where the deployment data are. The remedy is \emph{impor
 \end{equation}
 so training on the source examples weighted by $w(x)$ fits the model where it will be used. The densities are unknown,
 but their ratio can be estimated directly: by kernel mean matching \citep{huang2007correcting}, by KLIEP
-\citep{sugiyama2008direct}, or, most simply, with a domain classifier that separates source from target inputs
+\citep{sugiyama2008direct}, or, most simply, with a domain classifier\index{domain classifier} that separates source from target inputs
 \citep{bickel2009discriminative}: if it estimates the probability $q(x)$ that $x$ comes from the target, with $n_s$ source
 and $n_t$ target examples,
 \begin{equation}
@@ -704,7 +704,7 @@ are centred at 0 with a smaller spread. The ordinary least-squares line fits the
 (slope $+0.46$), and has an error of 0.285 on the deployment data. Weighting by the true density ratio, or by the ratio
 estimated with a logistic domain classifier, fits the region where the model will be used (slope $-0.57$) and divides the
 error by three (0.091), almost the 0.089 of a line fitted to the deployment data themselves and scored on the same data, a
-resubstitution reference rather than an estimate of generalisation.
+resubstitution reference rather than an estimate of generalisation\index{generalisation}.
 
 \begin{figure}[htbp]
 \centering
@@ -716,22 +716,22 @@ classifier.}
 \end{figure}
 
 Importance weighting has a price. A few training examples with large weights dominate the fit, which increases the
-variance: the \emph{effective sample size}, $(\sum_iw_i)^2/\sum_iw_i^2$, is only 76 of the 200 training examples in the
+variance: the \emph{effective sample size\index{sample size|textbf}\index{effective sample size|textbf}}, $(\sum_iw_i)^2/\sum_iw_i^2$, is only 76 of the 200 training examples in the
 listing. And the method fails completely where the target has data but the source has none, since no weight can create
 information that was never collected: importance weighting needs the support of the target to be covered by the source.
 Flattening the weights (raising them to a power between 0 and 1) or clipping them trades bias for variance.
 
 \subsection{Domain adaptation and transfer learning}\label{sec:transfer}
 
-\emph{Domain adaptation} is the general problem of using a model trained in a source domain in a different but related
-target domain, with few or no labels in the target; \emph{transfer learning} extends it to related but different tasks
+\emph{Domain adaptation\index{domain adaptation|textbf}} is the general problem of using a model trained in a source domain in a different but related
+target domain, with few or no labels in the target; \emph{transfer learning\index{transfer learning|textbf}} extends it to related but different tasks
 \citep{pan2010survey}. A classic result bounds the error of a model $h$ on the target by its error on the source, plus a
 measure of the divergence between the input distributions of the two domains, plus the error of the best model on both
 domains together \citep{bendavid2010theory}:
 \begin{equation}
   \varepsilon_t(h)\leq\varepsilon_s(h)+\tfrac12\,d_{\mathcal H\Delta\mathcal H}(\mathcal D_s,\mathcal D_t)+\lambda^\star .
 \end{equation}
-The divergence can be estimated, for a given class of classifiers, with a domain classifier, as in
+The divergence can be estimated, for a given class of classifiers, with a domain classifier\index{domain classifier}, as in
 \cref{lst:datadrift}, and the bound suggests the main families of methods: reduce the divergence by changing
 how the data are represented, and keep the source error low. Aligning the inputs is not enough when
 $\lambda^\star$ is large: if $p(x)$ is the same in both domains but $y_s=\mathbb 1[x>0]$ and $y_t=\mathbb 1[x<0]$, the
@@ -739,13 +739,13 @@ inputs are indistinguishable and the perfect source model is always wrong on the
 \begin{itemize}
   \item \emph{instance-based} methods reweight or select source examples so that they resemble the target, as
         importance weighting does;
-  \item \emph{feature-based} methods map both domains into a representation where they look alike. CORAL
+  \item \emph{feature-based} methods map both domains into a representation where they look alike. CORAL\index{CORAL}
         \citep{sun2016return} aligns the second-order statistics: it whitens the source features with their covariance
         $C_s$ and recolours them with the target covariance $C_t$, $\tilde X_s=(X_s-\mu_s)\,C_s^{-1/2}C_t^{1/2}+\mu_t$, and
         then trains on the transformed source. Domain-adversarial neural networks \citep{ganin2016domain} learn a
         representation that predicts the target well while a domain classifier fails to tell the domains apart;
   \item \emph{parameter-based} methods transfer what a model has learned. With a few target labels, the source model can
-        be fine-tuned on them, or a target model can be trained with a penalty that keeps it close to the source model,
+        be fine-tuned\index{fine-tuning} on them, or a target model can be trained with a penalty that keeps it close to the source model,
         $\min_w\,L_t(w)+\lambda\|w-w_s\|^2$ \citep{chelba2006adaptation}. \emph{Feature augmentation}
         \citep{daume2007frustratingly} triplicates the features into a shared copy and a copy for each domain,
         $\Phi_s(x)=(x,x,0)$ and $\Phi_t(x)=(x,0,x)$, and trains one model on both domains, which learns what is common and
@@ -870,7 +870,7 @@ target labels       target       source       pooled    augmented  regularised
 examples; a related target task, whose weights differ from those of the source by random perturbations, has between 10
 and 500. Training on the target labels alone needs between 100 and 200 of them to match the source model used as it is (0.849).
 Pooling both data sets barely moves away from the source model, because the source examples dominate. Feature augmentation
-pays off only with enough target data: with 10 to 50 labels the target-specific copies of the features overfit and the
+pays off only with enough target data: with 10 to 50 labels the target-specific copies of the features overfit\index{overfitting} and the
 model is worse than the source model (0.80 to 0.82), and it becomes competitive from 200 labels. Regularising the target
 model towards the source weights has the highest mean accuracy at every size in this task and these ten
 repetitions, from 0.853 with 10 labels to 0.875 with 500: it starts
@@ -890,27 +890,27 @@ source (mean of 10 repetitions).}
 
 The applications of \cref{sec:llmapps} need monitoring as much as any other model, and three features make it harder.
 Their outputs are free text, which cannot be compared with a label as simply as a class can. Their inputs are open: users
-can ask anything, in any language and in any way. And when the model is used through an API, it can change without
+can ask anything, in any language and in any way. And when the model is used through an API\index{API}, it can change without
 notice, because the provider updates it. The levels of \cref{fig:monitorlayers} still apply, with new metrics at each of
 them.
 
 \paragraph{Operational metrics} Besides the latency of the whole answer, interactive applications track the \emph{time to
 the first token}, which determines how responsive they feel. The number of tokens per request and per user determines the
-cost, and must be watched like any other expense: a prompt that grows by accident, or a loop in an agent, can multiply the
+cost, and must be watched like any other expense: a prompt\index{prompt} that grows by accident, or a loop in an agent, can multiply the
 bill. Errors, timeouts and rate limits of the provider, and the share of answers served from a cache, complete the picture.
 
 \paragraph{Quality without labels} Most answers are never checked by anybody, so quality is estimated indirectly. Users give
 \emph{explicit feedback} (a thumbs up or down) and \emph{implicit feedback}: rephrasing the same question, abandoning the
 conversation or asking for a human are signs of a bad answer. A random sample of conversations can be reviewed by people, and
 a larger one by a language model acting as a judge, provided that its ratings have first been compared with those of people on
-the same sample (\cref{sec:llmapps}). For RAG applications, the share of the claims of each answer that are supported by the
-retrieved passages measures its \emph{groundedness}, and the share of questions for which the assistant abstains measures the
+the same sample (\cref{sec:llmapps}). For RAG\index{retrieval-augmented generation (RAG)} applications, the share of the claims of each answer that are supported by the
+retrieved passages measures its \emph{groundedness}, and the share of questions for which the assistant abstains\index{abstention} measures the
 gaps in its knowledge: a rising abstention rate means that users are asking about something the index does not cover.
 
 \paragraph{Drift of the questions} What users ask changes: a new product, a news story, a change in the season or an outage
 bring new topics, and with them questions the application was not designed or tested for. The methods of \cref{sec:detectshift}
-apply directly to text. \Cref{lst:querydrift} represents the questions to a bank's assistant with TF-IDF, as in \cref{lst:rag},
-and trains a domain classifier to distinguish the questions of a reference week from those of the current one.
+apply directly to text. \Cref{lst:querydrift} represents the questions to a bank's assistant with TF-IDF\index{TF-IDF}, as in \cref{lst:rag},
+and trains a domain classifier\index{domain classifier} to distinguish the questions of a reference week from those of the current one.
 
 \begin{pylisting}[label={lst:querydrift}]{Detecting drift in the questions asked to an assistant}
 import numpy as np
@@ -966,19 +966,19 @@ When the current week has the same mix of topics as the reference, the domain cl
 the bank launches an instant payment service and 15\% of the questions ask about it, the AUC rises to 0.573: a modest value, because
 85\% of the questions are as usual, but enough to raise an alert, and the words on which the classifier relies say what changed:
 \emph{bizum}, \emph{send} and \emph{with}, from questions such as ``how do I send money with Bizum''. The knowledge base of the
-assistant must be extended, and its test set (\cref{sec:llmapps}) with it, before users start receiving invented answers.
+assistant must be extended, and its test set\index{test set} (\cref{sec:llmapps}) with it, before users start receiving invented answers.
 
 \paragraph{Changes in the model} When a provider updates a model behind an API, the behaviour of the application can change from
 one day to the next. A study of two widely used models found that their behaviour on several tasks, from solving mathematical
 problems to generating code, changed substantially between versions released only three months apart \citep{chen2024chatgpt}. The
 defences are those of \cref{sec:safedeploy}: pin the version of the model whenever the provider allows it, run the regression test
-set before adopting a new version, and roll it out gradually, in shadow mode or with a canary, comparing the old and new answers on
+set before adopting a new version, and roll it out gradually, in shadow mode\index{shadow mode} or with a canary\index{canary release}, comparing the old and new answers on
 real traffic.
 
 \paragraph{Safety and security} Applications that talk to the public must also be monitored for abuse: attempts at prompt
-injection and at making the model ignore its instructions, leaks of personal data in the answers, and harmful content. Each of
-them needs an alert, a person responsible and a procedure to respond. Under the AI Act, chatbots must tell users that they are
-talking to a machine, and the providers of high-risk systems must monitor them after deployment and report serious incidents
+injection\index{prompt injection} and at making the model ignore its instructions, leaks of personal data in the answers, and harmful content. Each of
+them needs an alert, a person responsible and a procedure to respond. Under the AI Act\index{AI Act}, chatbots must tell users that they are
+talking to a machine, and the providers of high-risk\index{AI Act!high-risk systems} systems must monitor them after deployment and report serious incidents
 (\cref{sec:aiact}).
 
 \begin{pitfall}
@@ -990,7 +990,7 @@ exactly like a right one. Some measure of quality, however indirect, must be par
 % =====================================================================
 \section{Deploying updates safely}\label{sec:safedeploy}
 
-Continuous integration and delivery make it easy to release new versions quickly; the challenge is to obtain
+Continuous integration\index{continuous integration} and delivery make it easy to release new versions quickly; the challenge is to obtain
 evidence, under declared criteria, that they are better. For machine learning, a suite of tests is not enough: a new model can pass every test, beat the
 old one on held-out data, and still be worse in production. There is no substitute for live performance, but exposing
 users to a worse model has a cost. The usual solution is to move a new model through stages that give progressively
@@ -1023,12 +1023,12 @@ from those used in training, because they are computed by different code, from d
 delays: this \emph{training--serving skew} is one of the most common causes of failures in production, and it
 goes unnoticed by an offline evaluation that uses only the training pipeline, unless the features produced by
 the serving path are tested against those of training \citep{breck2019data}. The model's own actions change the data it will see next (a feedback loop).
-And users react to a new model in ways that no historical data set can show: a recommender that is more accurate
+And users react to a new model in ways that no historical data set can show: a recommender\index{recommender system} that is more accurate
 offline may be less engaging, because it recommends what users would have found anyway.
 
 \subsection{Shadow mode}
 
-In \emph{shadow mode} the new model is deployed in parallel to the existing one: both compute their predictions for
+In \emph{shadow mode\index{shadow mode|textbf}} the new model is deployed in parallel to the existing one: both compute their predictions for
 every request and both are logged, but the application uses only those of the existing model. Shadow mode lets
 engineers check, on real production traffic and without changing the user experience:
 \begin{itemize}
@@ -1038,7 +1038,7 @@ engineers check, on real production traffic and without changing the user experi
         scores);
   \item and, once outcomes arrive, how accurate the new model is on the cases whose representative labels
         are available: if the current policy decides which outcomes are observed (only granted loans are
-        repaid or not), the evaluation inherits that selection, and a holdout or a counterfactual design is
+        repaid or not), the evaluation inherits that selection, and a holdout\index{hold-out} or a counterfactual design is
         needed.
 \end{itemize}
 The cost is double computation, and care is needed with side effects: the shadow model must never write to shared
@@ -1088,7 +1088,7 @@ once the outcomes arrive: current 0.712, candidate 0.585
 after the fix: agreement 0.887, candidate accuracy 0.726
 \end{pyoutput}
 
-\Cref{lst:shadow} shows shadow mode catching a typical skew. The candidate, a gradient boosting model with one more
+\Cref{lst:shadow} shows shadow mode catching a typical skew. The candidate, a gradient boosting\index{gradient boosting}\index{boosting} model with one more
 feature, beats the current model offline (0.727 against 0.715). In production, its new feature service sends the income
 in euros instead of thousands of euros. During the shadow week the two models agree on only 64\% of the applicants, and
 the candidate would approve 87\% of them against 53\% for the current model: a red flag long before any outcome is known.
@@ -1099,8 +1099,8 @@ would have received the decisions of a broken model.
 
 \subsection{Canary releases and progressive rollout}
 
-A \emph{canary release} serves the new model to a small share of the users (often 1\%) and increases the share in stages,
-as long as \emph{guardrail} metrics show no harm: technical ones (error rate, latency) and business ones (conversion,
+A \emph{canary\index{canary release|textbf} release} serves the new model to a small share of the users (often 1\%) and increases the share in stages,
+as long as \emph{guardrail\index{guardrails|textbf}} metrics show no harm: technical ones (error rate\index{error rate}, latency) and business ones (conversion,
 complaints). If a guardrail is violated, the rollout stops and the previous version is restored automatically. Two practices
 make this fast and safe: \emph{blue--green} deployments keep the previous version running, so that switching back is
 instantaneous, and \emph{feature flags} turn a model on or off for chosen users without a new deployment. Every deployed
@@ -1165,9 +1165,9 @@ a properly designed experiment.
 % =====================================================================
 \section{A/B testing and experimentation}\label{sec:abtesting}
 
-The principle of an \emph{A/B test}, or online controlled experiment, is simple: expose a random sample of the users to the new
+The principle of an \emph{A/B test\index{A/B testing|textbf}}, or online controlled experiment, is simple: expose a random sample of the users to the new
 model (the treatment, B) and the rest to the current one (the control, A); after enough time, compare a metric between the groups
-and keep the better model \citep{kohavi2009controlled,kohavi2020trustworthy}. Randomisation is what makes the comparison causal
+and keep the better model \citep{kohavi2009controlled,kohavi2020trustworthy}. Randomisation\index{randomisation} is what makes the comparison causal
 (\cref{sec:causality}): because users are assigned to groups by chance, the groups differ, on average, only in the model they
 receive. \Cref{fig:abanatomy} shows the parts of an experimentation system.
 
@@ -1193,20 +1193,20 @@ receive. \Cref{fig:abanatomy} shows the parts of an experimentation system.
 An experiment starts with a hypothesis (``the new ranking model increases the purchases per user'') and with decisions that must
 be taken before it starts:
 \begin{itemize}
-  \item the \emph{randomisation unit}: usually the user, so that each person has a consistent experience; sessions or requests
+  \item the \emph{randomisation\index{randomisation|textbf} unit}: usually the user, so that each person has a consistent experience; sessions or requests
         give more units but break consistency, and in marketplaces or social networks, where users influence each other,
         groups of connected users or periods of time may have to be randomised instead;
   \item the \emph{metrics}: one main metric, or overall evaluation criterion, that defines success and that the change is expected
-        to move; \emph{guardrail} metrics that must not get worse (latency, errors, revenue, unsubscriptions); and \emph{invariant}
+        to move; \emph{guardrail\index{guardrails|textbf}} metrics that must not get worse (latency, errors, revenue, unsubscriptions); and \emph{invariant}
         metrics that the treatment should not affect beyond sampling variation, the first of which is the share of users
         in each group;
   \item the \emph{groups}: users in both groups should be as similar as possible, so that any difference in the outcome can be
         attributed to the model and not to a difference between cohorts (if group A contained all the heavy users and group B only
         occasional ones, the experiment would be inconclusive), which randomisation achieves; the treatment group must be large
         enough to detect the effect, but as small as possible to limit the exposure to a potentially worse model;
-  \item the \emph{duration}: long enough to reach the planned sample size, in whole weeks to average out weekly cycles, and long
-        enough for \emph{novelty} and \emph{primacy} effects (users reacting to the change itself) to fade; too long, and users may
-        be lost. Effects that take months to appear, such as changes in retention, are measured with long-term holdout groups
+  \item the \emph{duration}: long enough to reach the planned sample size\index{sample size}, in whole weeks to average out weekly cycles, and long
+        enough for \emph{novelty\index{novelty|textbf}} and \emph{primacy} effects (users reacting to the change itself) to fade; too long, and users may
+        be lost. Effects that take months to appear, such as changes in retention, are measured with long-term holdout\index{hold-out} groups
         \citep{hohnhold2015focusing}.
 \end{itemize}
 
@@ -1217,12 +1217,12 @@ model serves each request; this works well when users are logged in. Equivalentl
 hashing their identifier together with an experiment-specific \emph{salt}: the same user always gets the same variant, and
 different salts make the assignments of different experiments independent, which is what allows large companies to run many
 experiments at the same time on the same users \citep{tang2010overlapping}. Independent assignment does not stop the
-interventions themselves from interacting when two experiments change the same part of the product, which platforms
+interventions\index{intervention} themselves from interacting when two experiments change the same part of the product, which platforms
 handle with layers of mutually exclusive experiments. Experiments assume that each user is exposed to only
 one variant, an assumption broken if users see several (for instance on different devices); identifying anonymous users with
 cookies or network addresses requires more infrastructure and is less reliable.
 
-The first analysis of any experiment is a sanity check of the assignment. A \emph{sample ratio mismatch} (SRM), a split of users
+The first analysis of any experiment is a sanity check of the assignment. A \emph{sample ratio mismatch\index{sample ratio mismatch|textbf}} (SRM), a split of users
 between the groups significantly different from the intended one, means that something is broken: a variant that crashes for some
 users and loses their logs, a redirect that drops users, a bot filter that acts differently on each variant. An SRM alarm calls
 for an investigation before the results can be trusted, however good they look \citep{fabijan2019diagnosing}; like any
@@ -1272,8 +1272,8 @@ assignment gives $p=0.0075$, no alarm, while losing the logs of 2\% of the users
 
 \subsection{Estimating the better variant}
 
-Most A/B tests compare a metric such as the click-through rate. Deciding which variant is better is more than choosing the group
-with the higher rate: the difference must be statistically significant, which for two proportions is usually checked with a
+Most A/B tests\index{A/B testing} compare a metric such as the click-through rate. Deciding which variant is better is more than choosing the group
+with the higher rate: the difference must be statistically significant\index{statistical significance}, which for two proportions is usually checked with a
 two-sample $z$-test (\cref{sec:stats}),
 \begin{equation}
   z=\frac{\hat p_B-\hat p_A}{\sqrt{\hat p\,(1-\hat p)\,\bigl(\frac1{n_A}+\frac1{n_B}\bigr)}},
@@ -1288,7 +1288,7 @@ significance level $\alpha$ and power $1-\beta$, each group needs approximately
 users. Small effects on small rates need large samples: to detect an increase of the CTR from 5.0\% to 5.5\% with $\alpha=0.05$ and a
 power of 0.8, each group needs 31,234 users (\cref{lst:abtest}). The formula assumes one independent opportunity (a click or not) per
 user. When users are randomised but each one contributes several impressions, those are not independent, and the
-uncertainty of a click-through rate must be computed at the level of users, for instance with a bootstrap over users or
+uncertainty of a click-through rate must be computed at the level of users, for instance with a bootstrap\index{bootstrap} over users or
 the delta method \citep{deng2018applying}; counting logged events as if they were users overstates the evidence.
 
 \begin{pylisting}[label={lst:abtest}]{Sample size, z-test and the cost of peeking at an A/B test}
@@ -1335,7 +1335,7 @@ one experiment: CTR A 0.0498, CTR B 0.0537, z = 2.18, p = 0.0289
 false positives in A/A tests: 0.044 testing once, 0.235 peeking 20 times
 \end{pyoutput}
 
-The result should be reported as an effect with a confidence interval, not only as a $p$-value: a significant difference may be too
+The result should be reported as an effect with a confidence interval\index{confidence interval}, not only as a $p$-value: a significant difference may be too
 small to matter, and a non-significant one may hide an important effect that the test was too small to detect. When several metrics or
 several variants are compared, the chance of a false positive grows with the number of comparisons, and corrections such as Holm's
 (\cref{sec:stats}) or a control of the false discovery rate are needed. And results that look too good deserve extra suspicion:
@@ -1344,7 +1344,7 @@ surprising effects in online experiments are more often bugs than discoveries \c
 \subsection{Reducing the variance}
 
 The variance of the metric determines how many users an experiment needs. Much of that variance has nothing to do with the treatment:
-some users simply use the product more than others. \emph{CUPED} \citep{deng2013improving} removes the part of the variance that can be
+some users simply use the product more than others. \emph{CUPED\index{CUPED|textbf}} \citep{deng2013improving} removes the part of the variance that can be
 predicted from data collected \emph{before} the experiment, such as each user's activity in the previous weeks. With $X$ the pre-experiment
 metric and $Y$ the metric during the experiment, it analyses
 \begin{equation}
@@ -1390,20 +1390,20 @@ correlation before/during 0.82: variance and sample size reduced by 67%
 \end{pyoutput}
 
 In \cref{lst:cuped} the correlation between the activity scores of each user before and during the experiment is 0.82, so CUPED removes 67\% of
-the variance: the 95\% confidence interval of the effect shrinks from $\pm0.068$ to $\pm0.039$ score units per user, and an experiment would
+the variance: the 95\% confidence interval\index{confidence interval} of the effect shrinks from $\pm0.068$ to $\pm0.039$ score units per user, and an experiment would
 need a third of the users for the same power.
 
 \subsection{Peeking and sequential tests}
 
 A frequent error is to check the significance continuously and declare the test successful as soon as a significant result appears. Each look
-is another chance for noise to cross the threshold, so the real false positive rate is much higher than the nominal one. In
-\cref{lst:abtest}, with A/A tests in which both groups receive the same model, testing once at the planned end produces 4.4\% false
+is another chance for noise to cross the threshold, so the real false positive rate\index{false positive rate} is much higher than the nominal one. In
+\cref{lst:abtest}, with A/A tests\index{A/A test} in which both groups receive the same model, testing once at the planned end produces 4.4\% false
 positives, close to the nominal 5\%, while looking 20 times and stopping at the first significant result produces 23.5\%; with 100 looks it
 reaches 37\% (\cref{fig:experimentation}a).
 
-Looking at the data is not wrong; looking with the wrong threshold is. \emph{Group sequential designs}, developed for clinical trials, plan
+Looking at the data is not wrong; looking with the wrong threshold is. \emph{Group sequential\index{sequential testing|textbf} designs}, developed for clinical trials, plan
 a number of looks in advance and use stricter thresholds at each one, so that the overall false positive rate stays at $\alpha$. The
-\emph{Pocock} design uses the same threshold at every look \citep{pocock1977group}; the \emph{O'Brien--Fleming} design uses very strict
+\emph{Pocock\index{sequential testing!Pocock|textbf}} design uses the same threshold at every look \citep{pocock1977group}; the \emph{O'Brien--Fleming\index{sequential testing!O'Brien--Fleming|textbf}} design uses very strict
 thresholds at the beginning, which relax towards the end, so that the final test is almost the ordinary one
 \citep{obrien1979multiple}; and \emph{alpha spending} functions allow the number and timing of the looks to be flexible
 \citep{lan1983discrete}. Methods that give ``always valid'' $p$-values, which can be monitored continuously, are used by commercial
@@ -1469,8 +1469,8 @@ look at which its path crosses the boundary.}
 
 Some teams prefer to report the results of an experiment as probabilities about the variants rather than as $p$-values. With a uniform prior,
 the click-through rate of each variant has a Beta posterior, $\mathrm{Beta}(1+\text{clicks},\,1+\text{non-clicks})$, and by drawing from
-both posteriors we can estimate the probability that B is better than A, a credible interval for the relative lift, and the \emph{expected
-loss} of choosing each variant, the clicks per user we would lose if it were in fact the worse one. A common decision rule is to choose a
+both posteriors we can estimate the probability that B is better than A, a credible interval for the relative lift\index{lift}, and the \emph{expected
+loss} of choosing each variant, the clicks per user we would lose if it were in fact the worse one. A common decision rule\index{decision rules} is to choose a
 variant once its expected loss is below a small threshold.
 
 \begin{pylisting}[label={lst:bayesab}]{Posterior probability, lift and expected loss of an A/B test}
@@ -1504,17 +1504,17 @@ expected loss if we choose B: 0.00001 clicks per user
 For the experiment of \cref{lst:abtest} (\cref{lst:bayesab}), the probability that B is better is 0.986, the lift is $+7.8\%$ with a 95\%
 credible interval from $+0.8\%$ to $+15.2\%$, and choosing B risks an expected loss of only 0.00001 clicks per user, against 0.00388 for A.
 These numbers are easier to communicate than a $p$-value of 0.029, but they rest on the same data. Checking them repeatedly does not invalidate the posterior itself, given an adequate
-prior and model, but a decision rule applied at every look does not inherit a given frequentist error rate.
+prior and model, but a decision rule applied at every look does not inherit a given frequentist error rate\index{error rate}.
 
 \subsection{Evaluating new models offline from logs}
 
-Every A/B test costs traffic and time, so teams try to discard bad candidates before testing them online. For ranking models,
+Every A/B test\index{A/B testing} costs\index{test costs} traffic and time, so teams try to discard bad candidates before testing them online. For ranking models,
 \emph{interleaving} mixes the results of two rankers in a single list and counts which one's results the user clicks, which detects
-differences with far fewer users than an A/B test \citep{chapelle2012large}. More generally, \emph{off-policy evaluation} estimates how a
+differences with far fewer users than an A/B test \citep{chapelle2012large}. More generally, \emph{off-policy\index{off-policy evaluation|textbf} evaluation} estimates how a
 new decision policy would have performed from the logs of the current one. This requires \emph{support}:
 every action that the new policy may choose must have a positive probability under the current policy in that
 context, and those probabilities (the \emph{propensities}) must be logged. Randomised logging policies provide it;
-deterministic logs can only evaluate the decisions they cover. The \emph{inverse propensity scoring} estimator
+deterministic logs can only evaluate the decisions they cover. The \emph{inverse propensity\index{inverse propensity scoring|textbf} scoring} estimator
 \citep{horvitz1952generalization,li2011unbiased} averages, over the logged events, the reward of the events in which the logged action is
 the one the new policy would have chosen, divided by the probability with which the current policy chose it:
 \begin{equation}
@@ -1522,7 +1522,7 @@ the one the new policy would have chosen, divided by the probability with which 
 \end{equation}
 For a stochastic new policy, the indicator is replaced by the probability $\pi(a_i\mid x_i)$ that it chooses the logged
 action; the estimate refers to the immediate reward, and the policy must be fixed before looking at the logs used to
-evaluate it. Doubly robust estimators combine it with a model of the rewards: they remain consistent if either the
+evaluate it. Doubly robust\index{doubly robust estimator} estimators combine it with a model of the rewards: they remain consistent if either the
 propensities or the reward model is correct, and often have lower variance \citep{dudik2011doubly}.
 
 \begin{pylisting}[label={lst:ips}]{Off-policy evaluation of a new recommendation policy}
@@ -1563,15 +1563,15 @@ In \cref{lst:ips}, the current policy shows three articles to three user segment
 new policy would have a click-through rate of 0.0610. Simply averaging the clicks of the logged events in which the old policy happened
 to choose what the new one would choose gives 0.0722, an 18\% overestimate, because those events over-represent the segments in which
 the agreement was more likely. Weighting by the inverse propensities gives $0.0616\pm0.0018$, an unbiased estimate obtained without showing
-the new policy to a single user. Logs of this kind, with their propensities, are also what is needed to evaluate a contextual bandit before deploying it.
+the new policy to a single user. Logs of this kind, with their propensities, are also what is needed to evaluate a contextual bandit\index{multi-armed bandit!contextual}\index{multi-armed bandit} before deploying it.
 
 % =====================================================================
 \section{Multi-armed bandits}\label{sec:bandits}
 
-An A/B test explores for a fixed time and then exploits the winner. \emph{Multi-armed bandits} interleave the two, continuously
+An A/B test\index{A/B testing} explores for a fixed time and then exploits the winner. \emph{Multi-armed bandits\index{multi-armed bandit|textbf}} interleave the two, continuously
 \citep{lattimore2020bandit}. The name comes from a gambler facing a row of slot machines (``one-armed bandits'') with unknown payouts. At each
 step $t$ we choose an arm $a_t$ (a variant) and receive a reward (a click); each arm $a$ has an unknown expected reward $\mu_a$. The goal is to
-maximise the total reward, or equivalently to minimise the \emph{regret}, the expected reward lost by not always choosing the best arm,
+maximise the total reward, or equivalently to minimise the \emph{regret\index{regret|textbf}}, the expected reward lost by not always choosing the best arm,
 \begin{equation}
   R_T=T\mu^\star-\sum_{t=1}^{T}\mu_{a_t},\qquad \mu^\star=\max_a\mu_a .
 \end{equation}
@@ -1582,14 +1582,14 @@ only way to discover whether one of them is better. For stationary bandits with 
 between the arms, no strategy that performs well on every instance of the problem can have a regret that grows more slowly
 than the logarithm of $T$ \citep{lai1985asymptotically} (a strategy that always plays one arm has zero regret where that arm
 is the best, and linear regret elsewhere). Good strategies achieve the logarithmic rate, while an A/B test with a fixed
-exploration phase, or $\varepsilon$-greedy with a fixed $\varepsilon$, has a regret that grows linearly; explore-then-commit
+exploration phase, or $\varepsilon$-greedy\index{multi-armed bandit!epsilon-greedy@$\varepsilon$-greedy} with a fixed $\varepsilon$, has a regret that grows linearly; explore-then-commit
 with an exploration that grows suitably with the horizon can be logarithmic. The main strategies are:
 \begin{itemize}
   \item \emph{$\varepsilon$-greedy}: serve the best arm so far, except with probability $\varepsilon$, when a random arm is served. Simple,
         but it explores forever, and as much the clearly bad arms as the promising ones;
-  \item \emph{upper confidence bounds} (UCB1, \citealp{auer2002finite}): serve the arm with the highest optimistic estimate, its mean reward
+  \item \emph{upper confidence bounds\index{multi-armed bandit!UCB|textbf}} (UCB1, \citealp{auer2002finite}): serve the arm with the highest optimistic estimate, its mean reward
         plus a bonus that shrinks as the arm is tried more, $\bar x_a+\sqrt{2\ln t/n_a}$ (``optimism in the face of uncertainty'');
-  \item \emph{Thompson sampling} \citep{thompson1933likelihood,chapelle2011empirical,russo2018tutorial}: keep a posterior distribution for the
+  \item \emph{Thompson sampling\index{multi-armed bandit!Thompson sampling|textbf}} \citep{thompson1933likelihood,chapelle2011empirical,russo2018tutorial}: keep a posterior distribution for the
         reward of each arm (for click rates, a Beta distribution updated with the clicks and non-clicks), draw a value from each posterior,
         and serve the arm with the highest draw. Arms are served in proportion to the probability that they are the best, so exploration
         concentrates on the arms that might still win \citep{scott2010modern}.
@@ -1665,9 +1665,9 @@ repetitions, not in general.
 
 \subsection{When the world changes}
 
-The strategies above assume that the reward of each arm is fixed. When it changes, as everything in this unit does, a bandit that has
+The strategies above assume that the reward of each arm is fixed. When it changes, as everything in this unit does, a bandit\index{multi-armed bandit} that has
 accumulated a lot of evidence keeps trusting it: after thousands of plays, its posterior for the old best arm is so concentrated that it takes
-a long time to notice that the arm has become the worst. The remedies are the same as for concept drift (\cref{sec:adapt}): forget old evidence,
+a long time to notice that the arm has become the worst. The remedies are the same as for concept drift\index{concept drift} (\cref{sec:adapt}): forget old evidence,
 by discounting it or by using only a sliding window of recent plays \citep{garivier2011upper}, or reset the bandit when a detector signals a
 change.
 
@@ -1705,14 +1705,14 @@ Thompson             clicks lost:  50.1 before the change,  161.6 after it
 discounted Thompson  clicks lost:  77.5 before the change,   94.3 after it
 \end{pyoutput}
 
-In \cref{lst:nsbandits}, the best of three variants becomes the worst halfway through 40,000 users. Standard Thompson sampling loses 50 expected
+In \cref{lst:nsbandits}, the best of three variants becomes the worst halfway through 40,000 users. Standard Thompson sampling\index{multi-armed bandit!Thompson sampling} loses 50 expected
 clicks before the change and 162 after it, while it slowly unlearns the old winner. Discounting the evidence by a factor of 0.999 per play, which
 keeps an effective memory of about 1000 plays in total (a half-life of about 700), costs more before the change (78 clicks, because it never becomes completely sure) but recovers much faster
 (94 clicks after it), and loses less overall (\cref{fig:banditsadv}a).
 
 \subsection{Contextual bandits}
 
-The best variant is often not the same for every user. \emph{Contextual bandits} choose the variant from the features of the user and the
+The best variant is often not the same for every user. \emph{Contextual bandits\index{multi-armed bandit!contextual|textbf}\index{multi-armed bandit|textbf}} choose the variant from the features of the user and the
 situation, learning a model of the reward of each arm as a function of the context \citep{li2010contextual}. LinUCB, for instance, fits a ridge
 regression of the reward on the context $x$ for each arm, with parameters $\hat\theta_a=A_a^{-1}b_a$ (where $A_a$ accumulates $I+\sum xx^\top$ and
 $b_a$ the reward-weighted contexts of the plays of arm $a$), and chooses the arm with the highest optimistic estimate,
@@ -1784,12 +1784,12 @@ Thompson (no context)  CTR 0.1289   expected clicks lost  1312.6
 LinUCB                 CTR 0.1892   expected clicks lost    92.1
 \end{pyoutput}
 
-In \cref{lst:linucb} each of three variants appeals to different users. A context-free Thompson sampler finds the best variant on average and
+In \cref{lst:linucb} each of three variants appeals to different users. A context-free Thompson\index{multi-armed bandit!Thompson sampling} sampler finds the best variant on average and
 reaches a click-through rate of 0.129; LinUCB, which uses five features of each user, reaches 0.189
 (with a linear model that only approximates the logistic click rates of the simulation, in a single run), close to the 0.202 of an oracle that knows
 the best variant for every user, and loses 92 expected clicks against 1313 (\cref{fig:banditsadv}b). Contextual bandits are a form of
 personalisation that learns online. The LinUCB of the listing chooses by $\argmax$, deterministically, so its logs do not
-support the off-policy evaluation of other policies (\cref{lst:ips}): that requires randomising part of the traffic, for
+support the off-policy\index{off-policy evaluation} evaluation of other policies (\cref{lst:ips}): that requires randomising part of the traffic, for
 instance by exploring with a small probability, and logging the actual probability of each chosen action.
 
 \begin{figure}[htbp]
@@ -1805,8 +1805,8 @@ instance by exploring with a small probability, and logging the actual probabili
 Real deployments add complications. Rewards arrive with delays (a purchase days after a click), and models are updated in batches rather than
 after every request, which reduces the advantage of adaptive allocation. The reward must be chosen carefully: optimising clicks can promote
 sensational content at the expense of long-term satisfaction. Because the allocation adapts to the results, the plain averages of the rewards of
-each arm are biased, so a bandit is a poor tool for estimating effect sizes. Bandits are the better choice when the goal is to earn while learning,
-for short-lived decisions with many alternatives (headlines, creatives, promotions); A/B tests remain preferable when the goal is an unbiased
+each arm are biased, so a bandit\index{multi-armed bandit} is a poor tool for estimating effect sizes. Bandits are the better choice when the goal is to earn while learning,
+for short-lived decisions with many alternatives (headlines, creatives, promotions); A/B tests\index{A/B testing} remain preferable when the goal is an unbiased
 estimate of the effect of a change on many metrics, including slow ones such as retention. Several companies offer hosted experimentation and
 optimisation services for organisations without a dedicated team.
 
@@ -1815,38 +1815,38 @@ optimisation services for organisations without a dedicated team.
 
 \begin{itemize}
   \item Deployed models must be monitored at every level: service, input data, predictions, performance and business metrics.
-        When the model's actions hide the ground truth, a random holdout gives unbiased estimates at a known cost.
-  \item Dataset shift comes in three main types: covariate shift ($p(x)$ changes, $p(y\mid x)$ does not), label shift ($p(y)$
-        changes, $p(x\mid y)$ does not) and concept drift (the predictive relationship changes otherwise); which one is plausible depends on the causal direction of the problem. Drift can be sudden,
-        gradual, incremental or recurring.
-  \item Without labels, drift is detected in the inputs and predictions: univariate tests and the PSI for each feature, and
-        domain classifiers for changes in the joint distribution. Statistical significance is not relevance. With labels,
-        detectors such as DDM and Page--Hinkley watch the error rate.
+        When the model's actions hide the ground truth, a random holdout\index{hold-out} gives unbiased estimates at a known cost.
+  \item Dataset shift\index{dataset shift} comes in three main types: covariate shift\index{covariate shift} ($p(x)$ changes, $p(y\mid x)$ does not), label shift\index{label shift} ($p(y)$
+        changes, $p(x\mid y)$ does not) and concept drift\index{concept drift} (the predictive relationship changes otherwise); which one is plausible depends on the causal direction of the problem. Drift can be sudden,
+        gradual, incremental or recurring\index{concept drift!recurring}.
+  \item Without labels, drift is detected in the inputs and predictions: univariate tests and the PSI\index{population stability index (PSI)} for each feature, and
+        domain classifiers\index{domain classifier} for changes in the joint distribution. Statistical significance\index{statistical significance} is not relevance. With labels,
+        detectors such as DDM\index{drift detection method (DDM)} and Page--Hinkley\index{Page--Hinkley test} watch the error rate\index{error rate}.
   \item Retraining (periodic, triggered, windowed or online) is the usual response. Label shift can be corrected without labels
-        by estimating the new priors (quantification); covariate shift by importance weighting, at the price of variance; domain
-        adaptation and transfer learning reuse what a model learned elsewhere.
-  \item New models should go through shadow mode, canaries with guardrails and A/B tests. Offline evaluation cannot reveal
+        by estimating the new priors (quantification\index{quantification}); covariate shift by importance weighting, at the price of variance; domain
+        adaptation\index{domain adaptation} and transfer learning\index{transfer learning} reuse what a model learned elsewhere.
+  \item New models should go through shadow mode\index{shadow mode}, canaries with guardrails\index{guardrails} and A/B tests\index{A/B testing}. Offline evaluation cannot reveal
         training--serving skew or the reaction of users; shadow mode catches the first, and canaries catch large problems with
         little exposure.
-  \item A/B tests need a design fixed in advance (unit, metrics, sample size, duration), a check of the sample ratio, and an analysis
-        whose looks follow a valid sequential rule. CUPED reduces the variance with pre-experiment data, sequential designs allow early stopping without
-        inflating the errors, and off-policy evaluation estimates new policies from randomised logs.
-  \item Multi-armed bandits trade learning and earning continuously. Thompson sampling is a robust default, discounting copes with
-        changing rewards, and contextual bandits learn which variant suits each user.
+  \item A/B tests need a design fixed in advance (unit, metrics, sample size\index{sample size}, duration), a check of the sample ratio, and an analysis
+        whose looks follow a valid sequential rule. CUPED\index{CUPED} reduces the variance with pre-experiment data, sequential designs allow early stopping\index{early stopping} without
+        inflating the errors, and off-policy\index{off-policy evaluation} evaluation estimates new policies from randomised logs.
+  \item Multi-armed bandits\index{multi-armed bandit} trade learning and earning continuously. Thompson sampling\index{multi-armed bandit!Thompson sampling} is a robust default, discounting copes with
+        changing rewards, and contextual bandits\index{multi-armed bandit!contextual} learn which variant suits each user.
   \item Applications built on language models need monitoring adapted to free text: costs and latency, feedback,
-        abstentions and groundedness, the topics of the questions, and the version of the model behind the API.
+        abstentions\index{abstention} and groundedness, the topics of the questions, and the version of the model behind the API\index{API}.
 \end{itemize}
 
 \section*{Bibliographic notes}
 \phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
-\citet{quinonero2009dataset} and \citet{morenotorres2012unifying} define and classify dataset shift. \citet{gama2014survey} and
-\citet{lu2019learning} survey concept drift detection and adaptation, and \citet{rabanser2019failing} compare methods for detecting
-shift in practice. \citet{gonzalez2017review} review quantification, \citet{pan2010survey} transfer learning, and
-\citet{bendavid2010theory} the theory of domain adaptation. \citet{kohavi2020trustworthy} is the standard guide to online
-experiments, with the earlier survey of \citet{kohavi2009controlled}; \citet{deng2013improving} introduced CUPED and
-\citet{fabijan2019diagnosing} catalogue the causes of sample ratio mismatches. \citet{lattimore2020bandit} cover bandit algorithms in
-depth, and \citet{russo2018tutorial} Thompson sampling. \citet{huyen2022designing} covers monitoring in production machine learning
+\citet{quinonero2009dataset} and \citet{morenotorres2012unifying} define and classify dataset shift\index{dataset shift}. \citet{gama2014survey} and
+\citet{lu2019learning} survey concept drift\index{concept drift} detection and adaptation, and \citet{rabanser2019failing} compare methods for detecting
+shift in practice. \citet{gonzalez2017review} review quantification\index{quantification}, \citet{pan2010survey} transfer learning\index{transfer learning}, and
+\citet{bendavid2010theory} the theory of domain adaptation\index{domain adaptation}. \citet{kohavi2020trustworthy} is the standard guide to online
+experiments, with the earlier survey of \citet{kohavi2009controlled}; \citet{deng2013improving} introduced CUPED\index{CUPED} and
+\citet{fabijan2019diagnosing} catalogue the causes of sample ratio mismatches\index{sample ratio mismatch}. \citet{lattimore2020bandit} cover bandit\index{multi-armed bandit} algorithms in
+depth, and \citet{russo2018tutorial} Thompson sampling\index{multi-armed bandit!Thompson sampling}. \citet{huyen2022designing} covers monitoring in production machine learning
 systems.
 
 \section*{Exercises}
@@ -1856,39 +1856,39 @@ systems.
   \item\label{exr6:plan} Propose one metric for each level of \cref{fig:monitorlayers} for a model that recommends products in an
         online shop, and say how quickly each can be observed.
   \item\label{exr6:holdout} A fraud model with a recall of 0.48 processes 200,000 transactions a month, 4.6\% of which are fraudulent.
-        How many frauds does a random holdout of 2\% let through each month? And one of 1\%? What do we lose with the smaller holdout?
+        How many frauds does a random holdout\index{hold-out} of 2\% let through each month? And one of 1\%? What do we lose with the smaller holdout?
   \item\label{exr6:psi} A binary feature took the value 1 in 50\% of the reference data and takes it in 60\% of the current data.
-        Compute the PSI.
-  \item\label{exr6:types} Classify each change as covariate shift, label shift or concept drift: (a) a diagnostic model trained when
+        Compute the PSI\index{population stability index (PSI)}.
+  \item\label{exr6:types} Classify each change as covariate shift\index{covariate shift}, label shift\index{label shift} or concept drift\index{concept drift}: (a) a diagnostic model trained when
         5\% of patients had a disease is used during an epidemic in which 30\% have it, with the same symptoms; (b) a credit model
         trained mostly with young applicants is used for all ages, and the relation between income and default is the same at every
         age; (c) spammers change their vocabulary so that words that indicated spam no longer do; (d) after a software update, a
         sensor reports temperatures in Fahrenheit instead of Celsius.
   \item\label{exr6:saerens} A classifier trained with 50\% positives gives a probability of 0.7 to an example. What is the corrected
         probability if the new proportion of positives is 10\%?
-  \item\label{exr6:acc} On new data, a classifier labels 30\% of the examples as positive. Its true and false positive rates, estimated on
-        the training data, are 0.80 and 0.10. Estimate the new proportion of positives with adjusted classify and count.
-  \item\label{exr6:weights} A domain classifier trained with 200 source and 1000 target examples gives probability 0.6 of coming from the
-        target to a source example. What is its importance weight? What is the effective sample size of five examples with weights 1,
+  \item\label{exr6:acc} On new data, a classifier labels 30\% of the examples as positive. Its true and false positive rates\index{false positive rate}, estimated on
+        the training data, are 0.80 and 0.10. Estimate the new proportion of positives with adjusted classify and count\index{classify and count}.
+  \item\label{exr6:weights} A domain classifier\index{domain classifier} trained with 200 source and 1000 target examples gives probability 0.6 of coming from the
+        target to a source example. What is its importance weight\index{importance weighting}? What is the effective sample size\index{sample size}\index{effective sample size} of five examples with weights 1,
         1, 1, 1 and 4?
-  \item\label{exr6:ddm} DDM has recorded $p_{\min}=0.10$ and $s_{\min}=0.02$. The current error rate is 0.15 with $s=0.025$. Is it in the
+  \item\label{exr6:ddm} DDM\index{drift detection method (DDM)} has recorded $p_{\min}=0.10$ and $s_{\min}=0.02$. The current error rate\index{error rate} is 0.15 with $s=0.025$. Is it in the
         warning or in the drift level?
   \item\label{exr6:size} How many users per group are needed to detect an increase of the CTR from 10\% to 11\% with $\alpha=0.05$ and a
         power of 0.8?
-  \item\label{exr6:peek} Explain why checking an A/B test every day and stopping at the first significant result inflates the false
+  \item\label{exr6:peek} Explain why checking an A/B test\index{A/B testing} every day and stopping at the first significant result inflates the false
         positive rate. What can be done instead?
-  \item\label{exr6:srm} An experiment meant to split users 50/50 logs 50,600 users in A and 49,400 in B. Is there a sample ratio mismatch?
+  \item\label{exr6:srm} An experiment meant to split users 50/50 logs 50,600 users in A and 49,400 in B. Is there a sample ratio mismatch\index{sample ratio mismatch}?
         What should be done with its results?
-  \item\label{exr6:cuped} The correlation between a metric in the weeks before an experiment and during it is 0.6. By how much does CUPED
+  \item\label{exr6:cuped} The correlation between a metric in the weeks before an experiment and during it is 0.6. By how much does CUPED\index{CUPED}
         reduce the number of users needed in the experiment of \cref{lst:abtest}?
-  \item\label{exr6:obf} Why are the O'Brien--Fleming thresholds very high at the first looks and close to 1.96 at the last one? When would you
-        prefer them to Pocock's?
+  \item\label{exr6:obf} Why are the O'Brien--Fleming\index{sequential testing!O'Brien--Fleming} thresholds very high at the first looks and close to 1.96 at the last one? When would you
+        prefer them to Pocock\index{sequential testing!Pocock}'s?
   \item\label{exr6:ips} In ten logged events, the new policy agrees with the logged action in three, with rewards 1, 0 and 1 and propensities
-        0.5, 0.25 and 0.25. Compute the IPS estimate of the new policy's click rate. Why is it so high?
-  \item\label{exr6:bandit} Give one situation where a bandit is preferable to an A/B test, and one where it is not.
-  \item\label{exr6:discount} A Thompson sampler discounts its evidence by a factor of 0.999 at every play. Roughly how many plays does it
+        0.5, 0.25 and 0.25. Compute the IPS\index{inverse propensity scoring} estimate of the new policy's click rate. Why is it so high?
+  \item\label{exr6:bandit} Give one situation where a bandit\index{multi-armed bandit} is preferable to an A/B test, and one where it is not.
+  \item\label{exr6:discount} A Thompson\index{multi-armed bandit!Thompson sampling} sampler discounts its evidence by a factor of 0.999 at every play. Roughly how many plays does it
         remember? What happens if the factor is 0.99?
-  \item\label{exr6:shadow} What can shadow mode tell us about a new model, and what can it not?
+  \item\label{exr6:shadow} What can shadow mode\index{shadow mode} tell us about a new model, and what can it not?
   \item\label{exr6:negative} How would you detect negative transfer when adapting a model from one hospital to another?
   \item\label{exr6:chatbot} Propose a monitoring dashboard for a customer-service assistant built on a language model,
         with at least one metric for each level of \cref{fig:monitorlayers}. Which metrics would have revealed the launch of
@@ -1900,21 +1900,21 @@ systems.
 
 \begin{description}[font=\bfseries,leftmargin=0pt,itemsep=5pt]
   \item[\ref{exr6:plan}] For example: latency p99 of the recommendation service (seconds); share of requests with missing user history
-        and the PSI of the main features (minutes to hours); distribution of the recommended categories (hours); precision of the
+        and the PSI\index{population stability index (PSI)} of the main features (minutes to hours); distribution of the recommended categories (hours); precision of the
         recommendations against later purchases (days); click-through and conversion rates (hours to days).
-  \item[\ref{exr6:holdout}] $200{,}000\cdot0.02\cdot0.046\cdot0.48\approx88$ frauds a month; with 1\%, about 44. The smaller holdout halves
-        the cost but the estimates become noisier: their confidence intervals widen by a factor of about $\sqrt2$.
+  \item[\ref{exr6:holdout}] $200{,}000\cdot0.02\cdot0.046\cdot0.48\approx88$ frauds a month; with 1\%, about 44. The smaller holdout\index{hold-out} halves
+        the cost but the estimates become noisier: their confidence intervals\index{confidence interval} widen by a factor of about $\sqrt2$.
   \item[\ref{exr6:psi}] $(0.6-0.5)\ln\frac{0.6}{0.5}+(0.4-0.5)\ln\frac{0.4}{0.5}=0.0182+0.0223=0.041$: below the conventional alert threshold of 0.1.
         This is a heuristic reading of the index, not a test: whether a change of ten points matters depends
-        on the application and on the sample sizes.
-  \item[\ref{exr6:types}] (a) Label shift. (b) Covariate shift. (c) Concept drift. (d) A change of measurement, or of representation: the same raw number now
+        on the application and on the sample sizes\index{sample size}.
+  \item[\ref{exr6:types}] (a) Label shift\index{label shift}. (b) Covariate shift\index{covariate shift}. (c) Concept drift\index{concept drift}. (d) A change of measurement, or of representation: the same raw number now
         means another temperature, so the relation between the feature and the target changes in the raw
         coordinates and it is not covariate shift. Convert the values back to Celsius and validate the contract
         of the feature before applying the model.
   \item[\ref{exr6:saerens}] $\frac{0.2\cdot0.7}{0.2\cdot0.7+1.8\cdot0.3}=\frac{0.14}{0.68}=0.21$, with the ratios of priors $0.1/0.5=0.2$ and
         $0.9/0.5=1.8$.
   \item[\ref{exr6:acc}] $(0.30-0.10)/(0.80-0.10)=0.29$.
-  \item[\ref{exr6:weights}] $\frac{200}{1000}\cdot\frac{0.6}{0.4}=0.3$. Effective sample size $(1+1+1+1+4)^2/(1+1+1+1+16)=64/20=3.2$: five
+  \item[\ref{exr6:weights}] $\frac{200}{1000}\cdot\frac{0.6}{0.4}=0.3$. Effective sample size\index{effective sample size} $(1+1+1+1+4)^2/(1+1+1+1+16)=64/20=3.2$: five
         examples count as about three.
   \item[\ref{exr6:ddm}] $p+s=0.175$; the warning level is $0.10+2\cdot0.02=0.14$ and the drift level $0.10+3\cdot0.02=0.16$, so drift is
         signalled.
@@ -1928,10 +1928,10 @@ systems.
   \item[\ref{exr6:cuped}] The variance is multiplied by $1-0.6^2=0.64$, so each group needs about $0.64\cdot31{,}234\approx20{,}000$ users instead
         of 31,234.
   \item[\ref{exr6:obf}] Early on there are few data, so only an overwhelming effect should stop the test; most of the error budget is kept for
-        the final look, which is almost the ordinary test. Prefer them when the final power matters and early stopping is a bonus for very
-        large effects; Pocock's suit situations where stopping early, for instance for harm, is the priority.
-  \item[\ref{exr6:ips}] $(1/0.5+0/0.25+1/0.25)/10=(2+0+4)/10=0.6$. With so few events, each rare match is multiplied by a large inverse propensity,
-        so the estimate has a huge variance; real off-policy evaluation needs thousands of events and propensities that are not too small. An IPS
+        the final look, which is almost the ordinary test. Prefer them when the final power matters and early stopping\index{early stopping} is a bonus for very
+        large effects; Pocock\index{sequential testing!Pocock}'s suit situations where stopping early, for instance for harm, is the priority.
+  \item[\ref{exr6:ips}] $(1/0.5+0/0.25+1/0.25)/10=(2+0+4)/10=0.6$. With so few events, each rare match is multiplied by a large inverse propensity\index{inverse propensity scoring},
+        so the estimate has a huge variance; real off-policy\index{off-policy evaluation} evaluation needs thousands of events and propensities that are not too small. An IPS
         estimate can even exceed 1 in small samples.
   \item[\ref{exr6:bandit}] Preferable: choosing among headlines for a news story that will be read for a few hours. Not preferable: deciding
         whether to launch a new ranking model, where an unbiased estimate of its effect on several metrics, including long-term ones,
@@ -1946,8 +1946,8 @@ systems.
   \item[\ref{exr6:negative}] Keep some labelled data from the new hospital as a test set, and compare the adapted model with a model
         trained only on the new hospital's data (and with the original model). If the adapted model is worse than the model trained on
         the new hospital alone, the transfer is hurting.
-  \item[\ref{exr6:chatbot}] Service: time to the first token, errors, tokens per request. Inputs: a weekly domain classifier
-        on the questions, with its most characteristic words. Outputs: the abstention rate and the length of the answers.
+  \item[\ref{exr6:chatbot}] Service: time to the first token, errors, tokens per request. Inputs: a weekly domain classifier\index{domain classifier}
+        on the questions, with its most characteristic words. Outputs: the abstention\index{abstention} rate and the length of the answers.
         Quality: the share of negative feedback, of rephrased questions and of requests for a human, and the groundedness of a
         reviewed sample. Business: the share of conversations resolved without a human. The launch would show up in the domain
         classifier, in its words, and in a rising abstention rate.

@@ -1,0 +1,6 @@
+% makeindex style: letter headings
+headings_flag 1
+heading_prefix "\\indexspace\n{\\sffamily\\bfseries\\color{edmnavy} "
+heading_suffix "}\\nopagebreak\n"
+symhead_positive "Symbols"
+numhead_positive "Numbers"
