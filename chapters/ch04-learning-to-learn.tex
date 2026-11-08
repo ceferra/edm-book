@@ -141,7 +141,7 @@ consider it the least enjoyable part of their work. It involves three groups of 
 The importance of wrangling has motivated many tools, beyond the classical extract--transform--load
 (ETL) software. OpenRefine works with messy data: cleaning it, transforming it from one format into
 another, and extending it with web services and external data. Trifacta Wrangler, a descendant of
-the Wrangler research prototype \citep{kandel2011wrangler}, is a desktop application to transform data
+the Wrangler research prototype\index{prototypes and criticisms} \citep{kandel2011wrangler}, is a desktop application to transform data
 for later analysis and visualisation. Flash Fill\index{Flash Fill}, in Microsoft Excel, fills a column automatically when
 it finds a pattern in a few examples typed by the user; it is based on inductive programming\index{inductive programming} over a
 domain-specific language\index{domain-specific language} for string manipulation, which reduces the search space enormously
@@ -170,7 +170,7 @@ It works on relational data. Following the relationships between tables, it appl
 three kinds of operations: \emph{aggregation primitives} (count, sum, mean, maximum, minimum, standard deviation\dots) to the
 records of a child table that belong to each record of the parent table; \emph{transform primitives}
 (the month of a date, the absolute value\dots) to individual columns; and \emph{where clauses}, which
-restrict the aggregations to subsets of interest. Stacking primitives produces ``deep'' features such
+restrict the aggregations to subsets of interest. Stacking\index{stacking} primitives produces ``deep'' features such
 as the mean of the monthly maximum.
 
 \Cref{lst:dfs} implements one level of deep feature synthesis. A company wants to predict which of its
@@ -285,7 +285,7 @@ The simplest strategies treat the objective as a black box:
         search when few hyperparameters matter, as is usually the case \citep{bergstra2012random}.
 \end{itemize}
 \emph{Bayesian optimisation\index{Bayesian optimisation|textbf}} uses the results so far to decide where to look next
-\citep{jones1998efficient,snoek2012practical}. It fits a probabilistic \emph{surrogate model} of the
+\citep{jones1998efficient,snoek2012practical}. It fits a probabilistic \emph{surrogate\index{global surrogate|textbf} model} of the
 objective, typically a Gaussian process, which gives for each candidate configuration $z$ a predicted
 mean $\mu(z)$ and an uncertainty $\sigma(z)$, and chooses the candidate that maximises an
 \emph{acquisition function} that balances exploitation (high predicted mean) and exploration (high
@@ -297,7 +297,7 @@ $f^\star$:
 \end{equation}
 where $\Phi$ and $\varphi$ are the standard normal distribution and density functions. Other surrogates
 handle the structured spaces of CASH\index{CASH problem} better: random forests\index{random forest} in SMAC \citep{hutter2011sequential} and
-tree-structured Parzen estimators in TPE \citep{bergstra2011algorithms}. \emph{Multi-fidelity} methods
+tree-structured Parzen estimators in TPE \citep{bergstra2011algorithms}. \emph{Multi-fidelity\index{fidelity|textbf}} methods
 save time by evaluating many configurations cheaply (on a subsample, or with few iterations) and
 spending more only on the promising ones. \emph{Successive halving} repeatedly keeps the best fraction
 $1/\eta$ of the configurations and multiplies their budget by $\eta$ \citep{jamieson2016non}. \emph{Hyperband} runs successive halving several times, with different trade-offs between the number of configurations and the budget
@@ -871,7 +871,7 @@ ones. From two examples it learns to extract first names, from one example to tu
 format, and from two examples to build initials. The listing also exposes the two classical problems of
 PbE:
 \begin{itemize}
-  \item \emph{ambiguity}: several programs fit the examples and disagree on new inputs. For the first
+  \item \emph{ambiguity\index{ambiguity decomposition|textbf}}: several programs fit the examples and disagree on new inputs. For the first
         names, ``the first word'' and ``the penultimate word'' fit both examples, and give different
         answers for a person with two first names, such as \texttt{Maria Jose Ramirez};
   \item \emph{language bias\index{language bias|textbf}}: the domain of \texttt{ana.gil@upv.es} is learned as the penultimate and
@@ -926,7 +926,7 @@ space of all programs, starting from a random population of programs and applyin
         one of them by a random part of the other;
   \item \emph{mutation\index{genetic programming!mutation|textbf}}: a random part of a program is replaced by a new random part.
 \end{itemize}
-The rates at which these operators are applied determine the diversity\index{genetic programming!diversity} of the population. The idea is
+The rates at which these operators are applied determine the diversity\index{diversity}\index{genetic programming!diversity} of the population. The idea is
 old: Alan Turing already suggested, in 1950, that a learning machine could be found by a process
 analogous to evolution \citep{turing1950computing}.
 
@@ -983,7 +983,7 @@ whole second parent (or any of its subtrees), producing a child that neither par
 
 \Cref{alg:gp} summarises the method. \Cref{lst:gp} applies it to \emph{symbolic regression\index{symbolic regression|textbf}}: from 200
 points of a hidden function of two variables, find a formula for it. The functions are $+$, $-$ and
-$\times$, the terminals $x$, $y$, 1, 2 and 3, the fitness\index{genetic programming!fitness} is the mean squared error\index{mean squared error (MSE)}, and the population
+$\times$, the terminals $x$, $y$, 1, 2 and 3, the fitness\index{fitness}\index{genetic programming!fitness} is the mean squared error\index{mean squared error (MSE)}, and the population
 has 300 programs, with tournament selection, subtree crossover, occasional mutation, elitism\index{genetic programming!elitism} and a
 maximum depth to limit \emph{bloat} (the tendency of programs to grow without improving). In generation
 11 the best program, $((y\cdot2+(x-y))\cdot x)-3$, has zero error; simplified, it is exactly the hidden
@@ -1174,7 +1174,7 @@ The risks of using language models for data science go beyond ordinary programmi
         models that run on the organisation's own machines avoid it;
   \item \emph{security}: generated code must be executed in isolation, without access to credentials or the network, and data
         can contain text that the model reads as instructions (a cell of a spreadsheet that says ``ignore the previous
-        instructions and\dots''), an attack known as \emph{prompt injection\index{prompt injection|textbf}};
+        instructions and\dots''), an attack known as \emph{prompt\index{prompt|textbf} injection\index{prompt injection|textbf}};
   \item \emph{reproducibility and cost}: answers vary between runs and between versions of a model, so prompts, model versions and
         outputs must be logged like any other experiment (\cref{sec:infrastructure}), and every call has a price and a latency\index{latency};
   \item \emph{over-reliance}: accepting outputs without understanding them, and losing the skills needed to judge them.
@@ -1393,7 +1393,7 @@ There are three main process mining\index{process mining} tasks:
   \item \emph{conformance checking\index{conformance checking|textbf}}: compare an existing model with the event log to find, locate and
         explain the discrepancies between them;
   \item \emph{enhancement}: extend or improve a model with information from the log, for instance with
-        the times at which activities are executed, to find bottlenecks (throughput analysis).
+        the times at which activities are executed, to find bottlenecks (throughput\index{throughput} analysis).
 \end{itemize}
 The simplest discovered model is the \emph{directly-follows\index{directly-follows graph|textbf} graph} (DFG): one node per activity and an
 edge from $a$ to $b$ whenever $b$ directly follows $a$ in some trace, annotated with its frequency
@@ -1403,7 +1403,7 @@ and $d$ occur in both orders, the DFG has edges in both directions between them.
 The \emph{alpha algorithm\index{alpha algorithm|textbf}} \citep{vanderaalst2004workflow} produces a Petri net\index{Petri net}, a model
 with \emph{transitions} (the activities), \emph{places} (the conditions between them) and \emph{tokens}
 (the state). From the directly-follows relation $a>b$ it derives three relations between activities:
-\emph{causality} $a\rightarrow b$ if $a>b$ and not $b>a$; \emph{parallelism} $a\parallel b$ if $a>b$ and
+\emph{causality\index{causality|textbf}} $a\rightarrow b$ if $a>b$ and not $b>a$; \emph{parallelism} $a\parallel b$ if $a>b$ and
 $b>a$; and \emph{choice} $a\#b$ if neither. A place can be created for every pair of sets of activities $(A,B)$ such that every
 activity of $A$ causes every activity of $B$, and the activities within $A$ and within $B$ are in choice. The algorithm keeps the maximal pairs, and adds a source place before the first
 activities and a sink place after the last ones (\cref{lst:pm}).
@@ -1621,7 +1621,7 @@ interface changes.
 
 Most RPA\index{robotic process automation (RPA)} systems rely on explicitly encoded rules and configurations. Artificial intelligence
 can extend these systems: \emph{intelligent process automation\index{intelligent process automation|textbf}} (IPA) aims to generalise RPA by
-providing the tools to create complex workflows with minimal user intervention. The IEEE describes it as
+providing the tools to create complex workflows with minimal user intervention\index{intervention}. The IEEE describes it as
 a preconfigured software instance that combines business rules, experience-based context determination
 logic and decision criteria to initiate and execute multiple interrelated human and automated processes
 in a dynamic context \citep{ieee2017ipa}. A key step is the formalisation of workflows (the interaction
@@ -1782,7 +1782,7 @@ format checks (acceptance and rejection tests):
   \item Data wrangling\index{data wrangling}, exploratory analysis and feature engineering\index{feature engineering} have many tools; deep feature
         synthesis\index{deep feature synthesis} generates features from relational data automatically.
   \item AutoML\index{AutoML} solves the combined algorithm selection\index{algorithm selection} and hyperparameter optimisation\index{hyperparameter optimisation} problem with
-        random search\index{random search}, Bayesian optimisation\index{Bayesian optimisation}, multi-fidelity or evolutionary methods. The score of the
+        random search\index{random search}, Bayesian optimisation\index{Bayesian optimisation}, multi-fidelity\index{fidelity} or evolutionary methods. The score of the
         selected configuration is optimistic, so the whole search must be evaluated on unseen data.
   \item Metalearning\index{metalearning} learns from previous experiments, for instance to select algorithms from
         meta-features; its value is bounded by how complementary the candidate algorithms are.

@@ -3,7 +3,7 @@
 Policy: a term is indexed at its first occurrence in each section or subsection; terms that occur in
 more than FREQUENT subsections are indexed only where they are defined (inside \\emph or \\textbf, page
 in bold) and at their first occurrence in each chapter. Code, mathematics, floats, captions, headings
-and command arguments are never touched. Run after build_chapter.py (it calls this script)."""
+and command arguments are never touched. The chapters are the source of the book: run it on them at any time; entries added by hand are kept."""
 import pathlib
 import re
 
@@ -131,8 +131,20 @@ def matches(block):
     return found
 
 
+AUTO_KEYS = {key for key, _ in TERMS}
+
+
+def strip_automatic(text):
+    """Remove the entries this script inserts; entries added by hand (other keys) are kept."""
+    def keep(m):
+        return "" if m.group(1) in AUTO_KEYS else m.group(0)
+    return re.sub(r"\\index\{([^{}|]*)(?:\|[^{}]*)?\}", keep, text)
+
+
 def main():
     files = sorted((ROOT / "chapters").glob("ch0*.tex"))
+    for f in files:                       # chapters are the source: start from them without automatic entries
+        f.write_text(strip_automatic(f.read_text(encoding="utf-8")), encoding="utf-8")
     units_of = {}
     cache = {}
     for f in files:
@@ -147,7 +159,6 @@ def main():
     total = 0
     for f in files:
         lines = f.read_text(encoding="utf-8").split("\n")
-        lines = [re.sub(r"\\index\{[^{}]*(\{[^{}]*\})?[^{}]*\}", "", l) for l in lines]   # idempotent
         inserts = {}
         seen_unit, seen_chapter = set(), set()
         for unit, ms in cache[f]:

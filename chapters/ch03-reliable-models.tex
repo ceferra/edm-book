@@ -35,7 +35,7 @@ After studying this unit you should be able to:
         counterfactuals\index{counterfactual};
   \item explain why interpretability matters, classify interpretability methods, and interpret
         linear models, logistic regression\index{logistic regression}, trees and rules;
-  \item apply model-agnostic methods (partial dependence\index{partial dependence plot}, individual conditional expectation or ICE\index{individual conditional expectation}, interaction strength,
+  \item apply model-agnostic methods (partial dependence\index{partial dependence plot}, individual conditional expectation\index{individual conditional expectation} or ICE, interaction strength,
         permutation importance\index{feature importance!permutation}, surrogates\index{global surrogate}, LIME\index{LIME} and Shapley\index{Shapley values} values) and example-based
         explanations (counterfactuals, prototypes\index{prototypes and criticisms} and criticisms, influential instances\index{influential instance}),
         knowing their limitations;
@@ -913,7 +913,7 @@ assumptions than the total effect, including the absence of confounding\index{co
 In a linear model $Z:=0.8X+U_Z$, $Y:=0.5X+Z+U_Y$, the total effect is $0.5+0.8\cdot1=1.3$, the
 natural direct effect 0.5 and the natural indirect effect 0.8. In the absence of confounding,
 natural effects can be estimated from observational data, and counterfactuals allow us to compute
-other path-specific\index{path-specific effect} effects and to design decision rules that eliminate the effects we deem
+other path-specific\index{path-specific effect} effects and to design decision rules\index{decision rules} that eliminate the effects we deem
 undesirable.
 
 \subsection{Counterfactual fairness}
@@ -1254,7 +1254,7 @@ a rule is summarised by its \emph{support} or \emph{coverage\index{coverage|text
 condition applies, and its \emph{accuracy\index{accuracy|textbf}} or \emph{confidence}, the fraction of those it predicts
 correctly (\cref{sec:unsupervised}). Rules can be combined in a \emph{decision list}, which orders
 them (the first rule that applies decides), or in a \emph{decision set}, a democracy of rules in
-which some may have more voting power; interpretability suffers when several rules of a set apply.
+which some may have more voting\index{voting} power; interpretability suffers when several rules of a set apply.
 
 Some algorithms that learn rules are:
 \begin{itemize}
@@ -1630,7 +1630,7 @@ seed 2, width 1.5: park_nearby=8.7 cat_allowed=7.1 area_m2=71.4 floor=5.5  R2=0.
 seed 0, width 0.5: park_nearby=0.3 cat_allowed=0.7 area_m2=42.5 floor=-0.4  R2=0.80
 \end{pyoutput}
 
-\Cref{lst:lime} implements LIME and explains the price predicted by a gradient boosting\index{gradient boosting} model for a
+\Cref{lst:lime} implements LIME and explains the price predicted by a gradient boosting model for a
 flat of 50 square metres, on the second floor, near a park and in a building where cats are forbidden
 (the synthetic apartment data of \cref{lst:apartments}). With the default kernel width the
 explanation is stable across random seeds and faithful ($R^2=0.97$): the area dominates (71 thousand
@@ -2096,10 +2096,10 @@ documentation and human oversight requirements on high-risk\index{AI Act!high-ri
 As soon as enough computers were connected, some people realised that the network was an easy way to make money, often illegitimately. Spam is the classic example, and it shows both the
 promise and the difficulty of using machine learning in security \citep{chio2018machine}. Machine
 learning was not invented by spam fighters, but it was quickly adopted by those who saw its potential
-against a constantly evolving source of abuse. Content-based models learned from e-mail data recognise
+against a constantly evolving source of abuse. Content-based\index{content-based filtering} models learned from e-mail data recognise
 spam in a generalisable way; metadata and the reputation of senders add evidence; and a feedback loop
 with users, who mark messages as spam, builds a collective intelligence that improves over time. Spam
-filters have evolved to deal with an ever-growing diversity of circumvention methods, and today the vast
+filters have evolved to deal with an ever-growing diversity\index{diversity} of circumvention methods, and today the vast
 majority of spam never reaches the inbox, although most e-mail traffic is spam. But the story also
 shows what makes security different: a \emph{motivated adversary} constantly tries to misuse the
 system, and each side races to exploit or fix the flaws before the other finds them.
@@ -2114,7 +2114,7 @@ as attacks generate profit, there will be people willing to launch them.
 The uses of machine learning in security fall into two broad categories:
 \begin{itemize}
   \item \emph{pattern recognition}: discover the explicit or latent characteristics of known kinds of
-        malicious data, distil them into features, and recognise other data that share them (malware,
+        malicious data, distil\index{model distillation} them into features, and recognise other data that share them (malware,
         bots, spam, phishing);
   \item \emph{anomaly detection}: establish a notion of normality that describes most of the data (say,
         more than 95\%), and flag any deviation (network intrusion detection, access control, user
@@ -2188,7 +2188,7 @@ that is not enough protection.
 
 \emph{Poisoning\index{poisoning attack|textbf}} is a causative attack, relevant to systems that keep learning after deployment. Anomaly
 detectors, for instance, are retrained automatically to follow the changes in the data distribution
-without human intervention; online systems sacrifice stationarity for adaptability. An attacker who
+without human intervention\index{intervention}; online systems sacrifice stationarity for adaptability. An attacker who
 controls part of the training data can then inject carefully placed synthetic examples, called
 \emph{chaff}, to move the decision boundary (a \emph{red herring}), either in a targeted way (so that one
 kind of attack is accepted) or indiscriminately \citep{biggio2012poisoning}. The more data the
@@ -2252,7 +2252,7 @@ difficult without sacrificing the efficacy of the system.
 like periodic batch systems: longer periods between retraining give time to inspect the data, a longer
 history makes boiling-frog attacks easier to detect, and short feedback loops help attackers.
 Poisoning attempts can also be detected in three ways: by looking for abnormal pockets of traffic (coming from the same
-addresses or networks, or sharing unusual characteristics); by keeping a \emph{calibration set} of
+addresses or networks, or sharing unusual characteristics); by keeping a \emph{calibration\index{calibration|textbf} set} of
 handcrafted normal and malicious data on which every retrained model is tested; and by monitoring\index{monitoring} the
 fraction of predictions that fall near the decision boundary, as in \cref{fig:poisoning}b. A sudden rise
 of that fraction (say, from 30\% to 80\% of the points in the band) suggests that someone is pushing the boundary. There is
@@ -2410,9 +2410,9 @@ attacker may add, for a standard and an adversarially trained filter.}
 Poisoning\index{poisoning attack} and evasion\index{evasion attack} are not the only threats. A model offered through an application programming interface (API\index{API}) can be \emph{stolen} by
 querying it and training a copy \citep{tramer2016stealing}. \emph{Membership inference} attacks find out
 whether a given record was part of the training data, a privacy breach for medical or financial data
-\citep{shokri2017membership}. \emph{Backdoors\index{backdoor attack|textbf}} hidden in training data or in pre-trained models make a
+\citep{shokri2017membership}. \emph{Backdoors\index{backdoor criterion|textbf}\index{backdoor attack|textbf}} hidden in training data or in pre-trained models make a
 model misbehave only when a secret trigger is present \citep{gu2017badnets}. And applications built on
-large language models\index{large language model (LLM)}\index{language model} can be hijacked by instructions hidden in the content they process, which is called a \emph{prompt
+large language models\index{large language model (LLM)}\index{language model} can be hijacked by instructions hidden in the content they process, which is called a \emph{prompt\index{prompt|textbf}
 injection\index{prompt injection|textbf}} \citep{greshake2023not}.
 
 \begin{keyidea}
@@ -2433,7 +2433,7 @@ intelligence \citep{eu2024aiact}. It regulates \emph{uses} of AI: the same class
 unregulated when it filters spam and heavily regulated when it decides who gets a loan. It complements earlier
 rules, such as the General Data Protection Regulation\index{GDPR}, which already gives people the right not to be subject
 to decisions based solely on automated processing that significantly affect them, with safeguards such as
-human intervention \citep{gdpr2016,wachter2017right}. The AI Act also adds a right to explanation (Article~86\index{AI Act!Article 86}). It applies to decisions based on the output of the high-risk\index{AI Act!high-risk systems} systems of Annex~III\index{AI Act!Annex III}
+human intervention\index{intervention} \citep{gdpr2016,wachter2017right}. The AI Act also adds a right to explanation\index{right to explanation} (Article~86\index{AI Act!Article 86}). It applies to decisions based on the output of the high-risk\index{AI Act!high-risk systems} systems of Annex~III\index{AI Act!Annex III}
 (except those of its point~2, critical infrastructure) that produce legal effects, or that similarly significantly affect a
 person in a way that they consider adverse to their health, safety or fundamental rights. The person affected can obtain clear and meaningful explanations of the role of the system in the decision procedure and of the main elements
 of the decision, subject to the exceptions and restrictions of other laws. It is not a general obligation
@@ -2459,7 +2459,7 @@ The AI Act\index{AI Act} sorts AI systems into four levels of risk:
   \item \emph{limited risk}: systems subject to transparency obligations: people must be told when they are
         interacting with a chatbot, and content generated or manipulated by AI, such as deepfakes, must be
         labelled as such;
-  \item \emph{minimal risk}: everything else, such as spam filters or film recommenders\index{recommender system}, with no specific
+  \item \emph{minimal risk}: everything else, such as spam filters or film recommenders, with no specific
         obligations beyond the duty to take measures that support the \emph{AI literacy\index{AI literacy|textbf}} of the staff who use
         AI (as amended in 2026, Article~4 does not require guaranteeing a specific individual level).
 \end{itemize}
@@ -2683,7 +2683,7 @@ learning for security, and \citet{biggio2018wild} review ten years of adversaria
   \item[\ref{exr3:aiactplan}] Article 10: the representativeness of the training data and an analysis of bias, such as the
         fairness\index{fairness} criteria of \cref{sec:fairness}. Article 13: documentation of the model and of how to read its outputs, with
         explanations (\cref{sec:interpretability}). Article 14: a procedure for analysts to review and override decisions, for
-        instance with a cautious classifier\index{cautious classifier} that delegates\index{delegation} uncertain cases (\cref{sec:cautious}). Article 72: a monitoring plan
+        instance with a cautious classifier\index{cautious classifier} that delegates uncertain cases (\cref{sec:cautious}). Article 72: a monitoring plan
         for drift and for performance by group (\cref{ch:monitoring}).
 \end{description}
 

@@ -23,22 +23,22 @@ X = X.astype({c: "category" for c in X.select_dtypes(exclude="number").columns})
 
 def scorecard(X):
     """A manual model: risk points for rules that a credit analyst might write."""
-    return (2 * (X.checking == "A11") + (X.checking == "A12")   # negative or low balance
-            + X.duration / 12                                   # one point per year of loan
-            + (X.savings == "A61") + (X.rate == 4)              # low savings, high instalment
-            + X.employment.isin(["A71", "A72"])).astype(float)  # unemployed or new in the job
+    return (2 * (X.checking == "A11") + (X.checking == "A12")  # negative or low balance
+            + X.duration / 12                                  # a point per loan year
+            + (X.savings == "A61") + (X.rate == 4)             # low savings, high rate
+            + X.employment.isin(["A71", "A72"])).astype(float) # unemployed or new job
 
 def with_card(X):
     return X.assign(card=scorecard(X))
 
 def falls(risk, X):
-    """Directional test: share of applicants whose risk falls if the loan is a year longer."""
+    """Directional test: share whose risk falls when the loan is a year longer."""
     return np.mean(risk(X.assign(duration=X.duration + 12)) < risk(X))
 
 def boosting(constraints=None):
-    return HistGradientBoostingClassifier(learning_rate=0.05, max_iter=200, max_leaf_nodes=8,
-                                          min_samples_leaf=20, monotonic_cst=constraints,
-                                          random_state=0)
+    return HistGradientBoostingClassifier(learning_rate=0.05, max_iter=200,
+                                          max_leaf_nodes=8, min_samples_leaf=20,
+                                          monotonic_cst=constraints, random_state=0)
 
 rising = {"duration": 1, "rate": 1}         # the risk may only grow with these features
 systems = {"gradient boosting": (None, False), "  + scorecard as a feature": (None, True),

@@ -13,7 +13,7 @@ def sample(n, spread=1.0):
     return X, (rng.random(n) < 1 / (1 + np.exp(-logit))).astype(int)
 
 X_tr, y_tr = sample(3000)                        # trains the model
-X_as, y_as = sample(3000)                        # trains the assessor (unseen by the model)
+X_as, y_as = sample(3000)                        # trains the assessor (unseen by model)
 X_te, y_te = sample(3000)                        # tests both
 X_new, y_new = sample(3000, spread=1.6)          # deployment data after a covariate shift
 
@@ -34,4 +34,5 @@ for name, score in [("the model's confidence", confidence(X_te)),
 print(f"after the shift, true accuracy {right(X_new, y_new).mean():.3f}; "
       "estimated without labels:")
 print(f"  test accuracy {r_te.mean():.3f}, "
-      f"mean confidence {confidence(X_new).mean():.3f}, assessor {p_right(X_new).mean():.3f}")
+      f"mean confidence {confidence(X_new).mean():.3f}, "
+      f"assessor {p_right(X_new).mean():.3f}")

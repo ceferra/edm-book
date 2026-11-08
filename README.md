@@ -1,32 +1,38 @@
-# Evaluation, Deployment and Monitoring of Models -- course book (draft, Units 1-2)
+# Evaluation, Deployment and Monitoring of Models
 
-Course book for *Evaluation, Deployment and Monitoring of Models* (3rd year, Degree in Data Science, UPV).
+Course book of the Degree in Data Science (GCD), Universitat Politècnica de València.
 
-## Compile
-- **Overleaf**: upload this zip as a new project; compiler XeLaTeX; main document `main.tex`.
-- **Local**: `latexmk -xelatex main.tex` (or `pdflatex main && bibtex main && pdflatex main && pdflatex main`).
+Cèsar Ferri, Carlos Monserrat, Yael Moros, Félix Martí, Daniel Romero-Alvarado and Fernando Martínez-Plumed.
+
+## Editions
+
+| File | Edition |
+|---|---|
+| `main.tex` | Digital edition: A4, with links, bookmarks and the cover |
+| `kdp.tex` | Print edition for Amazon KDP: 8.5 x 11 in, standard colour, no links |
+
+Both are compiled with **XeLaTeX** (`latexmkrc` selects it, also on Overleaf):
+
+```
+latexmk main.tex      # digital edition
+latexmk kdp.tex       # print edition
+```
 
 ## Structure
-- `main.tex` -- preamble (layout, colours from the course slides, boxes, listing styles), title page, document skeleton.
-  Chapters are called *Units*; add new units with `\input{chapters/chNN-...}`.
-- `frontmatter/preface.tex` -- course description, syllabus, practical sessions, how to use the book, recommended reading.
-- `chapters/ch01-model-evaluation.tex` -- Unit 1, Model evaluation.
-- `chapters/ch02-hybrid-models.tex` -- Unit 2, Hybrid models.
-- `references.bib` -- bibliography (natbib, author-year, `plainnat`).
-- `figures/chNN/` -- figures of each unit (vector PDF); `cd_results.txt` holds the benchmark tables.
-- `code/chNN/make_figures.py` -- regenerates every figure of the unit (`python make_figures.py`); seeds are fixed.
-  `code/ch01/edm_style.py` holds the shared plotting style.
-- `code/chNN/listings/` -- the code listings shown in the book, with the outputs printed in the text (`*.out`).
 
-Python packages: numpy, scipy, pandas, matplotlib, scikit-learn (1.8), imbalanced-learn (0.14).
+- `chapters/`: the text of the book. **These files are the source**: edit them directly.
+- `frontmatter/`: preface. `references.bib`: bibliography.
+- `code/chNN/listings/`: every listing as a Python file, with its output (`.out`); the
+  versions used are pinned in `code/requirements.txt`. Each output printed in the book is the
+  real output of its listing.
+- `figures/`: figures of the book; `figures/cover/`: generative cover (`generar.py`,
+  `make_cover.py`) and the full-wrap KDP cover (`make_kdp_cover.py`, which reads the page
+  count of `kdp.pdf` and computes the spine).
+- `fonts/`: Libertinus (SIL Open Font License, `fonts/OFL.txt`).
+- `add_index.py` and `index_terms.py`: the subject index. `python add_index.py` inserts the
+  entries of the term list into the chapters; entries added by hand are kept.
 
-## Writing conventions
-- Boxes: `keyidea`, `pitfall`, `further`, `objectives`, and numbered `example`/`definition`
-  (`\begin{example}{Title}{label}` -> `\cref{ex:label}`).
-- Code: `\begin{pylisting}[label={lst:x}]{Title} ... \end{pylisting}` followed by `\begin{pyoutput} ... \end{pyoutput}`.
-- Confusion matrices: rows = predicted class, columns = actual class (scikit-learn uses the transpose).
+## Rights
 
-
-## Fonts
-
-The book is set in Libertinus (SIL Open Font License, `fonts/OFL.txt`) with Latin Modern Mono for code, and is compiled with XeLaTeX (`latexmkrc` selects it, also on Overleaf).
+Copyright © 2026 the authors. All rights reserved (see the copyright page of the book).
+The Libertinus fonts are distributed under the SIL Open Font License.

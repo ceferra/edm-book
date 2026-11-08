@@ -118,7 +118,7 @@ its members:
   \item \emph{statistical}: with limited data, many hypotheses fit the training set\index{training set} equally
         well; averaging them reduces the risk of choosing a bad one (this is the variance
         reduction of \cref{sec:biasvariance});
-  \item \emph{computational}: learning algorithms perform local searches (greedy splits, gradient
+  \item \emph{computational}: learning algorithms perform local searches (greedy\index{multi-armed bandit!epsilon-greedy@$\varepsilon$-greedy} splits, gradient
         descent) that can get stuck in local optima; starting from different points and
         combining the results gives a better approximation;
   \item \emph{representational}: the true function may not be representable by any hypothesis of
@@ -128,7 +128,7 @@ its members:
 \Cref{fig:boundaries} illustrates the representational argument. A decision stump\index{decision stump} can only
 draw one axis-parallel line (test accuracy 0.794 on the two-moons problem), but a weighted vote
 of 100 stumps built by AdaBoost\index{AdaBoost} draws a complex frontier (0.902), better than a single unpruned
-tree (0.855). Bagging\index{bagging}, random forests and gradient boosting\index{gradient boosting} (the ensembles of \cref{sec:ensembles}) smooth the jagged frontier of a
+tree (0.855). Bagging\index{bagging}, random forests and gradient boosting (the ensembles of \cref{sec:ensembles}) smooth the jagged frontier of a
 single tree.
 
 \begin{figure}[htbp]
@@ -282,7 +282,7 @@ second case, diversity\index{diversity} can be induced by:
         the original classes, as in error-correcting output codes \citep{dietterich1995solving};
   \item \emph{injecting randomness} into the learning process: random initial weights of
         a neural network, random choices among the best splits of a tree (randomisation\index{randomisation}),
-        random thresholds (extremely randomised trees\index{extra trees}, \citealp{geurts2006extremely}).
+        random thresholds\index{threshold} (extremely randomised trees\index{extra trees}, \citealp{geurts2006extremely}).
 \end{itemize}
 \citet{brown2005diversity} distinguish \emph{implicit} diversity generation, which uses
 indirect means and hopes that diversity appears (random samples, random features), from
@@ -377,7 +377,7 @@ behaves more like model \emph{selection} than like an ensemble, even when a mixt
 \citep{domingos2000bayesian,yao2018using}. Cross-validated stacking\index{stacking} (\cref{sec:hybrid}) instead chooses
 the weights to optimise predictive performance: the two methods answer different questions.
 
-\paragraph{Metalearning} In this section, \emph{metalearning} means learning how to combine the base models. Unit~4 uses the same word for something else: learning from previous experiments which algorithm to apply. The fusion\index{fusion of models} rule can also be \emph{learned}: a second-level
+\paragraph{Metalearning} In this section, \emph{metalearning\index{metalearning|textbf}} means learning how to combine the base models. Unit~4 uses the same word for something else: learning from previous experiments which algorithm to apply. The fusion\index{fusion of models} rule can also be \emph{learned}: a second-level
 model is trained to combine the predictions of the members. This requires extra (validation)
 data, since the combiner must be trained on predictions made on examples that the members have
 not seen. Stacking and cascading\index{cascading} (\cref{sec:hybrid}) are the main examples.
@@ -554,7 +554,7 @@ member keeps a weighted error of at most $1/2-\gamma$ for a fixed $\gamma>0$ (a 
 bound is then at most $e^{-2\gamma^2T}$. That is a statement about the training error; the good generalisation\index{generalisation}
 of AdaBoost
 has been explained in terms of the \emph{margins} of the training examples
-\citep{schapire1998boosting}. AdaBoost can also be seen as a greedy minimisation of the
+\citep{schapire1998boosting}. AdaBoost can also be seen as a greedy\index{multi-armed bandit!epsilon-greedy@$\varepsilon$-greedy} minimisation of the
 exponential loss $\sum_i e^{-y_iF(x_i)}$, with $F(x)=\sum_t\alpha_th_t(x)$
 \citep{friedman2000additive}. This last view explains its main weakness: the exponential loss
 grows very fast for examples with large negative margins, so mislabelled\index{label noise} examples receive
@@ -570,7 +570,7 @@ gradient} of the loss with respect to the current predictions,
 \begin{equation}
   r_{it}=-\frac{\partial\,\ell\bigl(y_i,F(x_i)\bigr)}{\partial F(x_i)}\Big|_{F=F_{t-1}},
 \end{equation}
-which for the squared loss is the residual $y_i-F_{t-1}(x_i)$: each new tree predicts the
+which for the squared loss is the residual\index{residual analysis} $y_i-F_{t-1}(x_i)$: each new tree predicts the
 errors of the previous ones, and its predictions are added to the ensemble. The \emph{learning
 rate\index{learning rate|textbf}} (shrinkage) $\nu\in(0,1]$ slows down the learning, which improves generalisation\index{generalisation} at the
 cost of more trees; the number of trees is usually chosen by \emph{early stopping\index{early stopping|textbf}} on a
@@ -795,7 +795,7 @@ a little better (0.871).
 
 \subsection{Stacking}
 
-\emph{Stacking\index{stacking|textbf}} (stacked generalisation, \citealp{wolpert1992stacked}) learns how to combine
+\emph{Stacking\index{stacking|textbf}} (stacked generalisation\index{generalisation}, \citealp{wolpert1992stacked}) learns how to combine
 the models. It uses two levels of models (\cref{fig:stacking}): the \emph{base models}
 (level~0), usually learned with different techniques, and a \emph{metamodel} (level~1),
 trained to optimise the fusion\index{fusion of models} of the base models' outputs. The inputs of the metamodel are the
@@ -901,7 +901,7 @@ data that it has not seen (\cref{sec:protocols}).
 
 \subsection{Cascading}
 
-In \emph{cascade generalisation\index{cascading|textbf}} \citep{gama2000cascade} the classifiers are applied
+In \emph{cascade generalisation\index{cascading|textbf}\index{generalisation|textbf}} \citep{gama2000cascade} the classifiers are applied
 sequentially, and each one extends the representation of the data for the next: the class
 probability distribution predicted by a base classifier is added to the original attributes as
 new attributes, and the next classifier learns from the extended representation. In the
@@ -915,7 +915,7 @@ The word \emph{cascade} is also used, in computer vision, for a different idea: 
 increasingly complex classifiers in which the early, cheap ones reject the easy negative examples
 and only the difficult ones reach the expensive stages. The Viola--Jones face detector
 \citep{viola2001rapid} made this kind of cascade famous; its goal is speed, and it is close in
-spirit to the delegating\index{delegation} classifiers of \cref{sec:cautious}.
+spirit to the delegating classifiers of \cref{sec:cautious}.
 
 \subsection{Mixtures of experts}
 
@@ -1061,7 +1061,7 @@ model is best depends on how much abstention the application can tolerate.
 
 Naive Bayes needs a comment here, because \cref{sec:calibration} showed that its probabilities are badly
 calibrated. There is no contradiction. Abstaining on a fixed share of the least confident cases, as AURC and
-delegation\index{delegation} do, only needs a confidence that \emph{ranks} the errors well; any strictly increasing transformation of
+delegation do, only needs a confidence that \emph{ranks} the errors well; any strictly increasing transformation of
 it gives the same curve. Abstaining with cost-based thresholds, as the window rule\index{window rule} below does, needs
 probabilities that are \emph{calibrated\index{calibration|textbf}}. Part~(c) of \cref{lst:costcautious} applies the cost-matched window rule
 to naive Bayes on the same data: uncalibrated, it abstains on 22.8\% of the test cases at a mean cost of 0.326;
@@ -1113,7 +1113,7 @@ $p_i$, can be turned into a cautious classifier\index{cautious classifier}. Foll
 $w\in[0,1]$:
 \begin{center}
 \fbox{\begin{minipage}{0.86\textwidth}
-\textbf{Decision rule\index{window rule|textbf}} (given $K$ and $w$). For each class $i$, compute the threshold
+\textbf{Decision rule\index{decision rules|textbf}} (given $K$ and $w$). For each class $i$, compute the threshold
 $\tau_i=(1-k_i)\,w+k_i$. If some $p_i\geq\tau_i$, predict $\argmax_i\,(p_i/\tau_i)$ among those
 classes; otherwise predict $\perp$.
 \end{minipage}}
@@ -1229,7 +1229,7 @@ naive Bayes + isotonic  abstains 0.363  mean cost 0.312
 
 Conformal prediction\index{conformal prediction} (\cref{sec:other}) offers another way of deciding when to abstain, with a
 different guarantee. It computes prediction sets with coverage\index{coverage} $1-\alpha$, and the classifier abstains whenever the
-set does not contain exactly one label. Two or more labels signal ambiguity, and an empty set signals that
+set does not contain exactly one label. Two or more labels signal ambiguity\index{ambiguity decomposition}, and an empty set signals that
 no label is plausible, as for an input unlike the calibration data. In \cref{lst:conformalabst}, 90\% prediction sets cover 90.1\%
 of the test examples; 67.0\% of them contain a single label, with an accuracy of 0.853; the other
 33.0\% contain both labels, and no set is empty with this $\alpha$, although empty sets become possible as $\alpha$
@@ -1423,7 +1423,7 @@ random forest alone            accuracy=0.908
 
 \subsection{Delegating to humans and to large models}
 
-When the second level is a person, delegation\index{delegation} becomes \emph{learning to defer}
+When the second level is a person, delegation becomes \emph{learning to defer}
 \citep{madras2018predict,mozannar2020consistent}. The decision to defer should depend on the confidence of the model and also on how good the human is on each kind of case. A model
 should defer the cases that the human is likely to get right and that it is likely to get wrong, so
 the classifier and the deferral rule are trained together to minimise the error of the
@@ -1443,7 +1443,7 @@ data have probably changed.
 
 \subsection{Assessors\extsec}\label{sec:assessors}
 
-The cautious and delegating classifiers of this section rely on the confidence of the model
+The cautious\index{cautious classifier} and delegating classifiers of this section rely on the confidence of the model
 itself. An \emph{assessor\index{assessor|textbf}} is a separate model trained to predict whether the first
 model will be right on an example, or more generally its loss \citep{hernandezorallo2022training}.
 It is trained on examples that the first model has not seen, with the correctness of its
@@ -1457,9 +1457,9 @@ its output, which matters when the model is expensive \citep{zhou2022reject}; ch
 several models for each example; and, after deployment, estimating the accuracy of a model on new
 data without labels (\cref{sec:diagnose}).
 
-\Cref{lst:assessor} deploys a logistic regression\index{logistic regression} on a problem whose target depends
+\Cref{lst:assessor} deploys a logistic regression on a problem whose target depends
 on the square of a feature, which a linear model cannot represent. The assessor is a gradient
-boosting\index{gradient boosting} model trained on a separate sample, with the correctness of the logistic
+boosting model trained on a separate sample, with the correctness of the logistic
 regression as its target.
 
 \begin{pylisting}[label={lst:assessor}]{An assessor that predicts where a model fails}
@@ -1478,7 +1478,7 @@ def sample(n, spread=1.0):
     return X, (rng.random(n) < 1 / (1 + np.exp(-logit))).astype(int)
 
 X_tr, y_tr = sample(3000)                        # trains the model
-X_as, y_as = sample(3000)                        # trains the assessor (unseen by the model)
+X_as, y_as = sample(3000)                        # trains the assessor (unseen by model)
 X_te, y_te = sample(3000)                        # tests both
 X_new, y_new = sample(3000, spread=1.6)          # deployment data after a covariate shift
 
@@ -1499,7 +1499,8 @@ for name, score in [("the model's confidence", confidence(X_te)),
 print(f"after the shift, true accuracy {right(X_new, y_new).mean():.3f}; "
       "estimated without labels:")
 print(f"  test accuracy {r_te.mean():.3f}, "
-      f"mean confidence {confidence(X_new).mean():.3f}, assessor {p_right(X_new).mean():.3f}")
+      f"mean confidence {confidence(X_new).mean():.3f}, "
+      f"assessor {p_right(X_new).mean():.3f}")
 \end{pylisting}
 \begin{pyoutput}
 accuracy of the model on the test data: 0.749
@@ -1510,7 +1511,7 @@ after the shift, true accuracy 0.677; estimated without labels:
 \end{pyoutput}
 
 The model is right on 74.9\% of the test examples. Its own confidence ranks its errors with an
-AUC\index{area under the ROC curve (AUC)} of 0.683, and the assessor with 0.808; rejecting the 20\% of the
+AUC of 0.683, and the assessor with 0.808; rejecting the 20\% of the
 examples that each score finds least likely to be right raises the accuracy on the rest to 0.788
 with the confidence and to 0.830 with the assessor. The last two lines anticipate
 \cref{ch:monitoring}. After a covariate shift\index{covariate shift} that makes extreme values of the
@@ -1554,8 +1555,8 @@ missed (\cref{sec:ensembles});
 \item \emph{as a guard}: rules that come from the law or from the policy of the organisation
 are applied before or after the model; an applicant under the legal age is rejected whatever
 the model says, and a decision that breaks a business rule goes to a person;
-\item \emph{as a delegate}: the cases on which the learned model is least confident go to the
-manual model or to an expert, as in the delegating\index{delegation} classifiers of \cref{sec:cautious}.
+\item \emph{as a delegate\index{delegation|textbf}}: the cases on which the learned model is least confident go to the
+manual model or to an expert, as in the delegating classifiers of \cref{sec:cautious}.
 \end{itemize}
 
 \subsection{Monotonicity constraints}
@@ -1573,7 +1574,7 @@ can go down where they should go up. The constraint can be imposed during learni
 \citet{potharst2002classification} review classification trees that satisfy monotonicity
 constraints, and current libraries accept a direction for each feature: in scikit-learn the
 decision trees, random forests and histogram gradient boosting models take it through the
-\code{monotonic_cst} parameter, and XGBoost \citep{chen2016xgboost} and LightGBM
+\code{monotonic_cst} parameter, and XGBoost\index{XGBoost} \citep{chen2016xgboost} and LightGBM
 \citep{ke2017lightgbm} offer the same option. Linear and logistic models are monotone in each
 feature by construction, and the knowledge only fixes the sign of each weight.
 
@@ -1589,9 +1590,9 @@ accepting it.
 
 \Cref{lst:knowledge} applies both ideas to the German credit data of \cref{lst:firstlook}. The
 scorecard has six rules of the kind that a credit analyst might write. Gradient
-boosting\index{gradient boosting} is trained with and without the score as an extra feature, and with and without
+boosting is trained with and without the score as an extra feature, and with and without
 increasing constraints on the duration of the loan and on the instalment rate. Each system is
-evaluated on ten random splits with the AUC\index{area under the ROC curve (AUC)} and with a \emph{directional test\index{directional test|textbf}}, like the
+evaluated on ten random splits with the AUC and with a \emph{directional test\index{directional test|textbf}}, like the
 one in \cref{lst:tests}: the share of test applicants whose predicted risk falls when their
 loan is made a year longer.
 
@@ -1621,22 +1622,22 @@ X = X.astype({c: "category" for c in X.select_dtypes(exclude="number").columns})
 
 def scorecard(X):
     """A manual model: risk points for rules that a credit analyst might write."""
-    return (2 * (X.checking == "A11") + (X.checking == "A12")   # negative or low balance
-            + X.duration / 12                                   # one point per year of loan
-            + (X.savings == "A61") + (X.rate == 4)              # low savings, high instalment
-            + X.employment.isin(["A71", "A72"])).astype(float)  # unemployed or new in the job
+    return (2 * (X.checking == "A11") + (X.checking == "A12")  # negative or low balance
+            + X.duration / 12                                  # a point per loan year
+            + (X.savings == "A61") + (X.rate == 4)             # low savings, high rate
+            + X.employment.isin(["A71", "A72"])).astype(float) # unemployed or new job
 
 def with_card(X):
     return X.assign(card=scorecard(X))
 
 def falls(risk, X):
-    """Directional test: share of applicants whose risk falls if the loan is a year longer."""
+    """Directional test: share whose risk falls when the loan is a year longer."""
     return np.mean(risk(X.assign(duration=X.duration + 12)) < risk(X))
 
 def boosting(constraints=None):
-    return HistGradientBoostingClassifier(learning_rate=0.05, max_iter=200, max_leaf_nodes=8,
-                                          min_samples_leaf=20, monotonic_cst=constraints,
-                                          random_state=0)
+    return HistGradientBoostingClassifier(learning_rate=0.05, max_iter=200,
+                                          max_leaf_nodes=8, min_samples_leaf=20,
+                                          monotonic_cst=constraints, random_state=0)
 
 rising = {"duration": 1, "rate": 1}         # the risk may only grow with these features
 systems = {"gradient boosting": (None, False), "  + scorecard as a feature": (None, True),
@@ -1701,7 +1702,7 @@ data sets, however, bagging was the best method, followed by randomisation, and 
 the worst. \citet{bauer1999empirical} obtained similar results in a large comparison of voting\index{voting}
 methods.
 
-\Cref{fig:noise} reproduces the experiment on synthetic data, flipping a fraction of the training
+\Cref{fig:noise} reproduces the experiment on synthetic data, flipping\index{attribute flipping} a fraction of the training
 labels while testing on clean data. Without noise, AdaBoost\index{AdaBoost} is the most accurate method (0.898,
 against 0.893 for the random forest and 0.885 for bagging). With 10\% of noise it has already
 fallen behind both (0.848, against 0.888 and 0.870), and with 30\% the gap is large (0.686,
@@ -1742,7 +1743,7 @@ Several large studies have compared learning algorithms across many problems:
         statistically significant\index{statistical significance}, which illustrates the lessons of
         Unit~1.
   \item In data science competitions, gradient
-        boosting\index{gradient boosting} libraries appear in most winning solutions for tabular data, and deep neural networks
+        boosting libraries appear in most winning solutions for tabular data, and deep neural networks
         in most winning solutions for images, audio and text. \citet{grinsztajn2022why} and \citet{shwartzziv2022tabular} found that tree-based ensembles still
         outperform deep learning on typical medium-sized tabular data.
 \end{itemize}
@@ -1753,7 +1754,7 @@ To close the section, \cref{fig:cdens} compares seven methods on the twelve synt
 used in \cref{sec:stats}, with the AUC estimated by 5-fold cross-validation and the Friedman and
 Nemenyi\index{Nemenyi test} tests. Every ensemble clearly improves on a single tree (mean AUC 0.856): bagging\index{bagging}
 0.922, random forests 0.923, extremely randomised trees\index{extra trees} 0.928, AdaBoost\index{AdaBoost} 0.911, histogram gradient
-boosting\index{gradient boosting} 0.923 and stacking\index{stacking} 0.921. The Friedman test\index{Friedman test} rejects the equality of the methods
+boosting 0.923 and stacking\index{stacking} 0.921. The Friedman test\index{Friedman test} rejects the equality of the methods
 ($\chi^2_F=38.8$, $p<10^{-6}$), but with seven methods and twelve data sets the critical difference\index{critical difference diagram}
 is large ($\mathrm{CD}=2.60$). The single tree is significantly worse than all the ensembles except
 AdaBoost, and AdaBoost is significantly worse than extra trees; the differences among the
@@ -1922,7 +1923,7 @@ original to be crafted \citep{papernot2017practical}.
 unit. Some general recommendations:
 \begin{itemize}
   \item start with a random forest (robust, few hyperparameters, OOB\index{out-of-bag estimate} estimate for free) and a
-        gradient boosting\index{gradient boosting} model with early stopping\index{early stopping}; on tabular data one of them is usually
+        gradient boosting model with early stopping\index{early stopping}; on tabular data one of them is usually
         hard to beat;
   \item tune with nested or held-out validation (\cref{sec:protocols}), never on the test data;
         and remember that, with many candidates, small differences are likely to be noise
@@ -1933,7 +1934,7 @@ unit. Some general recommendations:
         many values; prefer permutation importance\index{feature importance!permutation} on held-out data \citep{strobl2007bias};
   \item if experts know the direction in which a feature moves the prediction, impose it with a
 monotonicity constraint\index{monotonicity constraint} and check it with a directional test\index{directional test} (\cref{sec:knowledge});
-\item if comprehensibility\index{comprehensibility}, latency\index{latency} or test costs\index{test costs} matter, consider pruning, delegation\index{delegation} or
+\item if comprehensibility\index{comprehensibility}, latency\index{latency} or test costs\index{test costs} matter, consider pruning, delegation or
         mimetic\index{mimetic classifier} models before deploying a large ensemble.
 \end{itemize}
 
@@ -1971,7 +1972,7 @@ Stacking & diverse, reasonably good base models; simple metamodel; cross-validat
         learned metamodel; uniform averaging is simple and hard to beat.
   \item Bagging\index{bagging} and random forests reduce variance and degrade gracefully with label noise\index{label noise}; boosting
         reduces bias and is often more accurate on clean data, but AdaBoost\index{AdaBoost}, with its exponential loss,
-        is sensitive to label noise (for gradient boosting\index{gradient boosting} it depends on the loss). Experimental
+        is sensitive to label noise (for gradient boosting it depends on the loss). Experimental
         comparisons show that random forests and boosted trees remain strong baselines on tabular data.
   \item Hybrid models (voting, stacking\index{stacking}, cascading\index{cascading}, mixtures of experts\index{mixture of experts}) combine different
         techniques and usually improve performance, provided the combination is learned on fresh
@@ -1980,7 +1981,7 @@ Stacking & diverse, reasonably good base models; simple metamodel; cross-validat
         costs more than abstaining; for two classes, the window rule\index{window rule} of cautious classifiers\index{cautious classifier} with a
         cost-matched class bias is exactly the optimal reject rule. Cautious classifiers are
         evaluated by their accuracy--abstention\index{abstention} trade-off, which depends on how well their
-        confidence ranks their own mistakes. Delegating\index{delegation} classifiers pass uncertain cases to a
+        confidence ranks their own mistakes. Delegating classifiers pass uncertain cases to a
         specialist, to a stronger but costlier model (a cascade) or to a person. An assessor\index{assessor}, a separate model trained to predict where another model fails, can rank
 its errors better than the model's own confidence.
   \item Domain knowledge\index{domain knowledge} can be combined with learned models. Manual models (rules,
@@ -2001,9 +2002,9 @@ is a short overview of why ensembles work, and \citet{brown2005diversity} survey
 methods for creating diversity\index{diversity}. Chapters~8, 10, 15 and~16 of \citet{hastie2009elements} cover
 bagging\index{bagging}, boosting, random forests and ensemble learning from the statistical point of view. The
 original papers on bagging \citep{breiman1996bagging}, boosting \citep{freund1997decision}, random
-forests \citep{breiman2001random}, stacking\index{stacking} \citep{wolpert1992stacked}, cascade generalisation\index{cascading}
+forests \citep{breiman2001random}, stacking\index{stacking} \citep{wolpert1992stacked}, cascade generalisation\index{cascading}\index{generalisation}
 \citep{gama2000cascade} and mixtures of experts\index{mixture of experts} \citep{jacobs1991adaptive} are all accessible after this unit.
-Cautious\index{cautious classifier} and delegating\index{delegation} classifiers are introduced in \citet{ferri2004cautious} and
+Cautious\index{cautious classifier} and delegating classifiers are introduced in \citet{ferri2004cautious} and
 \citet{ferri2004delegating}, and \citet{hendrickx2024machine} survey learning with a reject option\index{abstention};
 \citet{mozannar2020consistent} and \citet{chen2023frugalgpt} introduce learning to defer
 and model cascades.
@@ -2012,7 +2013,7 @@ and model cascades.
 \citet{potharst2002classification} review methods that build classification trees with
 monotonicity constraints\index{monotonicity constraint}.
 \Citet{hernandezorallo2022training} introduce assessors\index{assessor}, and \citet{zhou2022reject} use
-small assessors to anticipate the errors of large language models before running them.
+small assessors to anticipate the errors of large language models\index{large language model (LLM)} before running them.
 
 \section*{Exercises}
 \phantomsection\addcontentsline{toc}{section}{Exercises}
@@ -2038,13 +2039,13 @@ small assessors to anticipate the errors of large language models before running
         (rows: predicted $+$, $-$, $\perp$; columns: actual $+$, $-$): $(70,5)$, $(8,90)$,
         $(12,15)$. Compute coverage\index{coverage}, abstention\index{abstention}, accuracy and error, and check the relation between
         them.
-  \item\label{exr2:rule} Apply the decision rule\index{window rule} of \cref{sec:cautious} with $K=(0.6,0.4)$ and
+  \item\label{exr2:rule} Apply the decision rule\index{decision rules} of \cref{sec:cautious} with $K=(0.6,0.4)$ and
         $w=0.5$ to the probability vectors $(0.9,0.1)$, $(0.7,0.3)$, $(0.55,0.45)$ and $(0.2,0.8)$.
   \item\label{exr2:chow} Abstaining costs 0.2 and an error costs 1. Should a calibrated classifier
         that predicts $(0.75,0.25)$ abstain? From which maximum probability is predicting better?
   \item\label{exr2:costcautious} With the cost matrix\index{cost matrix} of \cref{ex:costcautious}, what is the best
         decision for an example with probabilities $(0.2,0.3,0.5)$?
-  \item\label{exr2:delegation} In a two-step delegation\index{delegation}, the first classifier keeps 70\% of the
+  \item\label{exr2:delegation} In a two-step delegation, the first classifier keeps 70\% of the
         test examples with an accuracy of 0.95, and the second classifies the remaining 30\% with an
         accuracy of 0.75. What is the overall accuracy?
   \item\label{exr2:rebound} Continue Exercise~\ref{exr2:delegation}. The second classifier is
@@ -2119,7 +2120,7 @@ see during its training? What would happen otherwise?
   \item[\ref{exr2:mimetic}] When comprehensibility\index{comprehensibility}, auditability, latency or test costs\index{test costs} matter more
         than a small loss of accuracy. Report its \emph{fidelity\index{fidelity|textbf}} to the ensemble, and its size.
   \item[\ref{exr2:design}] For instance: distil\index{model distillation} the stacking\index{stacking} into a single small model (mimetic\index{mimetic classifier}
-        model or distillation); prune the ensembles\index{ensemble pruning}; or use a delegating\index{delegation} cascade\index{cascading} in which a fast
+        model or distillation); prune the ensembles\index{ensemble pruning}; or use a delegating cascade\index{cascading} in which a fast
         model answers the easy cases and only the uncertain ones (within the budget) go to the
         expensive model.
 \item[\ref{exr2:monotone}] Increasing in the duration and in the instalment share, and decreasing
@@ -2135,6 +2136,6 @@ risk from falling along the whole change.
 \item[\ref{exr2:assessor}] On its own training examples a model is right more often than on new
 ones, especially if it overfits, so an assessor trained there would learn an optimistic picture and
 miss the regions where the model fails on new data. It is the reason why the metamodel of
-stacking\index{stacking} is trained on out-of-fold predictions.
+stacking is trained on out-of-fold predictions.
 \end{description}
 

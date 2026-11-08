@@ -354,7 +354,7 @@ TERMS = [
     ("domain adaptation", ["domain adaptation"]),
     ("CORAL", ["CORAL"]),
     ("transfer learning", ["transfer learning"]),
-    ("counterfactual holdout", ["counterfactual holdout", "counterfactual evaluation"]),
+    ("counterfactual hold-out", ["counterfactual holdout", "counterfactual hold-out", "counterfactual evaluation"]),
     ("shadow mode", ["shadow mode", "shadow deployment"]),
     ("canary release", ["canary"]),
     ("A/B testing", ["A/B test"]),

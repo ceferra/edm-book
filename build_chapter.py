@@ -1,3 +1,8 @@
+"""OBSOLETE: chapters/*.tex are now the source of the book (they are edited directly in Overleaf).
+This script assembled them from src/, which no longer exists; it now stops without touching anything."""
+import pathlib, sys
+if not (pathlib.Path(__file__).parent / "src").exists():
+    sys.exit("build_chapter.py: chapters/*.tex are now the source of the book; nothing to do.")
 """Assemble chapters/*.tex from src/chNN/*.tex.
 
 Lines of the form  %%LISTING name | title | label%%  are replaced by the code in

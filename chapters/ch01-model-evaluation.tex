@@ -44,7 +44,7 @@ After studying this unit you should be able to:
   \item incorporate costs into evaluation and decision making;
   \item evaluate models in specialised settings (conformal prediction\index{conformal prediction}, open-set\index{open-set recognition} recognition,
         computer vision, natural language processing) and compare models statistically.
-\item evaluate systems built on language models and agents: repeat the runs, compare systems question by
+\item evaluate systems built on language models\index{language model} and agents: repeat the runs, compare systems question by
 question, and report their cost;
 \end{itemize}
 \end{objectives}
@@ -218,7 +218,7 @@ The three terms have a clear interpretation:
 \end{itemize}
 
 \Cref{fig:polyfits} fits polynomials of increasing degree to 20 noisy points of
-$f(x)=\sin(2\pi x)$. The straight line underfits (training and test mean squared error, MSE\index{mean squared error (MSE)}, of $0.203$ and
+$f(x)=\sin(2\pi x)$. The straight line underfits (training and test mean squared error\index{mean squared error (MSE)}, MSE, of $0.203$ and
 $0.236$); the degree-4 polynomial captures the shape (0.069 and 0.074); the degree-15
 polynomial passes very close to every training point (training MSE 0.016) but oscillates
 strongly between them, and its test MSE rises to about $3\times10^3$.
@@ -414,7 +414,7 @@ set. The probability that a given example is never drawn is $(1-1/n)^n\approx e^
 remaining \emph{out-of-bag\index{out-of-bag estimate|textbf}} (OOB) examples can be used for testing. Repeating the process $B$
 times and averaging the OOB errors gives a pessimistic estimate (each model sees only 63.2\%
 of the distinct examples); the \emph{.632 estimator} corrects it by mixing it with the
-optimistic training error ($\widehat R$ denotes an estimate of the error rate),
+optimistic training error ($\widehat R$ denotes an estimate of the error rate\index{error rate}),
 \begin{equation}
   \widehat R_{.632}=0.368\,\widehat R_{\text{train}}+0.632\,\widehat R_{\text{OOB}},
 \end{equation}
@@ -452,7 +452,7 @@ evaluated inside an outer CV loop. This is \emph{nested cross-validation\index{c
 \end{algorithm}
 
 \Cref{lst:nested} tunes a support vector machine (SVM) over 30 hyperparameter combinations on a small, noisy problem.
-The inner-CV AUC (the area under the ROC curve, \cref{sec:scoring}) of the selected configuration is 0.782, but the honest nested estimate is
+The inner-CV AUC (the area under the ROC curve\index{ROC curve}, \cref{sec:scoring}) of the selected configuration is 0.782, but the honest nested estimate is
 0.746. The inner-CV score is therefore almost four points of AUC too optimistic, and this gap is larger than many of the differences between
 models reported in practice. Note that nested CV evaluates the tuning \emph{procedure}; the
 model finally deployed is obtained by running that procedure on all the data.
@@ -529,7 +529,7 @@ be available when the model is used in practice \citep{kaufman2012leakage}. It i
   \item \emph{target leakage}: features that are consequences of the target or are recorded
         after the event (the number of days in hospital to predict hospital admission, or a
         late-payment fee to predict default);
-  \item \emph{train--test contamination}: preprocessing steps (scaling, imputation, feature
+  \item \emph{train--test contamination\index{contamination of benchmarks|textbf}}: preprocessing steps (scaling, imputation, feature
         selection, resampling, target encoding) fitted on the whole data set before
         splitting it;
   \item \emph{temporal leakage}: random splits of time-ordered data, or features computed
@@ -896,7 +896,7 @@ Receiver Operating Characteristic\index{ROC analysis} (ROC) analysis originated 
 developed to analyse radar signals during the Second World War and later used extensively in
 psychophysics and medical diagnosis \citep{green1966signal}. The problem is to decide whether
 a signal is present in a noisy observation. If the observations follow one distribution when
-there is only noise and another when signal is present, any decision rule of the form ``say
+there is only noise and another when signal is present, any decision rule\index{decision rules} of the form ``say
 \emph{signal} if the observation exceeds a threshold $t$'' trades hits (true positives)
 against false alarms (false positives). The best threshold depends on the strength of the
 signal, on the noise variance and on the hit or false alarm rate we are willing to accept
@@ -984,7 +984,7 @@ TPR\index{true positive rate} & 0.50 & 0.60 & 0.80 & 0.70 & 0.95\\
 \end{tabular}
 \end{center}
 The convex hull is $(0,0)\to\text{CN2}\to\text{C4.5}\to\text{SVM}\to(1,1)$, with segment slopes
-$10$, $2.73$, $0.34$ and $0.125$; Ripper and naive Bayes (NB) lie below it (\cref{fig:rochull}).
+$10$, $2.73$, $0.34$ and $0.125$; Ripper and naive Bayes\index{naive Bayes} (NB) lie below it (\cref{fig:rochull}).
 \begin{itemize}
   \item With balanced classes, $C=1$ lies between 2.73 and 0.34, so C4.5 is optimal, with
         accuracy $0.5\cdot0.80+0.5\cdot(1-0.16)=0.82$.
@@ -2233,7 +2233,7 @@ $\{$sports, economy$\}$ and that the predicted ones are $\{$sports, politics$\}$
 \subsection{Hierarchical classification}
 
 In \emph{hierarchical} classification the classes are organised in a tree or a directed acyclic
-graph (animal $\to$ mammal $\to$ dog), and confusing two sibling classes is less serious than
+graph\index{causal graph} (animal $\to$ mammal $\to$ dog), and confusing two sibling classes is less serious than
 confusing two distant ones. \emph{Hierarchical precision\index{precision|textbf} and recall\index{recall|textbf}} \citep{silla2011survey}
 extend the sets of actual and predicted classes $C_i$ and $\hat C_i$ with all their ancestors
 (except the root) and compute
@@ -2268,7 +2268,7 @@ and $\mathrm{NDCG@3}=0.94$. These metrics are studied in depth with recommender 
 
 A point prediction does not say how much we can trust it. \emph{Conformal prediction\index{conformal prediction|textbf}}
 \citep{vovk2005algorithmic,angelopoulos2023conformal} is a framework for uncertainty
-quantification that turns any point predictor into one that outputs a \emph{set}: an interval
+quantification\index{quantification} that turns any point predictor into one that outputs a \emph{set}: an interval
 in regression, a set of labels in classification. These sets have a statistically valid
 coverage\index{coverage} guarantee,
 \begin{equation}
@@ -2370,7 +2370,7 @@ the unknown ones.
 
 Two metrics are standard. The \emph{AUROC for open set} measures how well a confidence score
 $S(x)$ separates known from unknown examples: known test examples are treated as positives,
-unknown ones as negatives, and the usual AUC is computed (1 means perfect separation). It is
+unknown ones as negatives, and the usual AUC is computed (1 means perfect separation\index{fairness!separation}). It is
 often complemented by the false positive rate\index{false positive rate} (FPR) at 95\% true positive rate\index{true positive rate} (TPR), the fraction of unknowns accepted when 95\% of the
 knowns are accepted. The \emph{open-set classification rate} (OSCR\index{open set classification rate (OSCR)}) curve
 \citep{dhamija2018reducing} combines the two goals: for each threshold $\tau$ it plots the
@@ -2657,7 +2657,7 @@ biases of the underlying models.
 
 \subsection{Language models and LLMs}
 
-A language model\index{language model} is evaluated intrinsically by its \emph{perplexity} on held-out text,
+A language model is evaluated intrinsically by its \emph{perplexity} on held-out text,
 \begin{equation}
   \mathrm{PPL}=\exp\Bigl(-\frac1N\sum_{t=1}^{N}\log p(w_t\mid w_{<t})\Bigr),
 \end{equation}
@@ -2709,7 +2709,7 @@ fraction of the statements of the answer that can be inferred from the retrieved
 \subsection{Evaluating language model systems and agents}\label{sec:llmsystems}
 
 The metrics of this section score the outputs of a model. An application built on a language
-model\index{large language model (LLM)} is a system: a model with a version, a prompt (the instructions and context sent to the model), decoding parameters, often retrieval and
+model is a system: a model with a version, a prompt\index{prompt} (the instructions and context sent to the model), decoding parameters, often retrieval and
 tools, and a price per call. Evaluating it raises four questions that the metrics alone do not
 answer.
 
@@ -2750,7 +2750,7 @@ systems = {"A (small model)": (0.8, 0.002),         # ability, cost per question
 results = {}
 for name, (ability, cost) in systems.items():
     p = 1 / (1 + np.exp(-(ability - difficulty)))   # chance of a right answer (IRT)
-    results[name] = rng.random((runs, n_items)) < p  # five runs with sampling: answers vary
+    results[name] = rng.random((runs, n_items)) < p  # five runs: the answers vary
     acc = results[name].mean(axis=1)
     print(f"{name}: accuracy in each run {np.round(acc, 3)}")
     print(f"  mean {acc.mean():.3f}, cost per right answer {cost / acc.mean():.4f} EUR")
@@ -2777,7 +2777,7 @@ single-run comparisons: B - A between -0.020 and +0.088
 The accuracy of system A varies from 0.595 to 0.672 between runs, so a single run of each system
 can rank them either way: the differences between single runs of B and A range from $-0.020$ to
 $+0.088$. Averaged over the five runs, B is better by 0.040. Treating the two sets of answers as
-independent samples gives a 95\% interval\index{confidence interval} of $\pm0.043$, which includes zero; pairing the
+independent samples gives a 95\% interval of $\pm0.043$, which includes zero; pairing the
 answers by question removes the variation in difficulty and gives $\pm0.025$, which does not. B
 costs five times as much per question, so its cost per right answer is 0.0149~EUR against
 0.0032~EUR, and each additional right answer of B costs $(0.010-0.002)/0.040=0.20$~EUR. Whether
@@ -3145,7 +3145,7 @@ Comparing learning algorithms requires evaluating them on many data sets.
 \citet{demsar2006statistical} recommends non-parametric tests, which do not assume normality and
 are not dominated by a few data sets:
 \begin{itemize}
-  \item for two algorithms, the \emph{Wilcoxon\index{Wilcoxon signed-rank test|textbf} signed-rank test} \citep{wilcoxon1945individual}
+  \item for two algorithms, the \emph{Wilcoxon\index{Mann--Whitney--Wilcoxon statistic|textbf}\index{Wilcoxon signed-rank test|textbf} signed-rank test} \citep{wilcoxon1945individual}
         on the differences of performance across data sets;
   \item for $k$ algorithms on $N$ data sets, the \emph{Friedman test\index{Friedman test|textbf}} \citep{friedman1937use}:
         the algorithms are ranked on each data set (1 for the best), $R_j$ is the average rank
@@ -3203,7 +3203,7 @@ deployment context.
 
 \begin{further}
 The metrics of this unit average over the test examples as if they were equally hard. Some
-examples are solved by almost every model, others by almost none, and some are mislabelled.
+examples are solved by almost every model, others by almost none, and some are mislabelled\index{label noise}.
 \emph{Item response theory\index{item response theory|textbf}} (IRT), developed in psychometrics to grade
 students with tests, models the probability that model $j$ gets example $i$ right from an
 \emph{ability} $\theta_j$ of the model and a \emph{difficulty} $b_i$ and a \emph{discrimination} $a_i$ of

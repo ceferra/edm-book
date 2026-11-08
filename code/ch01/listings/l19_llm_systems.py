@@ -8,7 +8,7 @@ systems = {"A (small model)": (0.8, 0.002),         # ability, cost per question
 results = {}
 for name, (ability, cost) in systems.items():
     p = 1 / (1 + np.exp(-(ability - difficulty)))   # chance of a right answer (IRT)
-    results[name] = rng.random((runs, n_items)) < p  # five runs with sampling: answers vary
+    results[name] = rng.random((runs, n_items)) < p  # five runs: the answers vary
     acc = results[name].mean(axis=1)
     print(f"{name}: accuracy in each run {np.round(acc, 3)}")
     print(f"  mean {acc.mean():.3f}, cost per right answer {cost / acc.mean():.4f} EUR")

@@ -21,7 +21,7 @@ predictions with the same confidence. This unit is about noticing these changes 
 monitor in a deployed model. It then explains \emph{dataset shift\index{dataset shift|textbf}}, the changes in the data
 that make models stale, and how to detect them with and without labels. Next come the ways of adapting a model to
 shift: retraining strategies, the correction of covariate and label shift\index{label shift}, domain adaptation\index{domain adaptation}
-and transfer learning\index{transfer learning}. The unit also shows how to monitor applications built on large language models, and how to replace a model safely with shadow deployments\index{shadow mode}, A/B tests\index{A/B testing} and
+and transfer learning\index{transfer learning}. The unit also shows how to monitor applications built on large language models\index{large language model (LLM)}\index{language model}, and how to replace a model safely with shadow deployments\index{shadow mode}, A/B tests\index{A/B testing} and
 multi-armed bandits\index{multi-armed bandit} \citep{ameisen2020building,huyen2022designing}. The sections follow the life of a deployed model: what to watch, how to notice a change, how to find its cause and respond to it, and how to put a new version into production without harming its users.
 
 \begin{objectives}
@@ -32,13 +32,13 @@ After studying this unit you should be able to:
   \item define and recognise the types of dataset shift (covariate shift\index{covariate shift}, prior or label shift, and
         concept drift\index{concept drift}) and their temporal patterns;
   \item detect data drift\index{data drift} without labels (statistical tests, the population stability index\index{population stability index (PSI)} and domain
-        classifiers\index{domain classifier}) and concept drift with labels (the drift detection method, DDM\index{drift detection method (DDM)}, and the Page--Hinkley test\index{Page--Hinkley test});
-\item diagnose the likely cause of a monitoring alarm, and choose a response;
+        classifiers\index{domain classifier}) and concept drift with labels (the drift detection method\index{drift detection method (DDM)}, DDM, and the Page--Hinkley\index{Page--Hinkley test} test);
+\item diagnose the likely cause of a monitoring\index{monitoring} alarm, and choose a response;
   \item choose a retraining strategy, correct label shift and estimate class proportions, and correct
         covariate shift with importance weights\index{importance weighting};
   \item explain domain adaptation and transfer learning, and apply simple methods such as correlation alignment (CORAL\index{CORAL}),
         feature augmentation and regularisation towards a source model;
-  \item monitor applications built on large language models\index{large language model (LLM)}\index{language model}: costs, quality without labels, drift of the
+  \item monitor applications built on large language models: costs, quality without labels, drift of the
         questions and changes of the model;
 \item deploy updates safely with shadow mode, canaries and A/B tests, size an experiment, avoid the
 peeking\index{peeking} trap, and use multi-armed bandits.
@@ -49,14 +49,14 @@ peeking\index{peeking} trap, and use multi-armed bandits.
 \section{Why monitor models?}\label{sec:whymonitor}
 
 Once a model is deployed, its performance must be monitored like that of any other software system;
-but a model can fail in ways that ordinary software cannot. When monitoring\index{monitoring} a model we must answer three
+but a model can fail in ways that ordinary software cannot. When monitoring a model we must answer three
 questions: why we monitor it, how, and what actions the monitoring should drive. There are four main
 reasons:
 \begin{itemize}
   \item \emph{to keep the model fresh}: most models need to be updated regularly to maintain their
         performance, and monitoring tells us when a model is no longer fresh and must be retrained. If we
         estimate the accuracy\index{accuracy} of a recommender\index{recommender system} from the implicit feedback of its users (whether they
-        click on the recommendations), we can retrain it as soon as that accuracy drops below a threshold;
+        click on the recommendations), we can retrain it as soon as that accuracy drops below a threshold\index{threshold};
         and before redeploying, we must check that the new model is better (\cref{sec:safedeploy});
   \item \emph{to detect abuse}: in fraud detection or abuse prevention, some users actively try to defeat
         the model (\cref{sec:adversarial}), and monitoring is the way to notice attacks and estimate their
@@ -119,9 +119,9 @@ from observing them: once a transaction is blocked as fraudulent, we never learn
 Having access only to a skewed sample of the true distribution makes it impossible to evaluate the model
 correctly, and it biases the data for the next model too (a feedback loop, \cref{sec:fairness}).
 
-\emph{Counterfactual evaluation\index{counterfactual hold-out|textbf}} estimates what would have happened had the model not acted
+\emph{Counterfactual\index{counterfactual|textbf} evaluation\index{counterfactual hold-out|textbf}} estimates what would have happened had the model not acted
 \citep{bottou2013counterfactual}. The simplest way is to withhold the model's action on a small random
-subset of the cases, a \emph{hold-out\index{counterfactual hold-out}}: the outcomes of those cases are observed whatever the model
+subset of the cases, a \emph{hold-out\index{hold-out|textbf}}: the outcomes of those cases are observed whatever the model
 predicted, so they form an unbiased sample on which precision\index{precision} and recall\index{recall} can be estimated.
 \Cref{lst:holdout} simulates a fraud model that blocks transactions. Among the transactions we can observe,
 the fraud rate is 2.6\%, about half of the true 4.6\%, because the model removed many frauds from view. The
@@ -185,7 +185,7 @@ The identifier joins the outcome to the prediction when it arrives; the versions
 metrics to a deployment; and the inputs as received by the model, after the serving pipeline, reveal a
 training--serving skew (\cref{sec:safedeploy}). If the model acts on its predictions, the record must also
 say which action was taken and, when the action was randomised, with which probability, which the hold-out
-of \cref{lst:holdout} and the off-policy evaluation of \cref{lst:ips} require. Logs of personal data are
+of \cref{lst:holdout} and the off-policy\index{off-policy evaluation} evaluation of \cref{lst:ips} require. Logs of personal data are
 subject to the same rules as the training data, so they need a retention period and access control
 (\cref{sec:aiact}).
 
@@ -387,7 +387,7 @@ confusion matrix\index{confusion matrix} measured on validation data\index{valid
 Drift monitors show that the inputs changed, and an assessor\index{assessor} (\cref{sec:assessors})
 estimates what the change costs: averaged over a window of new inputs, its predictions estimate the
 accuracy of the model on that window without a single label. In \cref{lst:assessor}, after a shift
-that makes hard inputs more frequent, the accuracy measured on the test data (0.749) and the mean
+that makes hard inputs more frequent, the accuracy measured on the test data\index{test set} (0.749) and the mean
 confidence of the model (0.731) both overestimate the true accuracy (0.677), and the assessor
 estimates 0.692. The estimate holds under covariate shift\index{covariate shift}, when the probability
 that the model is right at each input stays the same; under concept drift\index{concept drift} the
@@ -570,7 +570,7 @@ world has probably changed, and the type of shift (\cref{sec:shift}) decides the
 when they arrive, show whether the performance has fallen, and the inputs and the predicted classes show
 which part of the distribution moved. \Cref{tab:alarms} summarises common signals, their likely causes
 and the responses of this section. Several causes often act together, and an evaluation with outcomes,
-on a hold-out\index{counterfactual hold-out} if the model hides them, is the way to know whether the model
+on a hold-out\index{hold-out} if the model hides them, is the way to know whether the model
 has become worse.
 
 \begin{table}[htbp]
@@ -1030,7 +1030,7 @@ When the current week has the same mix of topics as the reference, the domain cl
 the bank launches an instant payment service and 15\% of the questions ask about it, the AUC rises to 0.573. The value is modest, because
 85\% of the questions are as usual, but it is enough to raise an alert. The words on which the classifier relies also say what changed:
 \emph{bizum}, \emph{send} and \emph{with}, from questions such as ``how do I send money with Bizum''. The knowledge base of the
-assistant must be extended, and its test set\index{test set} (\cref{sec:llmapps}) with it, before users start receiving invented answers.
+assistant must be extended, and its test set (\cref{sec:llmapps}) with it, before users start receiving invented answers.
 
 \paragraph{Changes in the model} When a provider updates a model behind an API, the behaviour of the application can change from
 one day to the next. \citet{chen2024chatgpt} found that the behaviour of two widely used models on several tasks, from solving mathematical
@@ -1085,7 +1085,7 @@ model is deployed, and the world may have drifted (\cref{sec:shift}). The featur
 from those used in training, because they are computed by different code, from different sources, or with different
 delays. This \emph{training--serving skew} is one of the most common causes of failures in production. An offline evaluation that uses only the training pipeline does not notice it, unless the features produced by
 the serving path are tested against those of training \citep{breck2019data}. The model's own actions change the data it will see next (a feedback loop).
-And users react to a new model in ways that no historical data set can show: a recommender\index{recommender system} that is more accurate
+And users react to a new model in ways that no historical data set can show: a recommender that is more accurate
 offline may be less engaging, because it recommends what users would have found anyway.
 
 \subsection{Shadow mode}
@@ -1100,7 +1100,7 @@ engineers check, on real production traffic and without changing the user experi
         scores);
   \item and, once outcomes arrive, how accurate the new model is on the cases whose representative labels
         are available: if the current policy decides which outcomes are observed (only granted loans are
-        repaid or not), the evaluation inherits that selection, and a hold-out\index{counterfactual hold-out} or a counterfactual design is
+        repaid or not), the evaluation inherits that selection, and a hold-out\index{hold-out} or a counterfactual design is
         needed.
 \end{itemize}
 The cost is double computation, and care is needed with side effects: the shadow model must never write to shared
@@ -1229,7 +1229,7 @@ a properly designed experiment.
 
 The principle of an \emph{A/B test\index{A/B testing|textbf}}, or online controlled experiment, is simple: expose a random sample of the users to the new
 model (the treatment, B) and the rest to the current one (the control, A); after enough time, compare a metric between the groups
-and keep the better model \citep{kohavi2009controlled,kohavi2020trustworthy}. Randomisation\index{randomisation!in experiments} is what makes the comparison causal
+and keep the better model \citep{kohavi2009controlled,kohavi2020trustworthy}. Randomisation\index{randomisation}\index{randomisation!in experiments} is what makes the comparison causal
 (\cref{sec:causality}): because users are assigned to groups by chance, the groups differ, on average, only in the model they
 receive. \Cref{fig:abanatomy} shows the parts of an experimentation system.
 
@@ -1255,7 +1255,7 @@ receive. \Cref{fig:abanatomy} shows the parts of an experimentation system.
 An experiment starts with a hypothesis (``the new ranking model increases the purchases per user'') and with decisions that must
 be taken before it starts:
 \begin{itemize}
-  \item the \emph{randomisation\index{randomisation!in experiments|textbf} unit}: usually the user, so that each person has a consistent experience; sessions or requests
+  \item the \emph{randomisation\index{randomisation|textbf}\index{randomisation!in experiments|textbf} unit}: usually the user, so that each person has a consistent experience; sessions or requests
         give more units but break consistency, and in marketplaces or social networks, where users influence each other,
         groups of connected users or periods of time may have to be randomised instead;
   \item the \emph{metrics}: one main metric, or overall evaluation criterion, that defines success and that the change is expected
@@ -1267,8 +1267,8 @@ be taken before it starts:
         occasional ones, the experiment would be inconclusive), which randomisation achieves; the treatment group must be large
         enough to detect the effect, but as small as possible to limit the exposure to a potentially worse model;
   \item the \emph{duration}: long enough to reach the planned sample size\index{sample size}, in whole weeks to average out weekly cycles, and long
-        enough for \emph{novelty\index{novelty effect|textbf}} and \emph{primacy} effects (users reacting to the change itself) to fade; too long, and users may
-        be lost. Effects that take months to appear, such as changes in retention, are measured with long-term hold-out\index{counterfactual hold-out} groups
+        enough for \emph{novelty\index{novelty|textbf}\index{novelty effect|textbf}} and \emph{primacy} effects (users reacting to the change itself) to fade; too long, and users may
+        be lost. Effects that take months to appear, such as changes in retention, are measured with long-term hold-out\index{hold-out} groups
         \citep{hohnhold2015focusing}.
 \end{itemize}
 
@@ -1531,8 +1531,8 @@ look at which its path crosses the boundary.}
 
 Some teams prefer to report the results of an experiment as probabilities about the variants. With a uniform prior,
 the click-through rate of each variant has a Beta posterior, $\mathrm{Beta}(1+\text{clicks},\,1+\text{non-clicks})$. Drawing from
-both posteriors, we can estimate three quantities: the probability that B is better than A, a credible interval for the relative lift, and the \emph{expected
-loss} of choosing each variant, that is, the clicks per user we would lose if it were in fact the worse one. A common decision rule is to choose a
+both posteriors, we can estimate three quantities: the probability that B is better than A, a credible interval for the relative lift\index{lift}, and the \emph{expected
+loss} of choosing each variant, that is, the clicks per user we would lose if it were in fact the worse one. A common decision rule\index{decision rules} is to choose a
 variant once its expected loss is below a small threshold.
 
 \begin{pylisting}[label={lst:bayesab}]{Posterior probability, lift and expected loss of an A/B test}
@@ -1570,7 +1570,7 @@ prior and model, but a decision rule applied at every look does not inherit a gi
 
 \subsection{Evaluating new models offline from logs}
 
-Every A/B test\index{A/B testing} costs traffic and time, so teams try to discard bad candidates before testing them online. For ranking models,
+Every A/B test\index{A/B testing} costs\index{test costs} traffic and time, so teams try to discard bad candidates before testing them online. For ranking models,
 \emph{interleaving} mixes the results of two rankers in a single list and counts which one's results the user clicks, which detects
 differences with far fewer users than an A/B test \citep{chapelle2012large}. More generally, \emph{off-policy\index{off-policy evaluation|textbf} evaluation} estimates how a
 new decision policy would have performed from the logs of the current one. This requires \emph{support}:
@@ -1876,7 +1876,7 @@ optimisation services for organisations without a dedicated team.
 
 \begin{itemize}
   \item Deployed models must be monitored at every level: service, input data, predictions, performance and business metrics.
-        When the model's actions hide the ground truth, a random hold-out\index{counterfactual hold-out} gives unbiased estimates at a known cost.
+        When the model's actions hide the ground truth, a random hold-out\index{hold-out} gives unbiased estimates at a known cost.
   \item Dataset shift\index{dataset shift} comes in three main types: covariate shift\index{covariate shift} ($p(x)$ changes, $p(y\mid x)$ does not), label shift\index{label shift} ($p(y)$
         changes, $p(x\mid y)$ does not) and concept drift\index{concept drift} (the predictive relationship changes otherwise); which one is plausible depends on the causal direction of the problem. Drift can be sudden,
         gradual, incremental or recurring\index{concept drift!recurring}.
@@ -1894,7 +1894,7 @@ and action makes this diagnosis possible.
         training--serving skew or the reaction of users; shadow mode catches the first, and canaries catch large problems with
         little exposure.
   \item A/B tests need a design fixed in advance (unit, metrics, sample size\index{sample size}, duration), a check of the sample ratio, and an analysis
-        whose looks follow a valid sequential rule. CUPED\index{CUPED} reduces the variance with pre-experiment data, sequential designs allow early stopping\index{sequential testing} without
+        whose looks follow a valid sequential rule. CUPED\index{CUPED} reduces the variance with pre-experiment data, sequential designs allow early stopping\index{early stopping} without
         inflating the errors, and off-policy\index{off-policy evaluation} evaluation estimates new policies from randomised logs.
   \item Multi-armed bandits\index{multi-armed bandit} trade learning and earning continuously. Thompson sampling\index{multi-armed bandit!Thompson sampling} is a robust default, discounting copes with
         changing rewards, and contextual bandits\index{multi-armed bandit!contextual} learn which variant suits each user.
@@ -1921,7 +1921,7 @@ systems.
   \item\label{exr6:plan} Propose one metric for each level of \cref{fig:monitorlayers} for a model that recommends products in an
         online shop, and say how quickly each can be observed.
   \item\label{exr6:holdout} A fraud model with a recall of 0.48 processes 200,000 transactions a month, 4.6\% of which are fraudulent.
-        How many frauds does a random hold-out\index{counterfactual hold-out} of 2\% let through each month? And one of 1\%? What do we lose with the smaller hold-out?
+        How many frauds does a random hold-out\index{hold-out} of 2\% let through each month? And one of 1\%? What do we lose with the smaller hold-out?
   \item\label{exr6:psi} A binary feature took the value 1 in 50\% of the reference data and takes it in 60\% of the current data.
         Compute the PSI\index{population stability index (PSI)}.
   \item\label{exr6:types} Classify each change as covariate shift\index{covariate shift}, label shift\index{label shift} or concept drift\index{concept drift}: (a) a diagnostic model trained when
@@ -1960,8 +1960,8 @@ systems.
         the service of \cref{lst:querydrift}?
 \item\label{exr6:diagnose} A credit model has been in production for a year. What would you check first,
 and what would you do, in each case? (a) The share of applicants with a missing income rises from 2\% to
-30\% overnight. (b) The PSI\index{population stability index (PSI)} of the age of the applicants is 0.3 after a
-marketing campaign aimed at students, and the default rate of the approved loans has not changed.
+30\% overnight. (b) The PSI of the age of the applicants is 0.3 after a
+marketing campaign\index{mailing campaign} aimed at students, and the default rate of the approved loans has not changed.
 (c) The predicted share of defaults is stable, but the observed default rate of the loans granted six
 months ago has doubled.
 \end{enumerate}
@@ -1973,7 +1973,7 @@ months ago has doubled.
   \item[\ref{exr6:plan}] For example: latency p99 of the recommendation service (seconds); share of requests with missing user history
         and the PSI\index{population stability index (PSI)} of the main features (minutes to hours); distribution of the recommended categories (hours); precision of the
         recommendations against later purchases (days); click-through and conversion rates (hours to days).
-  \item[\ref{exr6:holdout}] $200{,}000\cdot0.02\cdot0.046\cdot0.48\approx88$ frauds a month; with 1\%, about 44. The smaller hold-out\index{counterfactual hold-out} halves
+  \item[\ref{exr6:holdout}] $200{,}000\cdot0.02\cdot0.046\cdot0.48\approx88$ frauds a month; with 1\%, about 44. The smaller hold-out\index{hold-out} halves
         the cost but the estimates become noisier: their confidence intervals\index{confidence interval} widen by a factor of about $\sqrt2$.
   \item[\ref{exr6:psi}] $(0.6-0.5)\ln\frac{0.6}{0.5}+(0.4-0.5)\ln\frac{0.4}{0.5}=0.0182+0.0223=0.041$: below the conventional alert threshold of 0.1.
         This is a heuristic reading of the index, not a test: whether a change of ten points matters depends
@@ -1999,7 +1999,7 @@ months ago has doubled.
   \item[\ref{exr6:cuped}] The variance is multiplied by $1-0.6^2=0.64$, so each group needs about $0.64\cdot31{,}234\approx20{,}000$ users instead
         of 31,234.
   \item[\ref{exr6:obf}] Early on there are few data, so only an overwhelming effect should stop the test; most of the error budget is kept for
-        the final look, which is almost the ordinary test. Prefer them when the final power matters and early stopping\index{sequential testing} is a bonus for very
+        the final look, which is almost the ordinary test. Prefer them when the final power matters and early stopping\index{early stopping} is a bonus for very
         large effects; Pocock\index{sequential testing!Pocock}'s suit situations where stopping early, for instance for harm, is the priority.
   \item[\ref{exr6:ips}] $(1/0.5+0/0.25+1/0.25)/10=(2+0+4)/10=0.6$. With so few events, each rare match is multiplied by a large inverse propensity\index{inverse propensity scoring},
         so the estimate has a huge variance; real off-policy\index{off-policy evaluation} evaluation needs thousands of events and propensities that are not too small. An IPS
@@ -2024,9 +2024,9 @@ months ago has doubled.
         classifier, in its words, and in a rising abstention rate.
 \item[\ref{exr6:diagnose}] (a) A problem in the pipeline or in the source of the income: check the
 releases of the systems that provide it and the data contract of the feature, fix the pipeline, and do
-not retrain on the new data. (b) Covariate shift\index{covariate shift} towards young applicants, with no
+not retrain on the new data. (b) Covariate shift towards young applicants, with no
 visible loss of performance yet: watch the performance in that segment as the outcomes arrive, and
-reweight or retrain if the errors rise there. (c) Concept drift\index{concept drift}, or a change in the
+reweight or retrain if the errors rise there. (c) Concept drift, or a change in the
 economy that the inputs do not capture: retrain with recent labelled data and, until then, adjust the
 threshold to the new default rate.
 \end{description}

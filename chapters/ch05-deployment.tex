@@ -308,7 +308,7 @@ the complexity of the models that can be used.
 
 \paragraph{On the device} A model that runs on a laptop or a phone should be as small as possible, to
 run quickly and without draining the battery. There are several ways of shrinking it: using a simpler
-model, reducing the number of parameters or the \emph{precision} of the computations (quantisation\index{quantisation},
+model, reducing the number of parameters or the \emph{precision\index{precision|textbf}} of the computations (quantisation\index{quantisation},
 \citealp{jacob2018quantization}; pruning, \citealp{han2016deep}), reducing the number of features, or
 distilling a large model into a small one (\cref{sec:drawbacks}). Specialised runtimes, such as
 TensorFlow Lite or ONNX\index{ONNX} Runtime (\cref{sec:exchange}), execute the result efficiently. Most models
@@ -531,7 +531,7 @@ Federated learning adds complexity
 that are slow, offline or malicious, and limiting communication. And keeping the data on the device
 is not enough to guarantee privacy, since model updates can leak information about the training
 examples \citep{zhu2019deep}. Two techniques close that gap: secure aggregation, which lets the server see only the sum of the updates
-\citep{bonawitz2017practical}, and differential privacy, which adds calibrated noise
+\citep{bonawitz2017practical}, and differential privacy, which adds calibrated\index{calibration} noise
 \citep{abadi2016deep}.
 
 % =====================================================================
@@ -598,7 +598,7 @@ are:
 \end{itemize}
 The standard covers regression and generalised linear models, decision trees\index{decision tree}, rule sets, naive Bayes\index{naive Bayes},
 support vector machines, neural networks, $k$-nearest neighbours\index{k-nearest neighbours@$k$-nearest neighbours}, clustering\index{clustering}, association rules\index{association rules}, sequence
-and time series models, and ensembles\index{ensemble} of any of them through segmentation. PMML documents are produced by
+and time series models, and ensembles\index{ensemble} of any of them through segmentation\index{segmentation}. PMML documents are produced by
 converters for R, Python (sklearn2pmml), Spark, KNIME and commercial tools, and consumed by scoring
 engines such as JPMML \citep{jpmml}, by analytics platforms and by some databases.
 
@@ -945,7 +945,7 @@ test_shiny_app.py::test_output_follows_the_sliders PASSED                [100%]
 ============================== 3 passed in 1.65s ===============================
 \end{pyoutput}
 
-Such applications are well suited to demonstrations, internal tools and prototypes; products with many users need
+Such applications are well suited to demonstrations, internal tools and prototypes\index{prototypes and criticisms}; products with many users need
 the architecture of the rest of this unit.
 
 % =====================================================================
@@ -1790,7 +1790,7 @@ model and states its intended use and the uses it is not meant for, the data it 
 evaluated on, its performance with intervals, its performance for relevant groups of people, its
 known limitations and the plan to monitor it. \emph{Datasheets for datasets\index{datasheet|textbf}} \citep{gebru2021datasheets}
 do the same for the data: why they were collected, how, by whom, with which consent and with which
-known gaps. For a high-risk system, the AI Act\index{AI Act} turns this documentation into an obligation: the
+known gaps. For a high-risk\index{AI Act!high-risk systems} system, the AI Act\index{AI Act} turns this documentation into an obligation: the
 technical documentation of Article~11 and Annex~IV, and the instructions for use that providers
 must give to deployers under Article~13 (\cref{sec:aiact}).
 
@@ -1798,7 +1798,7 @@ A model card written by hand goes out of date at the next retraining. It is more
 generate it in the pipeline, from the same evaluation that decides whether the model is deployed,
 and to store it with the model in the registry or the package. \Cref{lst:modelcard} trains the
 monotone credit model of \cref{lst:knowledge} on the German credit\index{German credit data} data and writes its card:
-the evaluation with a bootstrap\index{bootstrap} interval, the decision rule with the costs of
+the evaluation with a bootstrap\index{bootstrap} interval, the decision rule\index{decision rules} with the costs of
 \cref{lst:firstlook}, results for applicants under and over 25, and a monitoring plan of the kind
 described in \cref{ch:monitoring}.
 
@@ -1874,7 +1874,7 @@ Monitoring: PSI of inputs and scores monthly; default rate of approved loans at 
 12 months; a random 5% of applications decided without the score (holdout).
 \end{pyoutput}
 
-The card shows what the overall AUC of 0.765 averages away. For the 63 test applicants under 25,
+The card shows what the overall AUC\index{area under the ROC curve (AUC)} of 0.765 averages away. For the 63 test applicants under 25,
 the AUC is 0.639 against 0.781 for the rest, 24\% are approved against 49\%, and 20\% of those
 approved turn out bad against 11\%. Whether this is unfair is the question of \cref{sec:fairness},
 and with only 63 young applicants in the test set these numbers are uncertain. The intended use,
@@ -1899,7 +1899,7 @@ data scientists worked on them at the same time. The team assembled its infrastr
         pipelines to make every experiment reproducible;
   \item \emph{experiment tracking\index{experiment tracking|textbf}}: an MLflow\index{MLflow} server with a shared database, so that every team member could
         browse and compare the results of the models for the different plants;
-  \item \emph{notebooks in pipelines}: the team liked to prototype in Jupyter notebooks, and used papermill to
+  \item \emph{notebooks in pipelines}: the team liked to prototype\index{prototypes and criticisms} in Jupyter notebooks, and used papermill to
         execute them from the command line as steps of the DVC pipelines;
   \item \emph{testing}: a suite of pytest tests, run by GitLab CI/CD\index{continuous integration} on every commit;
   \item \emph{serving and delivery}: the customer wanted a simple API\index{API}, so the models were served with MLflow,
@@ -1970,9 +1970,9 @@ Packaging and deployment & Docker, Kubernetes, Ansible\\
   \item Applications built on large language models\index{large language model (LLM)} are deployed as prompts\index{prompt}, retrieval and guardrails\index{guardrails} around a
         model that runs behind an API or on the organisation's hardware. Prompts must be managed as code; the retriever\index{retriever} can be
         measured with ranking metrics; outputs need tests; and prompt injection\index{prompt injection} needs specific defences.
-\item A model card states the intended use, data, performance with intervals and by group,
+\item A model card\index{model card} states the intended use, data, performance with intervals and by group,
 limitations and monitoring plan of a model; generated by the pipeline, it stays up to date with
-each retraining and supports the documentation that the AI Act requires.
+each retraining and supports the documentation that the AI Act\index{AI Act} requires.
 \end{itemize}
 
 \section*{Bibliographic notes}
@@ -2009,7 +2009,7 @@ datasheets for datasets\index{datasheet}.
   \item\label{exr5:privacy} Why is sending model updates instead of data not enough to guarantee privacy? Name two
         techniques that improve it.
   \item\label{exr5:format} Choose a format to move each model, and justify it: (a) a credit scoring model
-        that a regulator must audit and that runs in the bank's Java systems; (b) a gradient boosting\index{gradient boosting} model
+        that a regulator must audit and that runs in the bank's Java systems; (b) a gradient boosting model
         that must answer single requests in well under a millisecond; (c) an image classifier for Android
         phones and web browsers; (d) a model shared by two data scientists of the same team, who use the
         same environment.
@@ -2083,7 +2083,7 @@ completely, and which need a person?
         location, held fixed; the name of the street can encode the location, so changing it is not an
         irrelevant transformation.
   \item[\ref{exr5:gate}] (a) Yes: the difference is 0.006, twelve more correct predictions. (b) The answer depends on
-        the paired disagreements, not on the two accuracies. With 12 and 0, the exact McNemar\index{McNemar's test} test gives
+        the paired disagreements\index{diversity!disagreement}, not on the two accuracies. With 12 and 0, the exact McNemar\index{McNemar's test} test gives
         $p\approx0.0005$: evidence of a difference. With 112 and 100, $p\approx0.45$: no evidence. The standard error of
         one accuracy (about 0.008) is not that of the difference. And not rejecting equality does not show that
         the models are equivalent: a non-inferiority decision needs a margin fixed in advance.
