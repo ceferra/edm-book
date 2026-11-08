@@ -1,0 +1,6 @@
+                             AUC    risk falls with a longer loan
+scorecard alone              0.754    0.0%
+gradient boosting            0.771   11.5%
+  + scorecard as a feature   0.776   18.7%
+  + monotonic constraints    0.771    0.0%
+  + both                     0.776    0.0%

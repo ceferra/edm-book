@@ -1,0 +1,14 @@
+# Model card: credit risk score, version 1.0, trained 2026-10-29
+Model: gradient boosting, risk increasing with duration and instalment rate.
+Data: German credit, 1000 applicants, SHA-256 ec12a88b9fc1...; 600 train / 400 test.
+Intended use: support for credit analysts; the decision stays with a person.
+Not for: automatic rejection, other countries, other credit products.
+Decision rule: approve if P(bad) < 1/6 (a bad loan costs five times a lost good one).
+Test AUC: 0.765 (95% bootstrap interval 0.712 to 0.815).
+| group      |   n |   AUC | approved | bad among approved |
+| under 25   |  63 | 0.639 | 24% | 20% |
+| 25 or over | 337 | 0.781 | 49% | 11% |
+Limitations: one German bank, data published in 1994; small test set (400);
+outcomes known only for granted loans; the data include age, sex and marital status.
+Monitoring: PSI of inputs and scores monthly; default rate of approved loans at 6 and
+12 months; a random 5% of applications decided without the score (holdout).
