@@ -1,0 +1,72 @@
+% =====================================================================
+%  Software, data and legal status of this edition (back matter)
+% =====================================================================
+\chapter*{Software, data and legal status}\label{ch:status}
+\phantomsection
+\addcontentsline{toc}{chapter}{Software, data and legal status}
+\markboth{Software, data and legal status}{Software, data and legal status}
+
+Some of the content of this book will date faster than the rest: versions of software, online
+services and the law. This chapter gathers it in one place, as it stood when this edition was
+prepared (October 2026), so that the next edition, or a reader, can check it in a single list.
+
+\section*{Software}
+
+\begin{sloppypar}
+Every listing was run with Python 3.12 and the packages of \cref{tab:versions}, and the outputs printed in the book are those of that run. The versions are pinned in the file
+\code{code/requirements.txt}. To
+reproduce the outputs, create a virtual environment with Python 3.12 and install the packages with
+\begin{center}\code{pip install -r code/requirements.txt}\end{center} Other versions usually work, but numbers can change in
+the last digits and some default parameters may differ.
+\end{sloppypar}
+
+\begin{table}[htbp]
+\centering\small
+\caption{Versions of the Python packages used to run the listings.}\label{tab:versions}
+\begin{tabular}{@{}lll@{}}
+\toprule
+Package & Version & Used in\\
+\midrule
+numpy, scipy, pandas & 2.4.4, 1.17.1, 3.0.2 & all units\\
+scikit-learn & 1.8.0 & all units\\
+imbalanced-learn, matplotlib, joblib & 0.14.2, 3.10.8, 1.5.3 & all units\\
+Flask, PyYAML & 3.1.3, 6.0.3 & Unit~5\\
+pytest, hypothesis & 9.1.1, 6.169.0 & Unit~5\\
+onnx, onnxruntime, skl2onnx & 1.23.2, 1.24.4, 1.20.0 & Unit~5\\
+sklearn2pmml & 0.133.1 & Unit~5 (needs Java 17 or later)\\
+shiny, starlette, uvicorn & 1.8.0, 1.7.0, 0.54.0 & Units~5 and~7\\
+\bottomrule
+\end{tabular}
+\end{table}
+
+Some examples need software outside Python: Java 17 or later for PMML (\cref{sec:exchange}), a
+container engine such as Docker for packaging (\cref{sec:packaging}), and Git with a continuous
+integration service, such as GitLab CI/CD, for the pipelines of \cref{sec:infrastructure}.
+
+\section*{Data}
+
+The German credit\index{German credit data} data are downloaded from a mirror pinned to a fixed commit,
+and the listings check the SHA-256 hash of the file (\cref{lst:firstlook}). If the mirror disappears,
+the same data are available from the UCI Machine Learning Repository \citep{hofmann1994statlog},
+in a different file format. Most other examples generate synthetic data with fixed random seeds, and
+the listings that download other data say where they come from in their code.
+
+\section*{Services and models}
+
+Online services change more often than libraries. Posit plans to move its older hosting service,
+shinyapps.io, to Connect Cloud during 2027 (\cref{sec:shinyapps}), so the options for sharing an
+application should be checked against the current documentation. Applications built on language
+models depend on versions that providers update or retire (\cref{sec:llmmonitor}), and any result
+obtained with a provider's model holds only for the version used, which must be recorded
+(\cref{sec:llmsystems}).
+
+\section*{The AI Act}
+
+\Cref{sec:aiact} describes the AI Act\index{AI Act} as amended by the Digital Omnibus on AI
+(Regulation (EU) 2026/1744), as checked on 12 October 2026. The dates that matter most for the uses
+discussed in this book are these: the prohibitions and the duty to support AI literacy apply since
+2 February 2025, and the obligations for general-purpose models since 2 August 2025; the obligations
+for the high-risk systems of Annex~III, such as credit scoring, apply from 2 December 2027, and those
+for high-risk systems embedded in regulated products from 2 August 2028. The official text, in
+EUR-Lex, and the guidance of the national authorities, such as the Spanish AESIA, should be checked
+for each new edition.

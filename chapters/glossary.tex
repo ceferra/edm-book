@@ -1,0 +1,72 @@
+% =====================================================================
+%  Terms with more than one meaning (back matter)
+% =====================================================================
+\chapter*{Terms with more than one meaning}\label{ch:glossary}
+\phantomsection
+\addcontentsline{toc}{chapter}{Terms with more than one meaning}
+\markboth{Terms with more than one meaning}{Terms with more than one meaning}
+
+Several words are used in this book with more than one meaning, because different fields chose the
+same word for different ideas. The list gives the meanings and the sections where each one is used.
+
+\begin{description}
+\item[Bias] (1) The systematic error of a model or an estimator, as in the bias--variance
+decomposition (\cref{sec:biasvariance}). (2) The assumptions that a learning algorithm makes in order
+to generalise, its inductive bias (\cref{sec:biasvariance}), or the language in which its models are
+written, its language bias (Unit~4). (3) A systematic disadvantage for a group of people
+(\cref{sec:fairness}).
+\item[Calibration] (1) Agreement between predicted probabilities and observed frequencies
+(\cref{sec:calibration}). (2) A \emph{calibration set}: held-out data used to fit a calibrator or the
+threshold of conformal prediction (\cref{sec:calibration,sec:other}).
+\item[Confidence] (1) The probability that a classifier gives to its predicted class
+(\cref{sec:cautious}). (2) Of an association rule: the fraction of the examples that satisfy its
+antecedent and also satisfy its consequent (\cref{sec:unsupervised}). (3) The level of a confidence
+interval (\cref{sec:stats}).
+\item[Counterfactual] (1) In causal inference: what would have happened under a different action
+(\cref{sec:causality}). (2) A counterfactual explanation: the smallest change of the inputs that
+changes the prediction (\cref{sec:examplebased}). (3) Counterfactual evaluation: measuring what a
+deployed model changes, with a hold-out kept away from it (\cref{lst:holdout}) or with logged
+decisions (\cref{lst:ips}).
+\item[Coverage] (1) Of a rule: the fraction of the examples it applies to (\cref{sec:intmodels}).
+(2) Of prediction sets: the fraction that contain the true label (\cref{sec:other}). (3) Of a cautious
+classifier: the fraction of the examples on which it predicts (\cref{sec:cautious}). (4) Of a
+recommender: the fraction of the catalogue it recommends (\cref{sec:receval}).
+\item[Diversity] (1) Of an ensemble: how differently its members err (\cref{sec:crowds}). (2) Of a
+list of recommendations: how different its items are (\cref{sec:receval}).
+\item[Fidelity] (1) Of a surrogate model or an explanation: how well it reproduces the predictions
+of the model it explains (\cref{sec:agnostic,sec:drawbacks}). (2) In multi-fidelity optimisation:
+how closely a cheaper, approximate evaluation of a configuration follows the full one (Unit~4).
+\item[Fitness] (1) In genetic programming: the score that decides which programs survive
+(\cref{sec:gp}). (2) In process mining: how much of the observed behaviour a process model can replay
+(\cref{sec:procmining}).
+\item[Hold-out] (1) A test set kept apart from training (\cref{sec:protocols}). (2) A counterfactual
+hold-out: cases or users kept away from a deployed model, so that its effect can be measured
+(\cref{lst:holdout}).
+\item[Lift] (1) In gains and lift charts: how many more positives a model finds than random
+selection (\cref{sec:roc}). (2) Of an association rule: its confidence divided by the frequency of its
+consequent (\cref{sec:unsupervised}). (3) In A/B testing: the relative improvement of a variant over
+the control (\cref{sec:abtesting}).
+\item[Metalearning] (1) In combinations of models: learning how to fuse the predictions of the base
+models, as in stacking (\cref{sec:combining}). (2) Learning from previous experiments which algorithm or
+configuration to use for a new problem (\cref{sec:metalearning}).
+\item[Novelty] (1) Of a recommendation: how little known the recommended item is
+(\cref{sec:receval}). (2) The novelty effect in experiments: users react to a change because it is new
+(\cref{sec:abtesting}). (3) Novelty detection: recognising inputs of classes not seen in training
+(\cref{sec:other}).
+\item[Precision] (1) The fraction of positive predictions that are right (\cref{sec:crisp}). (2) The
+number of bits used to store numbers, which quantisation reduces (\cref{sec:deployoptions}).
+\item[Randomisation] (1) In ensembles: random choices while building the members, to make them
+diverse (\cref{sec:ensembles}). (2) In experiments: random assignment of users to variants, which
+makes the comparison causal (\cref{sec:abtesting}).
+\item[Regret] (1) In metalearning: the performance lost by choosing an algorithm other than the best
+one (\cref{sec:metalearning}). (2) In bandits: the reward lost over time by not always playing the
+best arm (\cref{sec:bandits}).
+\item[Support] (1) Of an association rule: the fraction of the transactions that contain all its
+items (\cref{sec:unsupervised}). (2) Of a distribution: the region where it has data; importance
+weighting fails where the training data have no support (\cref{sec:adapt}).
+\item[Threshold] (1) The decision threshold on a score (\cref{sec:roc,sec:costs}). (2) The level at
+which a monitor raises an alert (\cref{sec:detectshift}).
+\item[Validation] (1) A validation set, used to select models and hyperparameters
+(\cref{sec:protocols}). (2) Data validation: tests that the data meet their contract
+(\cref{sec:infrastructure}).
+\end{description}

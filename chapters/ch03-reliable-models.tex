@@ -8,11 +8,11 @@ In January 2021, the government of the Netherlands resigned over a scandal in wh
 wrongly accused thousands of families of defrauding the system of childcare benefits, demanding that they repay
 large sums and pushing many of them into debt. Among the tools that selected applications for scrutiny was a
 risk-classification model that, among other indicators, took into account whether the applicant had Dutch
-nationality \citep{amnesty2021xenophobic}. The model may well have been accurate by some measure; it was neither
-fair, nor understandable to the people it judged, nor subject to effective human oversight.
+nationality \citep{amnesty2021xenophobic}. The model may have been accurate by some measure, but it was not
+fair, the people it judged could not understand it, and it was not subject to effective human oversight.
 
 A model can be accurate and still be unacceptable. It may treat some groups of people worse
-than others, rely on spurious correlations that will not hold tomorrow, be impossible to
+than others, rely on spurious correlations that will not hold in the future, be impossible to
 understand or audit, or be easy to fool by someone who wants it to fail. This unit studies four
 aspects of the \emph{reliability} of models that go beyond the metrics of \cref{ch:evaluation}:
 \emph{fairness\index{fairness|textbf}} (are decisions made the right way and for the right reasons?), \emph{causality\index{causality|textbf}}
@@ -35,7 +35,7 @@ After studying this unit you should be able to:
         counterfactuals\index{counterfactual};
   \item explain why interpretability matters, classify interpretability methods, and interpret
         linear models, logistic regression\index{logistic regression}, trees and rules;
-  \item apply model-agnostic methods (partial dependence\index{partial dependence plot}, ICE\index{individual conditional expectation}, interaction strength,
+  \item apply model-agnostic methods (partial dependence\index{partial dependence plot}, individual conditional expectation or ICE\index{individual conditional expectation}, interaction strength,
         permutation importance\index{feature importance!permutation}, surrogates\index{global surrogate}, LIME\index{LIME} and Shapley\index{Shapley values} values) and example-based
         explanations (counterfactuals, prototypes\index{prototypes and criticisms} and criticisms, influential instances\index{influential instance}),
         knowing their limitations;
@@ -58,9 +58,9 @@ induction is only as reliable as its examples: they must be sufficient, diverse 
 annotated. If the examples reflect historical prejudices, a model learned from them will
 reproduce those prejudices, often in a way that is harder to see.
 
-Disparities do not require bad intentions. In 2016, an analysis of a same-day delivery service
-of a large online retailer found that, in several US cities, the neighbourhoods selected for the
-service were disproportionately white \citep{ingold2016amazon}. We do not know how that system
+Disparities do not require bad intentions. In 2016, \citet{ingold2016amazon} analysed a same-day delivery service
+of a large online retailer and found that, in several US cities, the neighbourhoods selected for the
+service were disproportionately white. We do not know how that system
 works, nor whether it uses machine learning; but the example shows how a decision that seems
 neutral (``offer the service where it is profitable'') can produce stark demographic
 differences. Whether a disparity amounts to \emph{discrimination} depends on whether it is
@@ -101,7 +101,7 @@ patients in the United States predicted future health \emph{costs} as a proxy fo
 needs, the algorithm systematically underestimated their needs \citep{obermeyer2019dissecting}.
 Variables recorded by decision makers (who was granted bail, who was arrested) measure their
 decisions as much as the underlying phenomenon, and data sets repurposed from another use carry
-the choices of their original creators. Knowing the \emph{provenance} of the data is crucial.
+the choices of their original creators. We therefore need to know the \emph{provenance} of the data.
 
 \paragraph{Learning} A learning algorithm can preserve, mitigate or exacerbate the disparities in
 its data, and it has no general way of telling legitimate patterns from stereotypes. Minority
@@ -133,8 +133,7 @@ stereotypes \citep{bolukbasi2016man}.
 \begin{keyidea}
 There are reasons to be cautiously optimistic: data-driven decision making forces us to
 articulate the objectives of a decision, makes the decision process more transparent and
-auditable than many human decisions, and allows effective intervention\index{intervention}. But fairness\index{fairness} cannot be
-reduced to an algorithmic stamp of approval. The value of the formal tools of this section is
+auditable than many human decisions, and allows effective intervention\index{intervention}. But a fairness\index{fairness} criterion cannot, on its own, certify that a system is fair. The value of the formal tools of this section is
 that they make it harder to avoid the difficult questions.
 \end{keyidea}
 
@@ -146,9 +145,9 @@ attribute\index{protected attribute|textbf}} $A$ (gender, ethnicity, age, religi
 want to compare. The classifier is usually a \emph{score} $R=r(X)$, a single number that
 summarises the features, turned into a decision by a threshold\index{threshold} (\cref{sec:roc}).
 
-\subsection{No fairness through unawareness}
+\subsection{Fairness through unawareness}
 
-The first intuition is to remove $A$ from the features. It does not work. In large feature
+An obvious first step is to remove $A$ from the features, but this does not work. In large feature
 spaces sensitive attributes\index{protected attribute} are generally \emph{redundantly encoded}: they can be predicted from
 the other features (place of residence, shopping habits, browsing history, even genetic markers),
 and a model that does not see $A$ can still treat the groups very differently. Removing the
@@ -223,12 +222,14 @@ Independence has important limitations. It can be satisfied in undesirable ways:
 accept the most solvent applicants of one group and a random selection of the same size of the
 other, which equalises the rates while being careless with the second group. And when the target
 is genuinely correlated with the group, a perfect classifier violates it. There are three families
-of techniques to achieve it (and, adapted, the other criteria): \emph{pre-processing}, which
+of techniques to achieve it (and, adapted, the other criteria): \begin{itemize}
+\item \emph{pre-processing}, which
 adjusts the data or the feature space so that it is uncorrelated with the sensitive attribute
-(for instance, by reweighting the examples, \citealp{kamiran2012data}); \emph{in-processing},
+(for instance, by reweighting the examples, \citealp{kamiran2012data}); \item \emph{in-processing},
 which adds a fairness\index{fairness} constraint or penalty to the optimisation problem of the learner
-\citep{zafar2017fairness,agarwal2018reductions}; and \emph{post-processing}, which adjusts a
+\citep{zafar2017fairness,agarwal2018reductions}; \item \emph{post-processing}, which adjusts a
 learned classifier, typically with group-specific thresholds.
+\end{itemize}
 
 \paragraph{Separation} Often the sensitive attribute is correlated with the target, and part of
 the correlation is legitimate. Separation\index{fairness!separation} allows the score to depend on $A$ only through the
@@ -241,9 +242,9 @@ that is, equal true positive rates\index{true positive rate} and equal false pos
 (\emph{equalised odds\index{fairness!equalised odds|textbf}}): the errors of the classifier are equally distributed. A common
 relaxation requires only one of the two equalities, for instance equal true positive rates
 (\emph{equality of opportunity\index{fairness!equal opportunity|textbf}}, \citealp{hardt2016equality}). Separation can be achieved by
-post-processing without retraining, using the ROC curves\index{ROC curve} of \cref{sec:roc}: each group has its
+post-processing without retraining, using the ROC curves\index{ROC curve} of \cref{sec:roc}. Each group has its
 own ROC curve, and the achievable operating points\index{operating point} that satisfy separation are those in the
-intersection of the regions under the group curves; the decision maker picks the cheapest one,
+intersection of the regions under the group curves. The decision maker picks the cheapest of them,
 possibly randomising between two thresholds \citep{hardt2016equality}.
 
 \paragraph{Sufficiency} The score must capture everything that the group says about the target,
@@ -315,8 +316,7 @@ classifier in a group with prevalence\index{prevalence} $p=P\{Y=1\}$ \citep{chou
 If two groups have different prevalences, equal predictive values (sufficiency) and equal true
 positive rates\index{true positive rate} force different false positive rates\index{false positive rate}. In \cref{lst:fairmetrics}, group $a$ has
 $p=0.70$, $\PPV=0.90$ and $\TPR=0.53$, which gives $\FPR=\frac{0.7}{0.3}\cdot\frac{0.1}{0.9}\cdot0.53
-\approx0.14$, while group $b$, with $p=0.50$, has $\FPR\approx0.04$. Choosing a criterion is
-therefore a choice about which errors, and whose, matter most.
+\approx0.14$, while group $b$, with $p=0.50$, has $\FPR\approx0.04$. Choosing a criterion therefore means deciding which errors matter most, and for which group.
 
 \subsection{The limits of observational criteria}
 
@@ -329,17 +329,17 @@ women in computing. Both kinds of features can be correlated with gender in the 
 observational criterion gives the same verdict in both cases, although we may judge them very
 differently. Observational criteria cannot tell us whether a classifier uses the sensitive
 attribute\index{protected attribute}, nor evaluate alternatives to the data we have. To go further we need to reason about
-how the data were generated: measurement and causality\index{causality} (\cref{sec:causality}).
+how the data were generated, which involves measurement and causality\index{causality} (\cref{sec:causality}).
 
 \begin{pitfall}
-A fairness\index{fairness} criterion is a diagnostic, not a certificate. We cannot base a conclusive argument
+A fairness\index{fairness} criterion is a diagnostic tool. It cannot certify that a model is fair. We cannot base a conclusive argument
 of fairness or unfairness on the value of a single observational criterion; and the criteria can
 be manipulated by changing the real-world processes that the data reflect, sometimes in harmful
 ways.
 \end{pitfall}
 
 % ---------------------------------------------------------------------
-\section{Case study: credit scoring}\label{sec:creditcase}
+\section{A credit scoring case study}\label{sec:creditcase}
 
 A bank decides whether to grant a loan to each applicant based on a score $R$, the predicted
 probability of repayment. A repaid loan earns 1 unit and a default costs 4 units, so the
@@ -481,9 +481,8 @@ the bank optimised.
 
 Causal reasoning is a conceptual and technical framework for questions about the effect of
 hypothetical actions or interventions\index{intervention}: what would happen if we did something, and which action
-caused an event? Causal inference\index{causality} gives us a formal language to ask these questions, but it does
-not make it easy to choose the right question, nor does it trivialise finding and interpreting the
-answer. In the context of fairness\index{fairness}, causality serves three purposes: to understand the limitations
+caused an event? Causal inference\index{causality} gives us a formal language to ask these questions, but choosing the right question, and finding and interpreting the
+answer, remain difficult. In the context of fairness\index{fairness}, causality serves three purposes: to understand the limitations
 of observational criteria, to design interventions that achieve a desired effect, and to reason
 about discrimination, which is itself a causal notion (\emph{because of} their sex, their
 ethnicity\dots).
@@ -724,7 +723,7 @@ In words, we estimate the effect separately in each stratum of $Z$ and average t
 weighting each stratum by its share of the \emph{whole} population (not of the treated). The
 ``adjusted'' line of \cref{lst:berkeley} performs the same computation with $Z$ the department, but there
 it is a \emph{descriptive} standardisation to a common distribution of departments: in the causal graph\index{causal graph}
-of Berkeley discussed below, the department is a mediator\index{mediator} of sex, not a confounder\index{confounder}, so it is not a valid
+of Berkeley discussed below, the department is a mediator\index{mediator} of sex. It is not a confounder\index{confounder}, so it is not a valid
 adjustment set for the total effect.
 
 A \emph{backdoor path} from $X$ to $Y$ is a path that starts with an edge pointing into $X$. When it is
@@ -867,8 +866,8 @@ treatment; for a binary treatment, $Y_0(u)$ and $Y_1(u)$. Only one of them is ob
 Causal inference then becomes a missing-data problem: a typical query is the average effect
 $\E[Y_1-Y_0]$, and estimating it means filling in the missing potential outcomes. Conditioning on the
 features gives the \emph{conditional average treatment effect}, $\mathrm{CATE}(x)=\E[Y_1-Y_0\mid X=x]$, which is
-exactly what uplift\index{uplift modelling} modelling estimates to decide whom to contact in a campaign\index{mailing campaign} (\cref{sec:uplift}). This becomes
-possible under well-established conditions:
+what uplift\index{uplift modelling} modelling (\cref{sec:uplift}) estimates to decide whom to contact in a campaign\index{mailing campaign} (\cref{sec:uplift}). This becomes
+possible under the following conditions:
 \begin{itemize}
   \item \emph{SUTVA} (stable unit treatment value assumption): the treatment of one unit does not
         change the outcome of other units;
@@ -884,7 +883,7 @@ The potential outcomes framework is generally easier to apply than full structur
 its ease can also lead to abuse: applying effect estimators when these assumptions do not hold
 produces false results, and possibly ineffective or harmful interventions\index{intervention} \citep{hernan2020causal}.
 
-\subsection{Mediation and path-specific effects}
+\subsection{Mediation and path-specific effects\extsec}
 
 \emph{Mediation analysis\index{mediation analysis|textbf}} decomposes a total causal effect into the contributions of different
 paths \citep{pearl2001direct}. Consider a treatment $X$, a mediator\index{mediator} $Z$ and an outcome $Y$, with
@@ -914,7 +913,7 @@ assumptions than the total effect, including the absence of confounding\index{co
 In a linear model $Z:=0.8X+U_Z$, $Y:=0.5X+Z+U_Y$, the total effect is $0.5+0.8\cdot1=1.3$, the
 natural direct effect 0.5 and the natural indirect effect 0.8. In the absence of confounding,
 natural effects can be estimated from observational data, and counterfactuals allow us to compute
-other path-specific\index{path-specific effect} effects and to design decision rules\index{decision rules} that eliminate the effects we deem
+other path-specific\index{path-specific effect} effects and to design decision rules that eliminate the effects we deem
 undesirable.
 
 \subsection{Counterfactual fairness}
@@ -923,13 +922,13 @@ Counterfactuals also suggest a fairness\index{fairness} criterion. With features
 predictor $\hat Y$, a predictor is \emph{counterfactually fair} \citep{kusner2017counterfactual}
 if, for every individual described by an event $E=\{X=x,A=a\}$ and every alternative value $a'$,
 the counterfactual predictions $\hat Y_{A:=a'}(E)$ and $\hat Y_{A:=a}(E)$ have the same
-distribution: the prediction would have been the same had the person belonged to another group,
-with everything that this change would have implied. The easiest way of satisfying it is to use
+distribution. In words, the prediction would have been the same had the person belonged to another group,
+with everything that this change would have implied. A simple way of satisfying it is to use
 only features that are not descendants of $A$ in the causal graph\index{causal graph}.
 
 A common shortcut is \emph{attribute flipping\index{attribute flipping|textbf}}: change the sensitive attribute of a record, leave
 everything else unchanged, and compare the predictions. In the lawsuit over admissions at Harvard
-College, an expert report estimated the effect of race by changing it in a statistical model of
+College, \citet{arcidiacono2017expert}, an expert report for the plaintiffs, estimated the effect of race by changing it in a statistical model of
 admissions while keeping the other characteristics of the applicants fixed. Flipping the sensitive
 attribute while holding the other model inputs fixed generally fails to represent its total counterfactual effect
 when those inputs are affected descendants of the attribute, which is plausible for race or gender, since they
@@ -954,7 +953,7 @@ make.
 \section{Interpretable machine learning}\label{sec:interpretability}
 
 Machines already exceed people in many prediction tasks, in speed, reproducibility and scale. The
-price is that the knowledge they use is hidden in increasingly complex models: deep neural
+drawback is that the knowledge they use is hidden in increasingly complex models: deep neural
 networks, random forests\index{random forest}, ensembles\index{ensemble}. \emph{Interpretability\index{interpretability|textbf}} is the degree to which a human can
 understand the cause of a decision \citep{miller2019explanation}; a model is more interpretable
 than another if its decisions are easier to comprehend. Interpretable machine learning can imply,
@@ -966,7 +965,7 @@ A single metric, such as accuracy, is an incomplete description of most real-wor
 we want to know \emph{why} a prediction was made, and we may be willing to pay for that knowledge
 with some accuracy, because the answer helps us to understand the problem, the data and how the
 model might fail. The need for explanations comes from an \emph{incompleteness} of the problem
-formalisation \citep{doshivelez2017towards}: the objective that the model optimises is never
+formalisation \citep{doshivelez2017towards}: the objective that the model optimises is rarely
 exactly what we care about. Interpretability helps to:
 \begin{itemize}
   \item \emph{learn} from the model, which matters for science;
@@ -980,9 +979,9 @@ exactly what we care about. Interpretability helps to:
         system and its users;
   \item \emph{debug} and audit models.
 \end{itemize}
-Explanations are not always needed: not when the consequences of errors are mild (a movie
-recommender\index{recommender system}), not for problems that have been studied for a long time (optical character
-recognition), and not when explaining would let people game the system. But the more a decision
+Explanations are not always needed, for instance when the consequences of errors are mild (a movie
+recommender\index{recommender system}), for problems that have been studied for a long time (optical character
+recognition), or when explaining would let people game the system. But the more a decision
 affects a person's life, the more important it is that the machine can explain it.
 
 \subsection{A taxonomy of interpretability methods}
@@ -1001,12 +1000,18 @@ Interpretability methods can be classified along several dimensions:
         points (a counterfactual, a prototype\index{prototypes and criticisms}), or an intrinsically interpretable model that
         approximates the black box.
 \end{itemize}
-The \emph{scope} of the interpretation ranges from algorithm transparency (how the algorithm learns
-a model, without reference to a particular model), through global holistic interpretability (how
-the trained model makes its decisions as a whole, very hard beyond a few dimensions) and global
-interpretability on a modular level (how parts of the model, such as a weight or a branch,
-influence predictions), to local interpretability for a single prediction or for a group of
+The \emph{scope} of the interpretation has four levels:
+\begin{itemize}
+\item algorithm transparency: how the algorithm learns
+a model, without reference to a particular model;
+\item global holistic interpretability: how
+the trained model makes its decisions as a whole, which is very hard beyond a few dimensions;
+\item global
+interpretability on a modular level: how parts of the model, such as a weight or a branch,
+influence predictions;
+\item local interpretability: why the model made a single prediction, or a group of
 predictions.
+\end{itemize}
 
 \subsection{Evaluating interpretability}
 
@@ -1019,13 +1024,13 @@ are sparsity, monotonicity, the length of the explanation, and the cognitive pro
 
 \subsection{Human-friendly explanations}
 
-An explanation is the answer to a why-question. Research in the social sciences shows what people
-expect from one \citep{miller2019explanation}:
+An explanation is the answer to a why-question. \citet{miller2019explanation} reviews the social-science research on what people
+expect from an explanation:
 \begin{itemize}
   \item explanations are \emph{contrastive}: people ask why this prediction was made \emph{instead
         of another}, and think in counterfactual terms. A good explanation compares with a
         reference, which depends on the application;
-  \item explanations are \emph{selective}: people prefer one or two causes rather than a complete
+  \item explanations are \emph{selective}: people prefer one or two causes to a complete
         list;
   \item explanations are \emph{social}: they depend on the explainer, the receiver and the context;
   \item explanations focus on the \emph{abnormal}: rare causes that changed the outcome a lot are
@@ -1037,12 +1042,12 @@ expect from one \citep{miller2019explanation}:
         which contradicts the preference for abnormal causes).
 \end{itemize}
 If we need all the factors that contributed to a prediction (for legal reasons, or to debug a
-model) we do not want a human-style explanation but a complete attribution.
+model) we need a complete attribution.
 
 % ---------------------------------------------------------------------
 \section{Interpretable models}\label{sec:intmodels}
 
-The most straightforward way of obtaining interpretable models is to use algorithms that produce
+A direct way of obtaining interpretable models is to use algorithms that produce
 them. \Cref{tab:intmodels} summarises their properties: a model is \emph{linear} if the
 association between features and target is linear, and \emph{monotone} if increasing a feature
 always moves the prediction in the same direction.
@@ -1109,7 +1114,7 @@ data of \cref{sec:regression}. The model explains half of the variance ($\bar R^
 index (bmi), blood pressure (bp) and the serum measurement s5 have clearly positive effects. The
 weights of s1 and s2 are large and of opposite sign, but their intervals are very wide and include
 zero: the two features are correlated ($r=0.90$), and the model can trade one against the other,
-so their individual weights cannot be interpreted. This is multicollinearity in action.
+so their individual weights cannot be interpreted. This is an effect of multicollinearity.
 
 \begin{pylisting}[label={lst:diabetes}]{Weights, confidence intervals and adjusted R2 of a linear model}
 import numpy as np
@@ -1152,9 +1157,9 @@ Do linear models produce good explanations? They are contrastive, but the refere
 with all features at zero, which is meaningless unless the features are centred; they are
 selective only if they are sparse (for instance, fitted with a Lasso penalty); and they are exactly faithful\index{faithfulness} to
 the linear model, while the scientific or causal validity of their interpretation depends on whether the
-relationship really is linear. Their great advantages are simplicity and
-generality. Their disadvantages: every non-linearity or interaction must be hand-crafted, their
-predictive performance is often not the best, and the interpretation of a weight depends on all
+relationship really is linear. Their main advantages are simplicity and
+generality. Their disadvantages are that every non-linearity or interaction must be hand-crafted, that their
+predictive performance is often not the best, and that the interpretation of a weight depends on all
 the other features in the model, which can make it counter-intuitive.
 
 \subsection{Logistic regression}
@@ -1197,7 +1202,7 @@ def loan_data(n=5000, seed=3):
 additional thousand euros of income multiplies the odds of repaying by 1.081 (an 8\% increase);
 an increase of the debt ratio by 0.1 multiplies them by $e^{-0.2976}=0.74$; a previous default
 divides them by almost three (0.369). For an applicant with a probability of repaying of 0.30,
-10,000 more euros of income would raise it to 0.48. As always, these are statements about the
+10,000 more euros of income would raise it to 0.48. These are statements about the
 model, and correlation does not imply causation.
 
 \begin{pylisting}[label={lst:odds}]{Odds ratios of a logistic regression}
@@ -1243,13 +1248,13 @@ confidence in their interpretation.
 \subsection{Decision rules}
 
 A \emph{decision rule\index{decision rules|textbf}} is an \textsc{if-then} statement with a condition (antecedent) and a
-prediction. Decision rules are probably the most interpretable prediction models, provided the
+prediction. Decision rules are among the most interpretable prediction models, provided the
 conditions use intelligible features, are short, and there are not too many rules. The usefulness of
 a rule is summarised by its \emph{support} or \emph{coverage\index{coverage|textbf}}, the fraction of instances to which its
 condition applies, and its \emph{accuracy\index{accuracy|textbf}} or \emph{confidence}, the fraction of those it predicts
 correctly (\cref{sec:unsupervised}). Rules can be combined in a \emph{decision list}, which orders
 them (the first rule that applies decides), or in a \emph{decision set}, a democracy of rules in
-which some may have more voting\index{voting} power; interpretability suffers when several rules of a set apply.
+which some may have more voting power; interpretability suffers when several rules of a set apply.
 
 Some algorithms that learn rules are:
 \begin{itemize}
@@ -1298,7 +1303,7 @@ OneR uses 'debt_ratio': accuracy 0.653 (predicting the majority: 0.619)
 
 In \cref{lst:oner}, OneR chooses the debt ratio: applicants in the lowest quartile repay, the rest
 default. The single rule reaches an accuracy of 0.653, only a few points above always predicting
-the majority class (0.619), a reminder that simple rules are good baselines but rarely good models.
+the majority class (0.619). Simple rules are useful as baselines, but they are rarely accurate enough to be used as models.
 Rules are easy to interpret, as expressive as trees while often more compact, fast at prediction
 time, robust to monotone transformations of the features, and sparse. On the other hand, most rule
 learners focus on classification, need discretised features, and describe linear relationships
@@ -1313,8 +1318,8 @@ features together with the rules as binary features. The rules capture interacti
 The interpretation is that of a linear model: if all the conditions of rule $r_k$ apply, the
 prediction changes by $\alpha_k$ (in classification, the odds are multiplied by $e^{\alpha_k}$). For
 one instance only a handful of rules usually matter, and RuleFit comes with useful diagnostics,
-such as feature importances\index{feature importance} and partial dependence\index{partial dependence plot} plots. Its drawbacks: it sometimes keeps many
-rules with non-zero weights, and the ``all other features fixed'' interpretation becomes problematic
+such as feature importances\index{feature importance} and partial dependence\index{partial dependence plot} plots. Its drawbacks are that it sometimes keeps many
+rules with non-zero weights, and that the ``all other features fixed'' interpretation becomes problematic
 when rules overlap.
 
 \subsection{Other interpretable models}
@@ -1437,12 +1442,12 @@ $PD_{jk}(x_j,x_k)=PD_j(x_j)+PD_k(x_k)$, and
                 {\sum_{i=1}^{n}PD_{jk}^2(x_j^{(i)},x_k^{(i)})}.
 \end{equation}
 Similarly, the interaction of $x_j$ with all the other features compares the prediction with
-$PD_j(x_j)+PD_{-j}(x_{-j})$. The statistic is dimensionless and, under an orthogonal decomposition (for instance with independent
-features), a fraction between 0 (no interaction) and 1 (the
-effect is pure interaction), and has a theory behind it, but it is expensive to compute (the cost
-grows with the square of the number of instances, which is why it is estimated on a sample, adding
-variance to the estimate), it is unclear when an interaction is significantly larger than zero, and it
-does not show the shape of the interaction (a two-feature PDP does). With dependent features or estimated partial dependences it can exceed 1, and it is
+$PD_j(x_j)+PD_{-j}(x_{-j})$. The statistic has no units and a theory behind it. Under an orthogonal decomposition (for instance, with independent
+features), it is a fraction between 0 (no interaction) and 1 (the
+effect is pure interaction). It also has three drawbacks. It is expensive to compute: the cost
+grows with the square of the number of instances, so it is estimated on a sample, which adds
+variance to the estimate. It is unclear when an interaction is significantly larger than zero. And it
+does not show the shape of the interaction, which a two-feature PDP does. With dependent features or estimated partial dependences it can exceed 1, and it is
 undefined when the denominator vanishes, so the sampling scheme and the support of the data must be
 checked before interpreting it. \Cref{lst:pdph} and
 \cref{fig:importanceh}b find the only interaction of \cref{eq:friedman}: $H^2_{12}=0.083$, while the other
@@ -1499,9 +1504,9 @@ algorithm is:
 \end{enumerate}
 Its interpretation is clear (the loss of performance when the information of the feature is
 destroyed), it gives a compressed global view of the model, and the ratio version is comparable
-across problems. It needs the true target (it cannot be computed with only a model and unlabelled
-data), it is tied to the error of the model, which is not what we want if the question is how much of
-the output varies with each feature, and it should be computed on \emph{test} data, since importance
+across problems. It needs the true target, so it cannot be computed with only a model and unlabelled
+data. It is tied to the error of the model, which is not what we want if the question is how much of
+the output varies with each feature. And it should be computed on \emph{test} data, since importance
 on training data reflects what the model memorised. With correlated features, permuting one creates
 unrealistic instances and the importance is shared between the correlated features.
 
@@ -1569,12 +1574,12 @@ where $\hat y_*$ are the predictions of the surrogate. Only then is the surrogat
 depth 3 captures 75\% and depth 5 captures 88\%.
 
 The method is flexible, intuitive, and its fidelity\index{fidelity} is easy to measure, but several cautions apply.
-It draws conclusions about the model, not about the data. There is no clear cut-off for a good
+Its conclusions concern the model. They say nothing directly about the data. There is no clear cut-off for a good
 enough $R^2$, and the surrogate may be very close to the black box in some regions and far from it in
 others. If the input distribution is changed, for instance by weighting the instances around a
 particular point, the surrogate becomes \emph{local}, which leads to LIME\index{LIME}.
 
-\subsection{Local surrogates: LIME}
+\subsection{LIME and local surrogates}
 
 LIME\index{LIME} (local interpretable model-agnostic explanations, \citealp{ribeiro2016should}) was introduced in
 \cref{sec:drawbacks}. To explain the prediction of a black box $f$ for an instance $x$, it
@@ -1584,12 +1589,12 @@ LIME\index{LIME} (local interpretable model-agnostic explanations, \citealp{ribe
   \item fits a weighted interpretable model (a Lasso, a short tree) with a small number $K$ of features;
   \item explains the prediction by interpreting the local model.
 \end{enumerate}
-The local model must be faithful\index{faithfulness} in the neighbourhood of $x$ (\emph{local fidelity\index{fidelity|textbf}}), not globally.
-How the perturbations are generated depends on the data: for text, LIME removes words at random and
-represents each variant by the presence or absence of each word; for images, it switches off
-\emph{superpixels} (groups of similar neighbouring pixels), replacing them by grey; for tabular data,
+The local model only needs to be faithful\index{faithfulness} in the neighbourhood of $x$ (\emph{local fidelity\index{fidelity|textbf}}).
+How the perturbations are generated depends on the data. For text, LIME removes words at random and
+represents each variant by the presence or absence of each word. For images, it switches off
+\emph{superpixels} (groups of similar neighbouring pixels) and replaces them by grey. For tabular data,
 it draws each feature from a normal distribution with the mean and standard deviation of the training
-data, so the samples come from the centre of the data and not from around $x$, and the kernel decides
+data; the samples therefore come from the centre of the data, possibly far from $x$, and the kernel decides
 which of them matter.
 
 \begin{pylisting}[label={lst:lime}]{A minimal implementation of LIME for tabular data}
@@ -1633,7 +1638,7 @@ euros per standard deviation), followed by the park (about 9). With a narrower k
 changes completely (only the area matters, with half the weight) and is less faithful ($R^2=0.80$). Part of this change is not about locality: with unnormalised weights and a
 fixed Ridge penalty, a narrower kernel also increases the relative regularisation, and the Gaussian
 perturbations produce invalid inputs, such as fractional values of the binary features. A careful
-implementation samples valid inputs, normalises the weights, reports the effective sample size\index{sample size}\index{effective sample size} and
+implementation samples valid inputs, normalises the weights, reports the effective sample size\index{sample size}\index{effective sample size} (how many unweighted examples the weighted sample is worth) and
 measures fidelity on fresh perturbations.
 This is LIME's main problem: the definition of the neighbourhood is an open question, there is no
 principled way of choosing the kernel width, the Gaussian sampling ignores correlations between
@@ -1742,19 +1747,19 @@ Comparing the two panels of \cref{fig:limeshap} shows that the two methods answe
 questions. LIME's weights are local \emph{slopes}: around this flat, more area means a higher price
 (+71 per standard deviation), and allowing cats would raise it. Shapley values are
 \emph{contributions} relative to the average flat: this flat's area, smaller than average, lowers its
-price by 70, and its cat ban lowers it by 8. Neither is ``the'' explanation.
+price by 70, and its cat ban lowers it by 8. They are two different explanations of the same prediction.
 
 For a fixed cooperative game, the Shapley value is the unique allocation that satisfies its classical
-axioms (other attribution methods, such as integrated gradients\index{integrated gradients}, have axiomatic foundations of their
-own \citep{sundararajan2017axiomatic}); it distributes the difference among the features according to
-those axioms, and it allows contrastive explanations (against the average, or
-against a subset of instances). But it is expensive: the number of coalitions grows exponentially with
+axioms; other attribution methods, such as integrated gradients\index{integrated gradients}, have axiomatic foundations of their
+own \citep{sundararajan2017axiomatic}. It distributes the difference among the features according to
+those axioms, and it allows contrastive explanations, against the average or
+against a subset of instances. But it is expensive: the number of coalitions grows exponentially with
 the number of features, so in practice it is approximated by sampling coalitions and background
 instances \citep{strumbelj2014explaining} or computed with model-specific algorithms, as in the SHAP\index{SHAP}
-library \citep{lundberg2017unified}. It is also easy to misinterpret: the Shapley value of a feature is
-\emph{not} the difference in prediction if the feature were removed from the model, and it does not
+(Shapley additive explanations) library \citep{lundberg2017unified}. It is also easy to misinterpret. The Shapley value of a feature is
+\emph{not} the difference in prediction if the feature were removed from the model. Nor does it
 support statements such as ``if I earned 300 euros more, my score would go up by 5 points'', because it
-returns one value per feature, not a model. It uses all the features, so it is the wrong method if
+returns one value per feature and does not provide a model of the prediction. It uses all the features, so it is the wrong method if
 sparse explanations are wanted, and, like the PDP, it evaluates the model on unrealistic combinations
 when features are correlated.
 
@@ -1762,7 +1767,7 @@ when features are correlated.
 \section{Example-based explanations}\label{sec:examplebased}
 
 Example-based methods explain a model, or the data it was trained on, by selecting particular
-instances instead of summarising features. People reason this way all the time: a physician who
+instances. People often reason this way: a physician who
 sees a patient with an unusual cough remembers a similar case; a data scientist starting a project
 reuses the code of a similar one; a firefighter decides not to enter a burning house because a
 similar one collapsed. These methods are mostly model-agnostic, but they only make sense if an
@@ -1877,13 +1882,13 @@ acceptance boundary.}
 \subsection{Adversarial examples}
 
 An \emph{adversarial example\index{adversarial example|textbf}} is an instance with small, intentional perturbations that make a model
-give a false prediction: a counterfactual whose aim is to deceive the model rather than to explain it.
+give a false prediction: a counterfactual whose aim is to deceive the model.
 A stop sign with a few stickers that a car's vision system reads as a speed limit sign
 \citep{eykholt2018robust}, or a spam message disguised as a normal one, are examples. Most methods
 minimise the distance between the adversarial example and the original while pushing the prediction
 towards the desired (wrong) output. Some need the gradients of the model, others only its predictions:
 \begin{itemize}
-  \item the \emph{fast gradient sign\index{fast gradient sign method (FGSM)|textbf} method} \citep{goodfellow2015explaining} moves every input feature
+  \item the \emph{fast gradient sign\index{fast gradient sign method (FGSM)|textbf} method} (FGSM) \citep{goodfellow2015explaining} moves every input feature
         by a small step $\epsilon$ in the direction that increases the loss $J$ of the true class,
         \begin{equation}\label{eq:fgsm}
           x'=x+\epsilon\cdot\operatorname{sign}\bigl(\nabla_xJ(\theta,x,y)\bigr);
@@ -1910,13 +1915,13 @@ We study adversarial examples as a security threat, with an experiment, in \cref
 From the interpretability point of view, understanding which features matter and how they affect the
 prediction is a proactive step towards finding the weaknesses of a model.
 
-\subsection{Prototypes and criticisms}
+\subsection{Prototypes and criticisms\extsec}
 
 A \emph{prototype\index{prototypes and criticisms|textbf}} is a data instance that is representative of the data; a \emph{criticism} is an
 instance that is not well represented by the set of prototypes. Prototypes summarise complex
 distributions, and criticisms point at what the summary misses. Both are real instances.
 MMD-critic\index{MMD-critic} \citep{kim2016examples} selects them by comparing distributions with the \emph{maximum mean
-discrepancy} \citep{gretton2012kernel}. For prototypes $z_1,\dots,z_m$ and data $x_1,\dots,x_n$,
+discrepancy} (MMD) \citep{gretton2012kernel}. For prototypes $z_1,\dots,z_m$ and data $x_1,\dots,x_n$,
 \begin{equation}
   \mathrm{MMD}^2=\frac{1}{m^2}\sum_{i,j=1}^{m}k(z_i,z_j)-\frac{2}{mn}\sum_{i=1}^{m}\sum_{j=1}^{n}k(z_i,x_j)
                 +\frac{1}{n^2}\sum_{i,j=1}^{n}k(x_i,x_j),
@@ -1982,7 +1987,7 @@ instances at the top right, which no prototype represents, and two instances at 
 groups. MMD-critic helps to understand a data distribution, to build interpretable models such as a
 \emph{nearest prototype classifier} (which predicts the class of the closest prototype and returns it as
 the explanation), and to audit a black box: predict the prototypes and criticisms, and look at the cases
-where the model is wrong. In experiments with people, sets of prototypes and criticisms helped
+where the model is wrong. In a pilot study with human subjects, \citet{kim2016examples} found that sets of prototypes and criticisms helped
 participants understand a classification better than random examples. The drawbacks are that the
 numbers of prototypes and criticisms must be chosen (a plot of $\mathrm{MMD}^2$ against the number of
 prototypes helps), as must the kernel and its scale, and that all features are used, relevant or not.
@@ -1994,10 +1999,10 @@ prototypes helps), as must the kernel and its scale, and that all features are u
 \label{fig:mmd}
 \end{figure}
 
-\subsection{Influential instances}
+\subsection{Influential instances\extsec}
 
 A training instance is \emph{influential\index{influential instance|textbf}} if deleting it considerably changes the parameters or the
-predictions of the model. With influential instances we do not treat the model as fixed but as a
+predictions of the model. Influential instances treat the model as a
 function of the training data, which helps to debug it: we learn for which instances the model could
 have problems, which training instances should be checked for errors, and how robust the model is. We
 might not trust a model whose parameters depend strongly on a single instance.
@@ -2012,7 +2017,7 @@ outlier is influential only if it changes the model, which also depends on its t
 where $\beta^{(-i)}$ and $\hat y_j^{(-i)}$ are the parameters and predictions of the model trained without
 instance $i$, and $D_i$ is \emph{Cook's distance\index{Cook's distance|textbf}} \citep{cook1977detection}, with $p$ parameters. DFBETA
 needs a model with parameters; Cook's distance does not, but the MSE\index{mean squared error (MSE)} is not meaningful for every model,
-and the simplest model-agnostic measure is the mean absolute change of the predictions. We can also
+and a simple model-agnostic measure is the mean absolute change of the predictions. We can also
 measure the influence of each training instance on the prediction for a particular instance, and model
 the influence as a function of the features (for instance, with a short tree) to find out what kind of
 training instances are most influential.
@@ -2066,17 +2071,17 @@ the gradient of the loss of $z$ scaled by the inverse Hessian $H_{\hat\theta}$ o
 curvature). Here the training loss is the average $\frac1n\sum_iL(z_i,\theta)$ and $z$ receives the extra
 weight $\epsilon$; removing $z$ corresponds to $\epsilon=-1/n$, which reverses the sign:
 $\hat\theta_{-z}-\hat\theta\approx\frac1n H_{\hat\theta}^{-1}\nabla_\theta L(z,\hat\theta)$. The approximation
-requires a regular optimum with an invertible Hessian. Influential instances are among the best debugging tools: they reveal the weaknesses of a
+requires a regular optimum with an invertible Hessian. Influential instances are useful for debugging: they reveal the weaknesses of a
 model, help to handle domain mismatch between training and test data (which training instances caused an
 error?), tell us which training labels to check first when we cannot check them all, and can be compared
-across models. Influence functions can even be used to create adversarial training\index{adversarial training} data. Their limits:
-they only consider single instances, there is no clear cut-off for calling an instance influential, and
-influence functions are an approximation, validated mostly empirically.
+across models. Influence functions can even be used to create adversarial training\index{adversarial training} data. Their limits are that
+they only consider single instances, that there is no clear cut-off for calling an instance influential, and
+that influence functions are an approximation, validated mostly empirically.
 
 \subsection{The future of interpretability}
 
-Interpretability tools catalyse the adoption of machine learning: since the goal of a model can never be
-specified perfectly, interpretability is needed to close the gap between the specified and the actual
+Interpretability tools help organisations adopt machine learning: since the goal of a model can rarely be
+specified completely, interpretability is needed to close the gap between the specified and the actual
 goal, and many organisations and industries demand transparency for legal reasons, for risk aversion or
 to gain insight. The focus is moving towards model-agnostic tools, interpretability is being automated
 along with model building (Unit~4), and systems are increasingly expected to explain themselves.
@@ -2088,16 +2093,15 @@ documentation and human oversight requirements on high-risk\index{AI Act!high-ri
 % =====================================================================
 \section{Machine learning and security}\label{sec:security}
 
-As soon as enough computers were connected, some people realised that the network was a perfect
-medium to make money, often illegitimately. Spam is the classic example, and it shows both the
+As soon as enough computers were connected, some people realised that the network was an easy way to make money, often illegitimately. Spam is the classic example, and it shows both the
 promise and the difficulty of using machine learning in security \citep{chio2018machine}. Machine
 learning was not invented by spam fighters, but it was quickly adopted by those who saw its potential
-against a constantly evolving source of abuse. Content-based\index{content-based filtering} models learned from e-mail data recognise
+against a constantly evolving source of abuse. Content-based models learned from e-mail data recognise
 spam in a generalisable way; metadata and the reputation of senders add evidence; and a feedback loop
 with users, who mark messages as spam, builds a collective intelligence that improves over time. Spam
-filters have evolved to deal with an ever-growing diversity\index{diversity} of circumvention methods, and today the vast
+filters have evolved to deal with an ever-growing diversity of circumvention methods, and today the vast
 majority of spam never reaches the inbox, although most e-mail traffic is spam. But the story also
-shows the essential feature of security: a \emph{motivated adversary} constantly tries to misuse the
+shows what makes security different: a \emph{motivated adversary} constantly tries to misuse the
 system, and each side races to exploit or fix the flaws before the other finds them.
 
 The motivation of attackers today is largely monetary. Underground marketplaces sell vulnerabilities,
@@ -2110,7 +2114,7 @@ as attacks generate profit, there will be people willing to launch them.
 The uses of machine learning in security fall into two broad categories:
 \begin{itemize}
   \item \emph{pattern recognition}: discover the explicit or latent characteristics of known kinds of
-        malicious data, distil\index{model distillation} them into features, and recognise other data that share them (malware,
+        malicious data, distil them into features, and recognise other data that share them (malware,
         bots, spam, phishing);
   \item \emph{anomaly detection}: establish a notion of normality that describes most of the data (say,
         more than 95\%), and flag any deviation (network intrusion detection, access control, user
@@ -2119,7 +2123,7 @@ The uses of machine learning in security fall into two broad categories:
 The limitations are equally important: the results often need to be explained to analysts; much of the
 context of an attack comes from cultural and experiential knowledge that is not in the data; models
 overfit to past attacks; and, above all, the data are generated by adversaries who adapt to the model.
-Machine learning should be approached with equal parts of enthusiasm and caution.
+Machine learning is useful in security, but its limitations must be kept in mind.
 
 % ---------------------------------------------------------------------
 \section{Adversarial machine learning}\label{sec:adversarial}
@@ -2184,7 +2188,7 @@ that is not enough protection.
 
 \emph{Poisoning\index{poisoning attack|textbf}} is a causative attack, relevant to systems that keep learning after deployment. Anomaly
 detectors, for instance, are retrained automatically to follow the changes in the data distribution
-without human intervention\index{intervention}; online systems sacrifice stationarity for adaptability. An attacker who
+without human intervention; online systems sacrifice stationarity for adaptability. An attacker who
 controls part of the training data can then inject carefully placed synthetic examples, called
 \emph{chaff}, to move the decision boundary (a \emph{red herring}), either in a targeted way (so that one
 kind of attack is accepted) or indiscriminately \citep{biggio2012poisoning}. The more data the
@@ -2244,14 +2248,14 @@ is transformed before reaching the classifier (for instance, by a dimensionality
 access, these difficulties can mostly be overcome; the defender's goal is to make such inference
 difficult without sacrificing the efficacy of the system.
 
-\paragraph{Defences} There are significant benefits in designing online learning systems that behave
+\paragraph{Defences} Online learning systems are safer if they behave
 like periodic batch systems: longer periods between retraining give time to inspect the data, a longer
-history makes boiling-frog attacks easier to detect, and attackers thrive on short feedback loops.
-Poisoning attempts can also be detected by looking for abnormal pockets of traffic (coming from the same
-addresses or networks, or sharing unusual characteristics); by keeping a \emph{calibration\index{calibration|textbf} set} of
+history makes boiling-frog attacks easier to detect, and short feedback loops help attackers.
+Poisoning attempts can also be detected in three ways: by looking for abnormal pockets of traffic (coming from the same
+addresses or networks, or sharing unusual characteristics); by keeping a \emph{calibration set} of
 handcrafted normal and malicious data on which every retrained model is tested; and by monitoring\index{monitoring} the
-fraction of predictions that fall near the decision boundary, as in \cref{fig:poisoning}b: a sudden rise
-(say, from 30\% to 80\% of the points in the band) suggests that someone is pushing the boundary. There is
+fraction of predictions that fall near the decision boundary, as in \cref{fig:poisoning}b. A sudden rise
+of that fraction (say, from 30\% to 80\% of the points in the band) suggests that someone is pushing the boundary. There is
 no definitive recipe; this is an active area of research, and monitoring is the subject of Unit~6.
 
 \subsection{Evasion attacks}
@@ -2309,7 +2313,7 @@ eps   LR (white  MLP (trans-  RF (trans-  robust LR:   robust LR:
 digits with the fast gradient sign\index{fast gradient sign method (FGSM)} method of \cref{eq:fgsm}. Changing every pixel by 0.1 (on a 0--1
 scale) reduces its accuracy from 0.972 to 0.641, and by 0.2 to 0.090. The same adversarial images,
 crafted only with the logistic regression, also fool a neural network (0.534 at $\epsilon=0.1$) and a
-random forest (0.627), neither of which the attacker has seen: this is transferability.
+random forest (0.627), although the attacker never had access to them. This is transferability.
 
 \begin{figure}[htbp]
 \centering
@@ -2329,7 +2333,7 @@ harder for the attacker to obtain information about the gradients of the decisio
         training data do not reach, which can never be done exhaustively. In \cref{lst:fgsm}, a model
         trained once with adversarial images is robust to the attack it was trained on (0.871 at
         $\epsilon=0.2$), but an attacker who crafts new examples against \emph{it} breaks it completely
-        (0.006): the defence only raised the bar for an attacker who does not adapt;
+        (0.006): the defence only works against an attacker who does not adapt;
   \item \emph{defensive distillation\index{model distillation|textbf}} \citep{papernot2016distillation} trains a second model on the
         probability outputs of the first (the distillation of \cref{sec:drawbacks}), which smooths the
         decision surface and hides useful gradients; stronger attacks were soon shown to defeat it
@@ -2337,8 +2341,7 @@ harder for the attacker to obtain information about the gradients of the decisio
         sense of security \citep{athalye2018obfuscated}.
 \end{itemize}
 Many practical defences fail against adaptive attacks, so robustness must be evaluated under an explicit threat
-model\index{threat model} and attack budget. A defence may raise the cost of attacks or provide guarantees within stated constraints;
-neither establishes security against every possible adversary.
+model\index{threat model} and attack budget. A defence may raise the cost of attacks or provide guarantees within stated constraints, but this does not establish security against every possible adversary.
 
 \begin{example}{A good-word attack on a spam filter}{goodword}
 A spammer cannot see the filter but can test messages against it. \citet{lowd2005good} showed that adding
@@ -2404,38 +2407,36 @@ attacker may add, for a standard and an adversarially trained filter.}
 
 \subsection{Other threats}
 
-Poisoning\index{poisoning attack} and evasion\index{evasion attack} are not the only threats. A model offered through an API\index{API} can be \emph{stolen} by
-querying it and training a copy \citep{tramer2016stealing}; \emph{membership inference} attacks find out
+Poisoning\index{poisoning attack} and evasion\index{evasion attack} are not the only threats. A model offered through an application programming interface (API\index{API}) can be \emph{stolen} by
+querying it and training a copy \citep{tramer2016stealing}. \emph{Membership inference} attacks find out
 whether a given record was part of the training data, a privacy breach for medical or financial data
-\citep{shokri2017membership}; \emph{backdoors\index{backdoor criterion|textbf}} hidden in training data or in pre-trained models make a
-model misbehave only when a secret trigger is present \citep{gu2017badnets}; and applications built on
-large language models\index{large language model (LLM)}\index{language model} can be hijacked by instructions hidden in the content they process, a \emph{prompt\index{prompt|textbf}
+\citep{shokri2017membership}. \emph{Backdoors\index{backdoor attack|textbf}} hidden in training data or in pre-trained models make a
+model misbehave only when a secret trigger is present \citep{gu2017badnets}. And applications built on
+large language models\index{large language model (LLM)}\index{language model} can be hijacked by instructions hidden in the content they process, which is called a \emph{prompt
 injection\index{prompt injection|textbf}} \citep{greshake2023not}.
 
 \begin{keyidea}
 Being secure and robust is a prerequisite for deploying machine learning, but the difficulty of avoiding
 attacks is not a reason to shy away from it. Machine learning can behave in unexpected ways in adversarial
-environments; this is not a ``failure'' of machine learning but a sign of improperly calibrated
-expectations. Knowing the types of vulnerability helps to make fewer false assumptions about what a model
+environments; such behaviour shows that our expectations of the model were miscalibrated. Knowing the types of vulnerability helps to make fewer false assumptions about what a model
 can do.
 \end{keyidea}
 
 % ---------------------------------------------------------------------
 
 % =====================================================================
-\section{Regulation: the European AI Act}\label{sec:aiact}
+\section{The European AI Act}\label{sec:aiact}
 
 Much of what this unit has presented as good practice is now law in the European Union. Regulation (EU)
-2024/1689, the \emph{AI Act\index{AI Act|textbf}}, entered into force on 1 August 2024 as the first comprehensive law on artificial
-intelligence \citep{eu2024aiact}. It does not regulate techniques but \emph{uses}: the same classifier may be
+2024/1689, the \emph{AI Act\index{AI Act|textbf}}, entered into force on 1 August 2024 as one of the first comprehensive laws on artificial
+intelligence \citep{eu2024aiact}. It regulates \emph{uses} of AI: the same classifier may be
 unregulated when it filters spam and heavily regulated when it decides who gets a loan. It complements earlier
 rules, such as the General Data Protection Regulation\index{GDPR}, which already gives people the right not to be subject
 to decisions based solely on automated processing that significantly affect them, with safeguards such as
-human intervention\index{intervention} \citep{gdpr2016,wachter2017right}. For decisions based on the output of the high-risk\index{AI Act!high-risk systems} systems of Annex~III\index{AI Act!Annex III}
-(except those of its point~2, critical infrastructure) that produce legal effects, or similarly significantly affect a
-person in a way that they consider adverse to their health, safety or fundamental rights, the AI Act adds a right to
-obtain clear and meaningful explanations of the role of the system in the decision procedure and of the main elements
-of the decision (Article~86\index{AI Act!Article 86}), subject to the exceptions and restrictions of other laws. It is not a general obligation
+human intervention \citep{gdpr2016,wachter2017right}. The AI Act also adds a right to explanation (Article~86\index{AI Act!Article 86}). It applies to decisions based on the output of the high-risk\index{AI Act!high-risk systems} systems of Annex~III\index{AI Act!Annex III}
+(except those of its point~2, critical infrastructure) that produce legal effects, or that similarly significantly affect a
+person in a way that they consider adverse to their health, safety or fundamental rights. The person affected can obtain clear and meaningful explanations of the role of the system in the decision procedure and of the main elements
+of the decision, subject to the exceptions and restrictions of other laws. It is not a general obligation
 to produce actionable or counterfactual explanations\index{counterfactual explanation} for every decision.
 
 \subsection{A risk-based approach}
@@ -2464,16 +2465,16 @@ The AI Act\index{AI Act} sorts AI systems into four levels of risk:
 \end{itemize}
 \emph{General-purpose AI models}, such as large language models\index{large language model (LLM)}, have their own obligations: technical documentation,
 information for the providers that build systems on them, a policy to respect copyright and a summary of the
-content used for training; the most capable ones, presumed to pose systemic risks, must also be evaluated, including
+content used for training. The most capable ones, presumed to pose systemic risks, must also be evaluated, including
 adversarial testing, have their serious incidents reported, and be adequately protected.
 
 \subsection{Obligations for high-risk systems}
 
 The \emph{providers} of high-risk\index{AI Act!high-risk systems} systems, those who develop them or place them on the market, must meet a set of
-requirements before and after the system is deployed. Read with the eyes of a data scientist, they are a summary of this
+requirements before and after the system is deployed. For a data scientist, they correspond closely to the topics of this
 book (\cref{tab:aiact}). The \emph{deployers}, the organisations that use the systems, must use them according to their
 instructions, assign human oversight to competent people, make sure that the input data are relevant, monitor their
-operation and keep their logs; public bodies, and those that use AI for credit scoring or to price life and health
+operation and keep their logs. Public bodies, and those that use AI for credit scoring or to price life and health
 insurance, must also assess the impact of the system on fundamental rights before using it.
 
 \begin{table}[htbp]
@@ -2488,7 +2489,7 @@ Risk management (Art.~9) & identify, estimate and mitigate the risks of the syst
 Data governance (Art.~10) & relevant and representative training, validation and test data, examined for possible
 biases & \cref{sec:protocols,sec:fairness,sec:shift}\\
 Documentation and logs (Arts.~11--12) & technical documentation of the system, and automatic recording of its operation
-& model cards \citep{mitchell2019model}; \cref{sec:infrastructure}\\
+& model cards \citep{mitchell2019model}; \cref{sec:modelcards,sec:infrastructure}\\
 Transparency (Art.~13) & instructions that let deployers understand the system and use its outputs appropriately &
 \cref{sec:interpretability}\\
 Human oversight (Art.~14) & people able to understand, monitor, override and stop the system, aware of the tendency to
@@ -2507,13 +2508,13 @@ serious incidents & \cref{ch:monitoring}\\
 
 The obligations apply in stages. The prohibitions and the duty to support AI literacy\index{AI literacy} apply since 2 February 2025, and the
 obligations for general-purpose models since 2 August 2025. The obligations for high-risk\index{AI Act!high-risk systems} systems were due to apply from
-August 2026, but an amendment adopted in 2026, the \emph{Digital Omnibus\index{Digital Omnibus on AI|textbf} on AI} (Regulation (EU) 2026/1744, in force since 27 July 2026),
-postponed them to fixed dates: those for the systems of Annex~III\index{AI Act!Annex III}, such as credit scoring, apply from 2 December 2027, and those for systems
-embedded in regulated products from 2 August 2028 \citep{eu2026omnibus}. The amendment also widened the possibility of
+August 2026. An amendment adopted in 2026, the \emph{Digital Omnibus\index{Digital Omnibus on AI|textbf} on AI} (Regulation (EU) 2026/1744, in force since 27 July 2026),
+postponed them to fixed dates \citep{eu2026omnibus}. The obligations for the systems of Annex~III\index{AI Act!Annex III}, such as credit scoring, apply from 2 December 2027, and those for systems
+embedded in regulated products from 2 August 2028. The amendment also widened the possibility of
 processing personal data when strictly necessary to detect and correct biases, which matters because, as we saw in
 \cref{sec:fairness}, measuring discrimination usually requires the very attributes that one would like to leave out. Fines
 reach 35 million euros or 7\% of a company's worldwide annual turnover for prohibited practices, and 15 million euros or 3\% for
-other infringements. Each member state designates authorities to supervise the market; Spain created the first national
+other infringements. Each member state designates authorities to supervise the market; Spain was among the first to create a national
 agency, the Spanish Agency for the Supervision of Artificial Intelligence (AESIA), while the European Commission's AI Office
 supervises general-purpose models. This section describes the AI Act\index{AI Act} as amended in 2026, as checked on 12 October 2026;
 its obligations and dates must be rechecked for each edition.
@@ -2525,15 +2526,14 @@ its provider, must document its data and their representativeness, its performan
 applicants (\cref{lst:credit}), its known limitations and the conditions under which it should not be used. Its decisions must be
 logged, and a person must be able to review and override them: the cautious classifiers\index{cautious classifier} of \cref{sec:cautious}, which
 delegate\index{delegation} uncertain cases to an analyst, are a natural design. Rejected applicants may have the right to a clear and meaningful
-explanation of the role of the system in the decision (Article~86\index{AI Act!Article 86}); offering an explanation they can act on, such as the
-counterfactual explanations\index{counterfactual explanation} of \cref{sec:examplebased} (``with a debt ratio below 35\%, the loan would have been approved''),
-is a design choice that goes beyond that right. Once in use, the model must be monitored for drift and for changes in its performance across groups, and serious
-incidents must be reported (\cref{ch:monitoring}). None of these obligations requires a new technique; all of them require using the
-techniques of this book systematically, and documenting that they were used. The techniques help to meet the
+explanation of the role of the system in the decision (Article~86\index{AI Act!Article 86}). Offering an explanation they can act on is a design choice that goes beyond that right; examples are the
+counterfactual explanations\index{counterfactual explanation} of \cref{sec:examplebased}, such as ``with a debt ratio below 35\%, the loan would have been approved''. Once in use, the model must be monitored for drift and for changes in its performance across groups, and serious
+incidents must be reported (\cref{ch:monitoring}). These obligations do not require new techniques. They require using the
+techniques of this book systematically and documenting that they were used. The techniques help to meet the
 obligations, but they do not replace conformity assessment, legal documentation and the procedures the law requires.
 
 \begin{keyidea}
-The AI Act\index{AI Act} regulates what a system is used for, not how it is built. For high-risk uses it turns evaluation, data governance,
+The AI Act\index{AI Act} regulates what a system is used for. It does not regulate how the system is built. For high-risk uses it turns evaluation, data governance,
 documentation, human oversight, robustness and monitoring from good practice into legal obligations.
 \end{keyidea}
 
@@ -2544,13 +2544,13 @@ documentation, human oversight, robustness and monitoring from good practice int
   \item Unfairness can enter a machine learning system at every stage: measurement, learning, action and
         feedback. Removing the sensitive attribute\index{protected attribute} does not remove it.
   \item The main group fairness\index{fairness} criteria (independence, separation\index{fairness!separation} and sufficiency\index{fairness!sufficiency}) are conditional
-        independences that are generally incompatible; choosing one is choosing whose errors matter. They
-        are diagnostics, not certificates, and they cannot distinguish mechanisms with the same
+        independences that are generally incompatible; choosing one means deciding whose errors matter most. They
+        are diagnostic tools that cannot certify fairness, and they cannot distinguish mechanisms with the same
         observational distribution.
   \item Causal models distinguish observing from intervening. Confounders\index{confounder} must be adjusted for, mediators\index{mediator}
         and colliders\index{collider} must not; counterfactuals answer questions about alternatives to what happened. Both
         are needed to reason about discrimination.
-  \item Interpretability is needed because objectives are never completely specified. Interpretable models
+  \item Interpretability is needed because objectives are rarely completely specified. Interpretable models
         (linear, logistic, trees, rules) can be read directly, with care about their assumptions.
   \item Model-agnostic methods (PDP, ICE\index{individual conditional expectation}, interaction strength, permutation importance\index{feature importance!permutation}, surrogates\index{global surrogate}, LIME\index{LIME} and
         Shapley\index{Shapley values} values) explain any model, but each answers a different question and has limitations that
@@ -2568,8 +2568,7 @@ documentation, human oversight, robustness and monitoring from good practice int
 \section*{Bibliographic notes}
 \phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
-The fairness\index{fairness} and causality\index{causality} sections follow the approach of \citet{barocas2023fairness}, whose book is the
-best introduction to the field; \citet{mehrabi2021survey} survey the sources of bias and the mitigation
+The fairness\index{fairness} and causality\index{causality} sections follow the approach of \citet{barocas2023fairness}, whose book is an introduction to the field; \citet{mehrabi2021survey} survey the sources of bias and the mitigation
 techniques. \citet{pearl2018book} is an accessible introduction to causal reasoning, and
 \citet{pearl2009causality}, \citet{peters2017elements} and \citet{hernan2020causal} are more technical
 references. The interpretability sections follow \citet{molnar2022interpretable}, which describes many more

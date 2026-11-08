@@ -8,7 +8,7 @@ import generar
 
 W, H = generar.W, round(generar.W * 297 / 210)        # 1600 x 2263: A4 proportions
 TITLE = ("Evaluation, Deployment", "and Monitoring of Models")
-AUTHORS = ("C\u00e8sar Ferri, Carlos Monserrat, Yael Moros,", "F\u00e9lix Mart\u00ed and Fernando Mart\u00ednez-Plumed")
+AUTHORS = ("C\u00e8sar Ferri, Carlos Monserrat, Yael Moros, F\u00e9lix Mart\u00ed,", "Daniel Romero-Alvarado and Fernando Mart\u00ednez-Plumed")
 
 background, paths = generar.flow(random.Random(42))
 text = (f'<g font-family="DejaVu Sans" fill="#F5F2E9" font-weight="bold" font-size="78">'

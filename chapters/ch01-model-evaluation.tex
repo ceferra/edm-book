@@ -4,13 +4,13 @@
 % =====================================================================
 \chapter{Model Evaluation}\label{ch:evaluation}
 
-In 2021, a team at the University of Michigan published a retrospective external validation of the then-current
+In 2021, \citet{wong2021external}, at the University of Michigan, published a retrospective external validation of the then-current
 version of a sepsis\index{sepsis prediction} prediction model that was already in use in hundreds of hospitals in the United States. Its
 developer reported an area under the ROC curve\index{area under the ROC curve (AUC)}\index{ROC curve} between 0.76 and 0.83; on the 38,455 hospitalisations of their own
 hospital, the researchers measured 0.63. At the threshold\index{threshold} they studied, simulated alerts would have flagged about 18\%
-of all hospitalisations while missing about two thirds of those with sepsis \citep{wong2021external}. The case shows
-why external evaluation under the intended conditions of use is essential: the numbers that had been reported did not
-measure what mattered where the model was used.
+of all hospitalisations while missing about two thirds of those with sepsis. The case shows
+why a model must be evaluated externally, under the conditions in which it will be used. The figures reported by the developer did not
+describe how the model performed in the hospitals that used it.
 
 Training a model is usually the easy part of a machine learning project: modern libraries
 fit a random forest\index{random forest} or a neural network in a couple of lines of code. Deciding whether that
@@ -21,7 +21,7 @@ or silently degrade once it meets real data.
 
 This unit is about \emph{evaluation}: the procedures that give us trustworthy estimates of
 how a model will behave on new data, and the metrics that turn that behaviour into numbers
-that reflect what we care about. Evaluation is also the backbone of the rest of the course:
+that reflect what we care about. The rest of the course also depends on evaluation:
 we need it to decide how to combine models (Unit~2), to check whether a model is fair or
 robust (Unit~3), to automate model building (Unit~4), and to decide when a deployed model
 has to be updated (Units~5 and~6).
@@ -44,6 +44,8 @@ After studying this unit you should be able to:
   \item incorporate costs into evaluation and decision making;
   \item evaluate models in specialised settings (conformal prediction\index{conformal prediction}, open-set\index{open-set recognition} recognition,
         computer vision, natural language processing) and compare models statistically.
+\item evaluate systems built on language models and agents: repeat the runs, compare systems question by
+question, and report their cost;
 \end{itemize}
 \end{objectives}
 
@@ -93,14 +95,13 @@ show the most frequent iterations.}
 
 Twenty years after CRISP-DM was proposed, \citet{martinezplumed2021crisp} analysed how data science
 projects are actually carried out and found that they follow more flexible
-\emph{trajectories}: some projects are exploratory, some start from the data rather than
-from a business goal, and many go back and forth between activities. Evaluation, however,
+\emph{trajectories}: some projects are exploratory, some start from the data, and many go back and forth between activities. Evaluation, however,
 remains present in all of them, and its role grows as models are deployed in more varied
 and changing contexts.
 
-\subsection{What exactly are we evaluating?}
+\subsection{What are we evaluating?}
 
-The word ``evaluation'' hides at least three different objects:
+The word ``evaluation'' can refer to at least three different objects:
 \begin{enumerate}
   \item a \emph{trained model} $h$, a concrete artefact that we may deploy
         (\emph{model assessment}: how well will \emph{this} model perform?);
@@ -117,13 +118,12 @@ statement of the \emph{uncertainty} of the estimate.
 The purpose of the model is described by its \emph{operating context}: the class distribution
 in deployment, the costs of the different errors, the fraction of cases that can be acted
 upon, the data distribution itself. Two models can be ranked differently in two contexts,
-and the context may change after deployment. Evaluating models over ranges of contexts,
-rather than at a single point, is one of the themes of this unit
+and the context may change after deployment. Evaluating models over ranges of contexts is one of the themes of this unit
 \citep{hernandez2012unified}; detecting when the context has changed is one of the themes of
 Unit~6 \citep{morenotorres2012unifying}.
 
 \begin{keyidea}
-A metric is a model of what we care about. Before computing any number, make explicit what
+A metric should measure what we care about in the application. Before computing any number, make explicit what
 the model will be used for, which errors matter and how much, and under which conditions it
 will operate.
 \end{keyidea}
@@ -169,10 +169,9 @@ but we can only compute averages over finite samples, such as the \emph{training
   \widehat R_{\text{train}}(h)=\frac1n\sum_{i=1}^n \ell\bigl(y_i,h(x_i)\bigr).
 \end{equation}
 Because the learning algorithm chose $h$ precisely to make $\widehat R_{\text{train}}$ small,
-the training error is an \emph{optimistically biased} estimate of $R(h)$. This simple fact is
-the reason why evaluation needs data that played no role in building the model.
+the training error is an \emph{optimistically biased} estimate of $R(h)$. This is why evaluation needs data that played no role in building the model.
 
-\subsection{The papaya problem}
+\subsection{Overfitting and underfitting in the papaya example}
 
 \citet{shalev2014understanding} illustrate the problem with a story. Imagine arriving on an
 island where papayas are a common food. You want to learn to predict whether a papaya is
@@ -182,7 +181,7 @@ a few papayas, taste them, and record the results.
 A first learner simply memorises: it predicts ``tasty'' for papayas identical to the tasty
 ones in the sample and ``not tasty'' for everything else. Its training error is zero, but it
 is useless, since almost every new papaya differs slightly from those already tasted. This
-is \emph{overfitting\index{overfitting|textbf}}: the model fits the particular sample, including its noise, instead of
+is \emph{overfitting\index{overfitting|textbf}}: the model fits the particular sample, including its noise, and misses
 the underlying regularity.
 
 A second learner assumes that tasty papayas are those whose softness and colour both lie in
@@ -212,17 +211,17 @@ The three terms have a clear interpretation:
   \item the \emph{noise} $\sigma^2$ is irreducible: no model can predict the random part of $y$;
   \item the \emph{bias} measures the error due to wrong or too restrictive assumptions of the
         learning algorithm. High bias means that the model pays little attention to the
-        data and oversimplifies the problem: \emph{underfitting\index{underfitting|textbf}};
+        data and oversimplifies the problem, which is \emph{underfitting\index{underfitting|textbf}};
   \item the \emph{variance} measures how much the model changes when the training set
         changes. High variance means that the model is sensitive to small fluctuations of the
-        sample and fits its noise: \emph{overfitting\index{overfitting|textbf}}.
+        sample and fits its noise, which is \emph{overfitting\index{overfitting|textbf}}.
 \end{itemize}
 
 \Cref{fig:polyfits} fits polynomials of increasing degree to 20 noisy points of
-$f(x)=\sin(2\pi x)$. The straight line underfits (training and test MSE\index{mean squared error (MSE)} of $0.203$ and
+$f(x)=\sin(2\pi x)$. The straight line underfits (training and test mean squared error, MSE\index{mean squared error (MSE)}, of $0.203$ and
 $0.236$); the degree-4 polynomial captures the shape (0.069 and 0.074); the degree-15
 polynomial passes very close to every training point (training MSE 0.016) but oscillates
-wildly between them, and its test MSE explodes to about $3\times10^3$.
+strongly between them, and its test MSE rises to about $3\times10^3$.
 
 \begin{figure}[htbp]
 \centering
@@ -238,8 +237,7 @@ with the same 40 input positions and fresh noise each time, and estimates each t
 \cref{eq:biasvariance}. As the degree grows, the bias drops quickly (from 0.54 for a
 constant model to practically zero from degree~5 on), while the variance grows steadily
 (from 0.002 to 0.061). The expected test error, which is their sum plus the noise, is
-U-shaped, with its minimum at degree~3. The training error, in contrast, keeps decreasing:
-it is blind to overfitting.
+U-shaped, with its minimum at degree~3. The training error, in contrast, keeps decreasing, so it does not reveal the overfitting.
 
 \begin{figure}[htbp]
 \centering
@@ -254,7 +252,7 @@ For the 0--1 loss of classification the decomposition is not additive in the sam
 \citep{domingos2000unified}, but the intuition carries over: flexible models have low bias and
 high variance, rigid models the opposite \citep{geman1992neural}.
 
-\subsection{Complexity in practice: the \texorpdfstring{$k$}{k}-nearest neighbours example}
+\subsection{Model complexity in \texorpdfstring{$k$}{k}-nearest neighbours}
 
 The complexity of a model is controlled by its hyperparameters: the degree of a polynomial,
 the depth of a tree, the strength of a regularisation term, the number of boosting\index{boosting}
@@ -262,7 +260,7 @@ iterations, or the number of neighbours $k$ in $k$-NN. \Cref{fig:knn} shows $k$-
 two-moons problem. With $k=1$ every training point is classified correctly (training accuracy\index{accuracy}
 1.00) but the frontier is jagged and the test accuracy is only 0.88; with $k=150$ the frontier
 is almost a straight line and both accuracies are low (0.82 and 0.83); $k=15$ is a good
-compromise (0.94 and 0.92). Choosing a hyperparameter is choosing a point on the bias--variance\index{bias--variance trade-off}
+compromise (0.94 and 0.92). The value chosen for a hyperparameter fixes a point on the bias--variance\index{bias--variance trade-off}
 trade-off, and this choice requires data that are not used for training
 (\cref{sec:protocols}).
 
@@ -277,14 +275,14 @@ $k$ means high variance (overfitting); large $k$ means high bias (underfitting).
 \subsection{Learning curves}
 
 A \emph{learning curve\index{learning curve|textbf}} plots the training and validation performance as a function of the
-size of the training set (\cref{fig:learningcurves}). It is a simple and powerful diagnostic:
+size of the training set (\cref{fig:learningcurves}). It helps to diagnose three situations:
 \begin{itemize}
   \item \emph{high bias}: both curves converge quickly to a similar, unsatisfactory value
         (logistic regression on the two moons, about 0.86). More data will not help; we need
         a more flexible model or better features;
   \item \emph{high variance}: there is a persistent gap between the training curve (1.00 for
         an unpruned tree) and the validation curve (0.88). More data, regularisation or
-        ensembles\index{ensemble} (Unit~2) will help;
+        ensembles\index{ensemble} (Unit~2) can help;
   \item a good compromise shows both curves close and high ($k$-NN with $k=25$: 0.92 and 0.91).
 \end{itemize}
 
@@ -297,7 +295,7 @@ two-moons problem with 3000 examples.}
 \end{figure}
 
 \begin{further}
-The U-shaped curve of \cref{fig:biasvariance} is not the whole story for heavily
+The U-shaped curve of \cref{fig:biasvariance} does not fully describe heavily
 over-parameterised models such as deep neural networks. \citet{belkin2019reconciling}
 documented a \emph{double descent}: beyond the point where the model can interpolate the
 training data, the test error may decrease again as the number of parameters keeps growing.
@@ -306,9 +304,9 @@ reliable guide.
 \end{further}
 
 % ---------------------------------------------------------------------
-\section{Estimating performance: evaluation protocols}\label{sec:protocols}
+\section{Protocols for estimating performance}\label{sec:protocols}
 
-The golden rule of evaluation is simple to state and easy to break: \emph{the performance of
+The basic rule of evaluation, and one that is often broken, is that \emph{the performance of
 a model must be estimated on data that played no role in building it}, and ``building''
 includes preprocessing, feature selection, hyperparameter tuning\index{hyperparameter optimisation} and model selection.
 
@@ -353,8 +351,8 @@ points:
   \item \emph{leave-one-out} CV ($k=n$) is almost unbiased but expensive and has high
         variance; \emph{repeated} CV, with several random partitions, reduces the variance
         due to the particular partition;
-  \item CV estimates the performance of the \emph{learning procedure} when trained on
-        $(k-1)n/k$ examples, not of a particular model. After CV, the final model is retrained
+  \item CV estimates the performance of the \emph{learning procedure} when it is trained on
+        $(k-1)n/k$ examples. It does not estimate the performance of any particular model. After CV, the final model is retrained
         on all the data, so the estimate is slightly pessimistic;
   \item the fold estimates are not independent (the training sets overlap), and there is no
         unbiased estimator of the variance of the CV estimate \citep{bengio2004no}. This has
@@ -416,21 +414,20 @@ set. The probability that a given example is never drawn is $(1-1/n)^n\approx e^
 remaining \emph{out-of-bag\index{out-of-bag estimate|textbf}} (OOB) examples can be used for testing. Repeating the process $B$
 times and averaging the OOB errors gives a pessimistic estimate (each model sees only 63.2\%
 of the distinct examples); the \emph{.632 estimator} corrects it by mixing it with the
-optimistic training error,
+optimistic training error ($\widehat R$ denotes an estimate of the error rate),
 \begin{equation}
   \widehat R_{.632}=0.368\,\widehat R_{\text{train}}+0.632\,\widehat R_{\text{OOB}},
 \end{equation}
 and the \emph{.632+} variant further corrects the case of strongly overfitting models
-\citep{efron1997improvements}. The bootstrap is also the standard tool to build confidence
-intervals\index{confidence interval} for any metric (\cref{sec:stats}), and the OOB idea is used by random forests
+\citep{efron1997improvements}. The bootstrap is also a common way to build confidence
+intervals\index{confidence interval} for almost any metric (\cref{sec:stats}), and the OOB idea is used by random forests
 (Unit~2).
 
 \subsection{Model selection and nested cross-validation}
 
 Hyperparameters are usually tuned by evaluating many candidate configurations with
 cross-validation and keeping the best one. The CV score of the winner, however, is
-optimistically biased: when many candidates are compared on the same data, the best one is
-partly the luckiest one \citep{varma2006bias,cawley2010over}. To estimate the performance of
+optimistically biased: when many candidates are compared on the same data, the best one owes part of its score to chance \citep{varma2006bias,cawley2010over}. To estimate the performance of
 the whole procedure (``tune with grid search\index{grid search}, then train''), the tuning must itself be
 evaluated inside an outer CV loop. This is \emph{nested cross-validation\index{cross-validation!nested|textbf}\index{cross-validation|textbf}}
 (\cref{alg:nestedcv}).
@@ -454,9 +451,9 @@ evaluated inside an outer CV loop. This is \emph{nested cross-validation\index{c
 \end{algorithmic}
 \end{algorithm}
 
-\Cref{lst:nested} tunes an SVM over 30 hyperparameter combinations on a small, noisy problem.
-The inner-CV AUC of the selected configuration is 0.782, but the honest nested estimate is
-0.746: an optimism of almost four points of AUC, larger than many of the differences between
+\Cref{lst:nested} tunes a support vector machine (SVM) over 30 hyperparameter combinations on a small, noisy problem.
+The inner-CV AUC (the area under the ROC curve, \cref{sec:scoring}) of the selected configuration is 0.782, but the honest nested estimate is
+0.746. The inner-CV score is therefore almost four points of AUC too optimistic, and this gap is larger than many of the differences between
 models reported in practice. Note that nested CV evaluates the tuning \emph{procedure}; the
 model finally deployed is obtained by running that procedure on all the data.
 
@@ -490,7 +487,7 @@ Inner-CV AUC of the selected model (optimistic): 0.7822
 Nested CV AUC (honest): 0.7458 +/- 0.0257
 \end{pyoutput}
 
-\subsection{Dependent data: groups and time}
+\subsection{Grouped, temporal and spatial data}
 
 Random splits assume that examples are independent. When they are not, random CV is
 optimistic, because information leaks between related training and test examples:
@@ -527,13 +524,12 @@ fold 4: train=[0, 1, 2, 3, 4, 5, 6, 7, 8, 9]  test=[10, 11]
 \subsection{Data leakage}
 
 \emph{Data leakage\index{data leakage|textbf}} is the use, during training or evaluation, of information that would not
-be available when the model is used in practice \citep{kaufman2012leakage}. It is the most
-common cause of results that look too good to be true. Typical forms are:
+be available when the model is used in practice \citep{kaufman2012leakage}. It is a common cause of results that look too good to be true. Typical forms are:
 \begin{itemize}
   \item \emph{target leakage}: features that are consequences of the target or are recorded
         after the event (the number of days in hospital to predict hospital admission, or a
         late-payment fee to predict default);
-  \item \emph{train--test contamination\index{contamination of benchmarks|textbf}}: preprocessing steps (scaling, imputation, feature
+  \item \emph{train--test contamination}: preprocessing steps (scaling, imputation, feature
         selection, resampling, target encoding) fitted on the whole data set before
         splitting it;
   \item \emph{temporal leakage}: random splits of time-ordered data, or features computed
@@ -578,7 +574,7 @@ Right CV accuracy: 0.50
 \begin{pitfall}
 Any step that looks at the data (including the labels) is part of the model. Put scaling,
 imputation, feature selection, resampling and encoders inside a \code{Pipeline}, and evaluate
-the pipeline, never a model fitted on preprocessed data.
+the whole pipeline, including these steps.
 \end{pitfall}
 
 % ---------------------------------------------------------------------
@@ -621,7 +617,7 @@ Three predictions are wrong, so the error is $3/10=0.3$ (30\%) and the accuracy 
 
 \subsection{The confusion matrix}
 
-Accuracy hides \emph{which} errors are made. The \emph{confusion matrix\index{confusion matrix|textbf}} counts the examples
+Accuracy does not show \emph{which} errors are made. The \emph{confusion matrix\index{confusion matrix|textbf}} counts the examples
 for every combination of predicted and actual class. In this book we follow the convention
 of \citet{fawcett2006introduction}: rows correspond to the \emph{predicted} class and columns
 to the \emph{actual} class. In binary problems, one class is called \emph{positive} (usually
@@ -670,7 +666,7 @@ before reading a confusion matrix.
 
 \subsection{Metrics derived from the confusion matrix}
 
-\Cref{tab:metrics} collects the most common metrics, with their values for the purchase
+\Cref{tab:metrics} lists the usual metrics, with their values for the purchase
 example ($\TP=4$, $\FN=2$, $\FP=1$, $\TN=3$), and \cref{lst:confusion} computes them with
 scikit-learn.
 
@@ -750,7 +746,7 @@ A few remarks help to choose among them:
         NPV\index{predictive value!negative}, accuracy, $F_1$, MCC and kappa mix both columns and \emph{do} depend on it:
         comparisons across different class mixtures confound model behaviour with prevalence\index{prevalence}
         unless the operating context is accounted for;
-  \item sensitivity\index{sensitivity} and specificity\index{specificity}, or precision and recall, always come in pairs: a model
+  \item sensitivity\index{sensitivity} and specificity\index{specificity}, or precision and recall, should be read in pairs: a model
         can trivially maximise one at the expense of the other. Balanced accuracy, the
         G-mean and $F_\beta$ summarise each pair; $\beta>1$ weighs recall more than
         precision \citep{vanrijsbergen1979information};
@@ -758,14 +754,14 @@ A few remarks help to choose among them:
         where negatives are innumerable and uninteresting, but it also means that $F_1$
         changes if we swap the roles of the two classes;
   \item the MCC uses the four cells, is symmetric in the classes, ranges from $-1$ to $1$ and
-        is 0 for random predictions \citep{matthews1975comparison}. It is a good single-number
-        summary for imbalanced\index{class imbalance} binary problems \citep{chicco2020advantages}. The G-mean
+        is 0 for random predictions \citep{matthews1975comparison}. \citet{chicco2020advantages} recommend it as a single-number
+        summary for imbalanced\index{class imbalance} binary problems. The G-mean
         was proposed for imbalanced problems by \citet{kubat1997addressing}, and
         \citet{brodersen2010balanced} discuss balanced accuracy.
         \citet{sokolova2009systematic} analyse the properties of many more metrics.
 \end{itemize}
 
-\subsection{Agreement beyond chance: Cohen's kappa}
+\subsection{Cohen's kappa}
 
 Accuracy does not take into account that some agreement between predictions and actual
 classes happens by chance. \emph{Cohen's kappa\index{Cohen's kappa|textbf}} \citep{cohen1960coefficient} corrects for it:
@@ -814,7 +810,7 @@ for two tests. The dots mark the PPV at a prevalence of 1\%.}
 \end{figure}
 
 \begin{example}{What is the sensitivity of a COVID-19 test?}{covid}
-During the COVID-19 pandemic, rapid antigen tests were criticised because, compared with PCR,
+During the COVID-19 pandemic, rapid antigen tests were criticised because, compared with PCR (polymerase chain reaction) tests,
 they missed a substantial fraction of infections. \citet{mina2020rethinking} argued that this
 comparison used the wrong reference for the purpose of \emph{containment}. PCR detects viral
 RNA long before and long after a person is infectious, whereas antigen tests detect the high
@@ -823,7 +819,7 @@ matters is the sensitivity for \emph{infectious} people, and also how often and 
 results are obtained: a cheap test used frequently, with immediate results, can prevent more
 transmission than a very sensitive test whose result arrives two days later.
 
-The lesson goes beyond medicine: a metric is only meaningful with respect to a reference
+The same applies outside medicine. A metric is only meaningful with respect to a reference
 (what counts as a ``true'' positive) and to the context in which the model is deployed.
 \end{example}
 
@@ -894,15 +890,15 @@ weighted avg      0.766     0.750     0.756        20
 % ---------------------------------------------------------------------
 \section{ROC analysis}\label{sec:roc}
 
-\subsection{Origins: signal detection}
+\subsection{Origins in signal detection}
 
 Receiver Operating Characteristic\index{ROC analysis} (ROC) analysis originated in signal detection theory,
 developed to analyse radar signals during the Second World War and later used extensively in
 psychophysics and medical diagnosis \citep{green1966signal}. The problem is to decide whether
 a signal is present in a noisy observation. If the observations follow one distribution when
-there is only noise and another when signal is present, any decision rule\index{decision rules} of the form ``say
+there is only noise and another when signal is present, any decision rule of the form ``say
 \emph{signal} if the observation exceeds a threshold $t$'' trades hits (true positives)
-against false alarms (false positives), and the best threshold depends on the strength of the
+against false alarms (false positives). The best threshold depends on the strength of the
 signal, on the noise variance and on the hit or false alarm rate we are willing to accept
 (\cref{fig:signal}). \citet{spackman1989signal} was one of the first to use ROC graphs to
 evaluate machine learning algorithms.
@@ -957,7 +953,7 @@ $\TPR=m\cdot\FPR+b$, an \emph{iso-performance line}, with slope
 \begin{equation}\label{eq:isoslope}
   m=\frac{\pi_-\,c_{\mathrm{FP}}}{\pi_+\,c_{\mathrm{FN}}}=\frac{N}{P}\cdot\frac{c_{\mathrm{FP}}}{c_{\mathrm{FN}}}.
 \end{equation}
-For accuracy (equal costs) the slope is simply the class ratio $C=N/P$, and the lines are
+For accuracy (equal costs) the slope is the class ratio $C=N/P$, and the lines are
 called \emph{iso-accuracy\index{iso-accuracy line|textbf}\index{accuracy|textbf} lines} \citep{flach2003geometry}. Steep lines (many negatives or
 expensive false positives) favour conservative classifiers close to $(0,0)$; flat lines
 favour liberal classifiers close to $(1,1)$.
@@ -988,7 +984,7 @@ TPR\index{true positive rate} & 0.50 & 0.60 & 0.80 & 0.70 & 0.95\\
 \end{tabular}
 \end{center}
 The convex hull is $(0,0)\to\text{CN2}\to\text{C4.5}\to\text{SVM}\to(1,1)$, with segment slopes
-$10$, $2.73$, $0.34$ and $0.125$; Ripper and NB lie below it (\cref{fig:rochull}).
+$10$, $2.73$, $0.34$ and $0.125$; Ripper and naive Bayes (NB) lie below it (\cref{fig:rochull}).
 \begin{itemize}
   \item With balanced classes, $C=1$ lies between 2.73 and 0.34, so C4.5 is optimal, with
         accuracy $0.5\cdot0.80+0.5\cdot(1-0.16)=0.82$.
@@ -1000,7 +996,7 @@ $10$, $2.73$, $0.34$ and $0.125$; Ripper and NB lie below it (\cref{fig:rochull}
         examples are positive; AlwaysPos is optimal when $C<0.125$, that is, when less than
         $1/9\approx11\%$ are negative.
 \end{itemize}
-No classifier is the best in all contexts, and two of them are the best in none.
+None of the five classifiers is optimal in every context, and Ripper and NB are not optimal in any.
 \end{example}
 
 \begin{figure}[htbp]
@@ -1014,7 +1010,7 @@ context.}
 
 \subsection{Scoring classifiers and ROC curves}
 
-Most classifiers can output a \emph{score} rather than a label: a scoring classifier\index{scoring classifier} assigns
+Most classifiers can also output a \emph{score}: a scoring classifier\index{scoring classifier} assigns
 to each example a real-valued score $s(x)$, with larger values indicating stronger evidence for the positive class,
 such as a predicted positive-class probability or a signed decision margin. Ratios are useful in specific cases, such
 as posterior odds or a likelihood ratio $P(x\mid+)/P(x\mid-)$ with a positive denominator; arbitrary class scores need
@@ -1041,7 +1037,7 @@ gives a point in ROC space\index{ROC space}, and moving the threshold from $+\in
 \end{algorithmic}
 \end{algorithm}
 
-In words: start at $(0,0)$ and walk down the ranking; each positive moves the curve up by
+The algorithm starts at $(0,0)$ and walks down the ranking; each positive moves the curve up by
 $1/P$, each negative moves it right by $1/N$, and a group of tied scores containing both
 classes produces a diagonal step.
 
@@ -1072,7 +1068,7 @@ threshold that produces it; the shaded area is the AUC.}
 \subsection{The area under the ROC curve}
 
 The \emph{area under the ROC curve\index{area under the ROC curve (AUC)|textbf}\index{ROC curve|textbf}} (AUC) summarises the whole curve in a single number
-\citep{bradley1997use}. It has a very intuitive interpretation
+\citep{bradley1997use}. It can be interpreted as a probability
 \citep{hanley1982meaning}: the AUC is the probability that a randomly chosen positive
 receives a higher score than a randomly chosen negative, which is the Mann--Whitney\index{Mann--Whitney--Wilcoxon statistic}--Wilcoxon
 statistic \citep{mann1947test}:
@@ -1131,9 +1127,8 @@ The AUC has several useful properties:
 \Cref{fig:rocmodels} compares four classifiers on the same synthetic problem. The random forest
 dominates the other three almost everywhere (AUC 0.902), whereas the curves of logistic
 regression (0.823) and naive Bayes\index{naive Bayes} (0.828) cross: which of the two is preferable depends on the
-region of the curve where the model will operate. ROC curves are therefore very useful to
-select the best model for a particular context of deployment, and the AUC is the right summary
-when that context is unknown. When the relevant region is known (for instance, a screening
+region of the curve where the model will operate. ROC curves therefore help to
+select a model for a particular context of deployment, and the AUC can summarise the curve when that context is unknown. When the relevant region is known (for instance, a screening
 programme that cannot tolerate more than 10\% of false alarms) the \emph{partial} AUC over that
 region is more informative.
 
@@ -1150,8 +1145,7 @@ show the crisp classifiers obtained with the default threshold 0.5.}
 costs using a distribution that depends on the classifier itself, and proposed the
 H-measure as an alternative. \citet{hernandez2012unified} gave a unifying view: accuracy, AUC,
 the Brier score\index{Brier score} and other metrics are all \emph{expected losses}, under different assumptions
-about how the decision threshold will be chosen when the model is deployed. Choosing a metric
-is, implicitly, choosing such an assumption.
+about how the decision threshold will be chosen when the model is deployed. A choice of metric therefore carries an implicit assumption about how the threshold will be chosen.
 \end{further}
 
 \subsection{Multiclass ROC analysis}
@@ -1167,7 +1161,7 @@ the AUC is extended by averaging binary AUCs:
           M=\frac{2}{c(c-1)}\sum_{j<k}\hat A(j,k),\qquad
           \hat A(j,k)=\frac{\mathrm{AUC}(j,k)+\mathrm{AUC}(k,j)}{2},
         \end{equation*}
-        and it is insensitive to the class distribution.
+        where $\mathrm{AUC}(j,k)$ is the AUC computed on the examples of classes $j$ and $k$ only, with class $j$ treated as positive. This measure is insensitive to the class distribution.
 \end{itemize}
 In scikit-learn, these variants are selected with the arguments \code{multi_class}
 (\code{"ovr"} or \code{"ovo"}) and \code{average} (\code{"macro"} or \code{"weighted"}) of
@@ -1233,7 +1227,7 @@ the actual class:
 \end{equation}
 It takes values in $[0,\infty)$, it is 0 only for perfect and fully confident predictions, and
 it penalises confident mistakes without limit: assigning probability close to zero to the
-actual class costs almost infinitely. Implementations clip the probabilities to
+actual class gives a very large loss. Implementations clip the probabilities to
 $[\epsilon,1-\epsilon]$ to avoid infinite values. The logarithm can be natural (as in
 scikit-learn) or in base~2 (the loss is then measured in bits).
 
@@ -1280,7 +1274,7 @@ p3=0.68  AUC=0.667  Acc=0.80  Brier=0.1990  LogLoss=0.5843
 
 \subsection{Proper scoring rules}
 
-Which of these metrics actually rewards good probabilities? A \emph{scoring rule} $S(p,y)$
+Which of these metrics reward good probabilities? A \emph{scoring rule} $S(p,y)$
 assigns a loss to the prediction $p$ when the outcome is $y$. It is \emph{proper} if, whenever
 the true probability of the event is $q$, the expected loss $\E_{Y\sim q}[S(p,Y)]$ is minimised
 by predicting $p=q$, and \emph{strictly proper} if $q$ is the only minimiser
@@ -1338,8 +1332,7 @@ situations can happen, as \cref{lst:disagree} verifies:
         punishes the single large error of $M_1$.
   \item \emph{Accuracy\index{accuracy|textbf} prefers $M_1$, MAE prefers $M_2$.} Actual classes $(+,+,-,-)$. $M_1$
         predicts $(0.51,0.51,0.49,0.49)$: all correct at threshold 0.5, but barely (accuracy
-        1, MAE 0.49). $M_2$ predicts $(0.99,0.99,0.01,0.60)$: confident and almost always
-        right (accuracy 0.75, MAE 0.16).
+        1, MAE 0.49). $M_2$ predicts $(0.99,0.99,0.01,0.60)$: confident, and right on three of the four examples (accuracy 0.75, MAE 0.16).
   \item \emph{Accuracy prefers $M_1$, AUC\index{area under the ROC curve (AUC)|textbf} prefers $M_2$.} Same actual classes. $M_1$ predicts
         $(0.90,0.40,0.30,0.45)$: accuracy 0.75, AUC 0.75. $M_2$ predicts $(0.90,0.80,0.70,0.60)$:
         a perfect ranking (AUC 1) with a bad threshold, since everything is predicted
@@ -1379,7 +1372,7 @@ print(f"(c) Acc: {acc(y, m1):.2f} vs {acc(y, m2):.2f} | "    # (c) accuracy vs. 
 \subsection{What is a calibrated model?}
 
 A binary probabilistic classifier is \emph{well calibrated\index{calibration|textbf}} if, among the examples that receive
-a predicted probability $p$, the proportion of positives is approximately $p$:
+a predicted probability $p$, the proportion of positives is approximately $p$. With $X$ a random example and $Y\in\{0,1\}$ its class,
 \begin{equation}
   P\bigl(Y=1\mid\hat p(X)=p\bigr)=p\qquad\text{for all }p.
 \end{equation}
@@ -1394,7 +1387,7 @@ score\index{Brier score} decomposes into a calibration term and a refinement ter
 
 Not all learning methods produce calibrated probabilities. Naive Bayes is a clear example: its
 independence assumption counts correlated evidence several times and pushes the probabilities
-towards 0 and 1. Maximum-margin methods such as SVMs output distances to a hyperplane, not
+towards 0 and 1. Maximum-margin methods such as SVMs output distances to a hyperplane, which are not
 probabilities; boosted trees tend to avoid extreme values; and modern deep networks are often
 overconfident \citep{niculescu2005predicting,guo2017calibration}. As we will see in
 \cref{sec:imbalance}, resampling and class weights also distort the probabilities.
@@ -1472,10 +1465,10 @@ calibration error in each bin:
 \end{itemize}
 
 \begin{pitfall}
-\textbf{Small samples flatter hulls and calibration errors.} On small or very imbalanced\index{class imbalance} validation sets, the
-convex hull of noisy ROC points, the isotonic fit behind CalLoss and the bins of the ECE all adapt to the noise:
-the area under the hull is optimistic, and the calibration errors are biased (the ECE is positive even for a
-perfectly calibrated model). Estimate them on data that took no part in fitting the hull or the calibrator, and
+\textbf{Hulls and calibration errors are biased on small samples.} On small or very imbalanced\index{class imbalance} validation sets, the
+convex hull of noisy ROC points, the isotonic fit behind CalLoss and the bins of the ECE all adapt to the noise. As a result,
+the area under the hull is optimistic and the calibration errors are biased: the ECE is positive even for a
+perfectly calibrated model. Estimate them on data that took no part in fitting the hull or the calibrator, and
 report their variability, for instance with the bootstrap\index{bootstrap}.
 \end{pitfall}
 
@@ -1485,7 +1478,7 @@ report their variability, for instance with the bootstrap\index{bootstrap}.
 maps the scores of the classifier to calibrated probabilities. The examples used to train the
 calibrator must not have been used to train the classifier, because scores on training data
 are optimistic; scikit-learn's \code{CalibratedClassifierCV} handles this with an internal
-cross-validation. The most common calibrators are:
+cross-validation. Common calibrators are:
 \begin{itemize}
   \item \emph{Platt scaling\index{calibration!Platt scaling|textbf}} \citep{platt1999probabilistic}: a logistic regression on the
         score $s$, $\hat p=1/\bigl(1+\exp(As+B)\bigr)$, with $A$ and $B$ fitted by maximum
@@ -1497,7 +1490,7 @@ cross-validation. The most common calibrators are:
         calibration sets. It is equivalent to calibrating with the ROC convex hull\index{ROC convex hull}
         \citep{fawcett2007pav};
   \item \emph{temperature scaling} \citep{guo2017calibration}: for multiclass neural networks,
-        divides the logits $z$ by a single parameter $T>0$ fitted on validation data,
+        divides the logits $z$ (the scores of the network before the softmax function turns them into probabilities) by a single parameter $T>0$ fitted on validation data,
         $\hat p=\operatorname{softmax}(z/T)$. It does not change the predicted class, so the
         accuracy is unchanged. It mainly improves \emph{confidence} (top-label) calibration,
         $P(Y=\hat y\mid\max_j\hat p_j=p)=p$; \emph{classwise} calibration, $P(Y=j\mid\hat p_j=p)=p$ for every
@@ -1558,7 +1551,7 @@ NB + isotonic  Brier=0.0849  LogLoss=0.2809  ECE=0.0068
 % ---------------------------------------------------------------------
 \section{Imbalanced classification}\label{sec:imbalance}
 
-In many important problems one class is rare: fraud, diseases, machine failures, customers
+In many problems one class is rare: fraud, diseases, machine failures, customers
 who respond to a campaign\index{mailing campaign}. Imbalance\index{class imbalance} affects both evaluation and learning.
 
 \subsection{Why accuracy fails}
@@ -1597,8 +1590,8 @@ Kappa & \textbf{0.458} & 0 & 0.119\\
 The classifier with the lowest error, $c_2$, never detects a faulty valve: it simply predicts
 the majority class. Balanced accuracy and the G-mean prefer $c_3$, which finds 80\% of the
 faulty valves at the price of 5400 unnecessary inspections. $F_1$, MCC and kappa prefer $c_1$,
-which is much more precise. Which one is better? The metrics cannot tell; only the
-consequences of each type of error can. We will come back to this example in
+which is much more precise. The metrics alone cannot decide which one is better; that depends on the
+consequences of each type of error. We will come back to this example in
 \cref{sec:costs}.
 \end{example}
 
@@ -1615,12 +1608,12 @@ The \emph{precision\index{precision|textbf}--recall\index{recall|textbf}} (PR) c
 the \emph{average precision\index{average precision|textbf}} (AP) summarises it as a step-wise area,
 $\mathrm{AP}=\sum_k(R_k-R_{k-1})P_k$, where $P_k$ and $R_k$ are the precision and recall at the
 $k$-th threshold. Unlike the ROC curve\index{ROC curve}, the PR curve depends on the class distribution: the
-precision of a random classifier equals the prevalence\index{prevalence}. This is exactly why it is informative
+precision of a random classifier equals the prevalence\index{prevalence}. This is why it is informative
 with rare positives \citep{saito2015precision}. In \cref{fig:prvsroc} the same score
 distributions are evaluated with 50\% and 2\% of positives. The ROC curves are almost
 identical (AUC 0.857 and 0.862), but the average precision drops from 0.855 to 0.213: with
 many negatives, even a small false positive rate\index{false positive rate} produces many false alarms, and most positive
-predictions are wrong. The ROC curve hides this; the PR curve shows it.
+predictions are wrong. The ROC curve does not show this effect. The PR curve does.
 
 \begin{figure}[htbp]
 \centering
@@ -1633,8 +1626,7 @@ the precision of a random classifier (the prevalence).}
 
 \citet{davis2006relationship} proved that a curve dominates another in ROC space\index{ROC space} if and only
 if it dominates it in PR space, but that linear interpolation between points, valid in ROC
-space, is not valid in PR space. This is why AP is computed as a step-wise sum rather than
-with the trapezoidal rule.
+space, is not valid in PR space. This is why AP is computed as a step-wise sum. The trapezoidal rule would interpolate linearly between the points.
 
 \subsection{Learning from imbalanced data}
 
@@ -1693,7 +1685,7 @@ set and the evaluation is optimistic. The \code{Pipeline} of \textsf{imbalanced\
 \citep{lemaitre2017imbalanced} applies the resampling only when fitting, inside each fold.
 \end{pitfall}
 
-\subsection{What rebalancing really does}
+\subsection{The effects of rebalancing}
 
 \Cref{lst:imbalance} compares, with 5-fold CV on a problem with about 3.5\% of positives (3\% before the label noise\index{label noise}
 of the generator), a plain
@@ -1736,10 +1728,9 @@ weights or the sample also changes the fitted model, and with it the ranking, in
 on the learner and on the sampling method. And because the model has learned that positives are as
 frequent as negatives, its probabilities no longer describe the original population. Under pure
 prior shift\index{label shift}, when the class-conditional distributions do not change, the probabilities of a model
-trained with a prevalence\index{prevalence} $\pi'$ can be corrected for a population with prevalence $\pi$ (random
+trained with a prevalence\index{prevalence} $\pi'$ can be corrected for a population with prevalence $\pi$ \citep{saerens2002adjusting,elkan2001foundations}. Random
 sampling of whole classes approximates this situation; after SMOTE or other feature-dependent
-sampling, recalibrate on data representative of deployment instead)
-\citep{saerens2002adjusting,elkan2001foundations}:
+sampling, recalibrate on data representative of deployment instead. The correction is
 \begin{equation}\label{eq:priorshift}
   \hat p=\frac{\frac{\pi}{\pi'}\,\hat p'}{\frac{\pi}{\pi'}\,\hat p'+\frac{1-\pi}{1-\pi'}\,(1-\hat p')}.
 \end{equation}
@@ -1749,7 +1740,7 @@ prediction, \citet{vandengoorbergh2022harm} showed that imbalance\index{class im
 calibration of logistic regression models without improving their discrimination.
 
 \begin{keyidea}
-Class imbalance is as much a problem of evaluation and decision as of learning. Often the
+Class imbalance affects evaluation and decision making as well as learning. Often the
 best strategy is to keep the data as they are, obtain calibrated probabilities, evaluate with
 metrics suited to rare classes, and choose the threshold according to the costs
 (\cref{sec:costs}).
@@ -1913,7 +1904,7 @@ There are four main ways of making a learning process sensitive to costs:
         using the default threshold behaves as if it used $t^\star$. \citet{elkan2001foundations}
         showed that, if correct decisions cost nothing, the number of negative examples must be
         multiplied by $c_{\mathrm{FP}}/c_{\mathrm{FN}}$ (or, equivalently, positives replicated
-        $c_{\mathrm{FN}}/c_{\mathrm{FP}}$ times). For the valves, one negative in every 20.
+        $c_{\mathrm{FN}}/c_{\mathrm{FP}}$ times). For the valves, this means keeping one negative in every 20.
   \item \emph{Weighting.} Give each training example a weight proportional to the cost of
         misclassifying it \citep{zadrozny2003cost}. Most scikit-learn estimators accept
         \code{class_weight} or \code{sample_weight} for this purpose.
@@ -1939,7 +1930,7 @@ nine types of cost in inductive learning, among which:
         matter at deployment time (Unit~5);
   \item the cost of \emph{cases}: collecting data;
   \item the cost of \emph{instability}: models that change substantially when the data change
-        slightly are hard to trust and to maintain, which is closely related to concept drift\index{concept drift}
+        slightly are hard to trust and to maintain, which is closely related to concept drift\index{concept drift} (a change in the relation between the inputs and the target, \cref{ch:monitoring})
         and to the need to update models (Unit~6).
 \end{itemize}
 
@@ -1959,10 +1950,9 @@ misclassification cost and the expected test cost together.
 
 \subsection{Instance-dependent costs}
 
-In some domains the cost of an error is not constant but varies from example to example.
+In some domains the cost of an error varies from example to example.
 \citet{elkan2001foundations} gives the example of credit card transactions, where $x$ is the
-amount of the transaction. Here it is more convenient to use a \emph{benefit} matrix $B$ rather than a cost
-matrix\index{cost matrix}: positive entries are gains and negative entries losses, and the optimal decision maximises the
+amount of the transaction. Here it is more convenient to replace the cost matrix\index{cost matrix} with a \emph{benefit} matrix $B$: positive entries are gains and negative entries losses, and the optimal decision maximises the
 expected benefit (equivalently, it minimises the costs $C=-B$):
 \begin{center}\small
 \begin{tabular}{@{}lcc@{}}
@@ -2023,7 +2013,7 @@ Given a set $S$ of $n$ examples:
   \mathrm{RMSE}&=\sqrt{\mathrm{MSE}}.
 \end{align}
 In the example, the \emph{mean absolute error\index{mean absolute error (MAE)|textbf}} is $70/10=7.0$, the \emph{mean squared error\index{mean squared error (MSE)|textbf}}
-$744/10=74.4$ and the \emph{root mean squared error\index{root mean squared error (RMSE)|textbf}} 8.63 million euros. The RMSE is in the
+$744/10=74.4$ and the \emph{root mean squared error\index{root mean squared error (RMSE)|textbf}} (RMSE) 8.63 million euros. The RMSE is in the
 units of the target and is always at least as large as the MAE; the gap between them grows
 with the variability of the errors. The single error of 20 contributes 400 of the 744 squared
 units: squared errors are dominated by the largest mistakes, which is desirable if large
@@ -2033,7 +2023,7 @@ useful metrics are:
   \item the \emph{median absolute error\index{median absolute error|textbf}}, robust to outliers: 6.0 in the example;
   \item the \emph{mean absolute percentage error\index{mean absolute percentage error|textbf}},
         $\mathrm{MAPE}=\frac1n\sum_i|y_i-\hat y_i|/|y_i|$: 9.0\% in the example. It is
-        scale-free and easy to communicate, but it is undefined or explodes when $y_i$ is close
+        scale-free and easy to communicate, but it is undefined or very large when $y_i$ is close
         to zero, and it is asymmetric: for a positive target an under-prediction can never cost
         more than 100\%, whereas an over-prediction is unbounded, so MAPE favours models that
         under-predict \citep{hyndman2006another};
@@ -2041,8 +2031,7 @@ useful metrics are:
         MAE of a naive forecast (the previous value of the series). It is scale-free and a
         value below 1 means that the model beats the naive forecast \citep{hyndman2006another};
   \item the \emph{bias} or mean error, $\frac1n\sum_i(\hat y_i-y_i)$: $+3.0$ in the example.
-        The model over-predicts by 3 million euros on average, something that neither MAE nor
-        RMSE reveal.
+        The model over-predicts by 3 million euros on average; MAE and RMSE do not show this, because they ignore the sign of the errors.
 \end{itemize}
 
 \subsection{Relative metrics and the coefficient of determination}
@@ -2106,12 +2095,12 @@ $r=\operatorname{cov}(y,\hat y)/(\sigma_y\sigma_{\hat y})$, measures their linea
 and the \emph{Spearman\index{Spearman correlation|textbf} correlation}, the Pearson correlation between their ranks, measures any
 monotone association. Both are invariant to (increasing linear or monotone) transformations of
 the predictions: a model that predicts $\hat y=2y$ has a perfect correlation of 1, but its
-errors are enormous (for $y=1,\dots,5$, $R^2=-4.5$). Correlations are useful to evaluate the
-ability of a model to rank or to follow the trend of the target, not its accuracy.
+errors are enormous (for $y=1,\dots,5$, $R^2=-4.5$). Correlations evaluate the
+ability of a model to rank or to follow the trend of the target. They do not measure its accuracy.
 
 \subsection{Residual analysis}
 
-Single numbers hide structure. Plots of predicted against actual values and of residuals\index{residual analysis}
+A single number cannot show how the errors are distributed. Plots of predicted against actual values and of residuals\index{residual analysis}
 $y-\hat y$ against predictions (\cref{fig:residuals}) reveal curvature (a missing non-linear
 effect), funnels (errors that grow with the prediction, which makes constant-width
 prediction intervals inadequate; see \cref{sec:other}), outliers and groups of examples where
@@ -2134,7 +2123,7 @@ Consider a supermarket that forecasts the demand of a product. An under-predicti
 which costs storage or, for fresh products, is wasted. The two costs are rarely equal, so a
 model ``centred'' on the expected demand is not the best option: the model that minimises the
 MSE\index{mean squared error (MSE)} predicts the conditional mean, and the one that minimises the MAE\index{mean absolute error (MAE)} predicts the conditional
-median, but neither takes the asymmetry into account. \Cref{fig:losses} compares several loss
+median, but both ignore the asymmetry. \Cref{fig:losses} compares several loss
 functions.
 
 \begin{figure}[htbp]
@@ -2158,38 +2147,37 @@ that a function such as $1-e^{ae}$ is not a valid loss, since it is negative for
 sign. With an asymmetric cost function we can select the model with the lowest average cost on
 validation data or, better, train the model to minimise that cost directly.
 
-Another important asymmetric loss is the \emph{pinball} (or quantile) loss, with
+Another asymmetric loss is the \emph{pinball} (or quantile) loss, with
 $\tau\in(0,1)$,
 \begin{equation}\label{eq:pinball}
   L_\tau(y,\hat y)=\begin{cases}\tau\,(y-\hat y) & \text{if } y\geq\hat y,\\
                                  (1-\tau)\,(\hat y-y) & \text{if } y<\hat y,\end{cases}
 \end{equation}
 whose expected value is minimised by the $\tau$-quantile of the distribution of $y$ given $x$
-\citep{koenker1978regression}. This gives a clean solution to the \emph{newsvendor problem}:
+\citep{koenker1978regression}. This solves the \emph{newsvendor problem}:
 if each unit of unmet demand costs $c_u$ (underage) and each unsold unit costs $c_o$
 (overage), the optimal prediction is the quantile
 \begin{equation}
   \tau^\star=\frac{c_u}{c_u+c_o}.
 \end{equation}
 If a product has a margin of 3\EUR{} per unit sold and each unsold unit loses 1\EUR, the
-forecast should target the 75th percentile of the demand, not its mean.
+forecast should target the 75th percentile of the demand.
 
 \begin{keyidea}
 The optimal decision threshold of a classifier, $t^\star=c_{\mathrm{FP}}/(c_{\mathrm{FP}}+c_{\mathrm{FN}})$,
 and the optimal quantile of a regressor, $\tau^\star=c_u/(c_u+c_o)$, have the same structure:
-the costs of the two kinds of error determine the operating point\index{operating point}. A good model provides
-calibrated probabilities or quantiles; the context decides how to use them.
+the costs of the two kinds of error determine the operating point\index{operating point}. The model should provide
+calibrated probabilities or quantiles, and the costs of the application determine how to use them.
 \end{keyidea}
 
 \subsection{Utility-based regression}
 
-In many regression problems only some values of the target really matter: extreme rainfall,
+In many regression problems only some values of the target matter: extreme rainfall,
 very high returns of an investment, unusually high sales. \emph{Utility-based regression}
 \citep{torgo2007utility} formalises this with a \emph{relevance function} $\phi(y)\in[0,1]$ that
 marks the important values of the target, and a utility function that combines the benefits of
 accurate predictions of relevant values with the costs of false alarms and missed events.
-Models are then evaluated, selected and even trained to maximise utility rather than to
-minimise a symmetric error. The cost penalties can also be added to standard regression
+Models are then evaluated, selected and even trained to maximise this utility. The cost penalties can also be added to standard regression
 techniques so that they minimise the expected cost\index{expected cost} directly.
 
 \subsection{Imbalanced regression}
@@ -2202,11 +2190,10 @@ values and oversampling\index{oversampling} the rare ones. \emph{SMOTE\index{SMO
 the inputs and the target between rare examples \citep{torgo2013smote}, and \emph{SMOGN}
 combines random undersampling with two oversampling strategies, SMOTER and the addition of
 Gaussian noise \citep{branco2017smogn}. Evaluation must then focus on the relevant values, for
-example with errors restricted to them or with utility-based precision and recall, rather than
-on a global MSE\index{mean squared error (MSE)}.
+example with errors restricted to them or with utility-based precision and recall; a global MSE\index{mean squared error (MSE)} is dominated by the frequent values.
 
 % ---------------------------------------------------------------------
-\section{Other supervised settings}\label{sec:other}
+\section{Other supervised settings\extsec}\label{sec:other}
 
 \subsection{Ordinal regression}
 
@@ -2246,7 +2233,7 @@ $\{$sports, economy$\}$ and that the predicted ones are $\{$sports, politics$\}$
 \subsection{Hierarchical classification}
 
 In \emph{hierarchical} classification the classes are organised in a tree or a directed acyclic
-graph\index{causal graph} (animal $\to$ mammal $\to$ dog), and confusing two sibling classes is less serious than
+graph (animal $\to$ mammal $\to$ dog), and confusing two sibling classes is less serious than
 confusing two distant ones. \emph{Hierarchical precision\index{precision|textbf} and recall\index{recall|textbf}} \citep{silla2011survey}
 extend the sets of actual and predicted classes $C_i$ and $\hat C_i$ with all their ancestors
 (except the root) and compute
@@ -2281,7 +2268,7 @@ and $\mathrm{NDCG@3}=0.94$. These metrics are studied in depth with recommender 
 
 A point prediction does not say how much we can trust it. \emph{Conformal prediction\index{conformal prediction|textbf}}
 \citep{vovk2005algorithmic,angelopoulos2023conformal} is a framework for uncertainty
-quantification\index{quantification} that turns any point predictor into one that outputs a \emph{set}: an interval
+quantification that turns any point predictor into one that outputs a \emph{set}: an interval
 in regression, a set of labels in classification. These sets have a statistically valid
 coverage\index{coverage} guarantee,
 \begin{equation}
@@ -2363,11 +2350,13 @@ In \emph{semi-supervised\index{semi-supervised learning|textbf} learning} a smal
 amount of unlabelled data, which helps to discover the structure of the input space (for
 instance, by placing the decision boundary in low-density regions) \citep{vanengelen2020survey}.
 Evaluation must always use held-out \emph{labelled} data, and it is easy to get wrong.
-\citet{oliver2018realistic} recommend comparing against well-tuned supervised baselines that
-use the same model and tuning budget; using realistically small validation sets (tuning
+\citet{oliver2018realistic} recommend four practices:
+\begin{itemize}
+\item compare against well-tuned supervised baselines that
+use the same model and tuning budget; \item use realistically small validation sets (tuning
 hyperparameters with 5000 labelled validation examples makes no sense if only 250 labels are
-supposed to be available); reporting performance as a function of the number of labels; and
-checking what happens when the unlabelled data contain classes absent from the labelled data.
+supposed to be available); \item report performance as a function of the number of labels; \item check what happens when the unlabelled data contain classes absent from the labelled data.
+\end{itemize}
 
 \subsection{Open-set recognition}
 
@@ -2381,8 +2370,8 @@ the unknown ones.
 
 Two metrics are standard. The \emph{AUROC for open set} measures how well a confidence score
 $S(x)$ separates known from unknown examples: known test examples are treated as positives,
-unknown ones as negatives, and the usual AUC is computed (1 means perfect separation\index{fairness!separation}). It is
-often complemented by the FPR\index{false positive rate} at 95\% TPR\index{true positive rate}, the fraction of unknowns accepted when 95\% of the
+unknown ones as negatives, and the usual AUC is computed (1 means perfect separation). It is
+often complemented by the false positive rate\index{false positive rate} (FPR) at 95\% true positive rate\index{true positive rate} (TPR), the fraction of unknowns accepted when 95\% of the
 knowns are accepted. The \emph{open-set classification rate} (OSCR\index{open set classification rate (OSCR)}) curve
 \citep{dhamija2018reducing} combines the two goals: for each threshold $\tau$ it plots the
 correct classification rate on the known examples $D_K$ against the false positive rate on the
@@ -2419,7 +2408,7 @@ The main families of methods are:
         is rejected, for instance using the Mahalanobis distance \citep{lee2018simple};
   \item \emph{background class} or \emph{outlier exposure\index{outlier exposure|textbf}}: the model is trained with an
         auxiliary set of ``garbage'' examples labelled as unknown
-        \citep{hendrycks2019deep}. It is very effective when the auxiliary data resemble the
+        \citep{hendrycks2019deep}. It helps most when the auxiliary data resemble the
         unknowns that will actually appear.
 \end{itemize}
 
@@ -2430,7 +2419,7 @@ describe the open-set protocol (known classes, unknown classes, their proportion
 \end{pitfall}
 
 % ---------------------------------------------------------------------
-\section{Evaluation in computer vision}\label{sec:vision}
+\section{Evaluation in computer vision\extsec}\label{sec:vision}
 
 \subsection{Tasks}
 
@@ -2445,7 +2434,7 @@ segmentation assigns a class to every pixel, \emph{instance} segmentation separa
 individual objects, and \emph{panoptic} segmentation does both; foundation models such as SAM
 \citep{kirillov2023segment} segment arbitrary objects.
 
-\subsection{Object detection: IoU, AP and mAP}
+\subsection{IoU, AP and mAP for object detection}
 
 The \emph{intersection over union\index{intersection over union (IoU)|textbf}} (IoU, or Jaccard index) measures how well a predicted box
 $B_p$ overlaps the ground-truth box $B_{gt}$:
@@ -2563,7 +2552,7 @@ pedestrians, traffic lights\dots) and is the standard metric of detection benchm
 \emph{mAP@[0.5:0.95]} averages the mAP over IoU thresholds $0.50,0.55,\dots,0.95$ (COCO), so it
 also rewards precise localisation \citep{lin2014microsoft}.
 
-\subsection{Segmentation: pixel accuracy, mIoU and Dice}
+\subsection{Pixel accuracy, mIoU and Dice for segmentation}
 
 \emph{Pixel accuracy\index{accuracy|textbf}}, the percentage of correctly classified pixels, suffers from the same
 problem as accuracy with imbalanced\index{class imbalance} classes: if 90\% of an image is sky, a model that always
@@ -2588,7 +2577,7 @@ as the Hausdorff distance are used \citep{taha2015metrics}; \citet{maierhein2024
 detailed guidelines for choosing metrics in image analysis.
 
 % ---------------------------------------------------------------------
-\section{Evaluation in natural language processing}\label{sec:nlp}
+\section{Evaluation in natural language processing\extsec}\label{sec:nlp}
 
 The choice of metric in natural language processing (NLP) depends above all on whether the
 model performs a \emph{classification} task (sentiment analysis, topic labelling, named entity
@@ -2604,14 +2593,14 @@ where an entity counts as correct only if both its span and its type match exact
 \citep{tjong2003introduction}. Cohen's kappa\index{Cohen's kappa} is used to measure the agreement between human
 annotators and thus the reliability of the data set.
 
-\subsection{Text generation: n-gram overlap metrics}
+\subsection{Text generation metrics based on n-gram overlap}
 
 Evaluating generated text is difficult because there is no single correct answer: the same
 sentence can be translated or summarised in many valid ways. Traditional metrics compare the
 output of the model with one or more human-written \emph{references} by counting shared
 $n$-grams (sequences of $n$ words).
 
-BLEU\index{BLEU} \citep{papineni2002bleu}, designed for machine translation, focuses on precision. For each
+BLEU\index{BLEU} (bilingual evaluation understudy) \citep{papineni2002bleu}, designed for machine translation, focuses on precision. For each
 $n$ it computes the \emph{modified} $n$-gram precision $p_n$, in which each $n$-gram of the
 candidate is counted at most as many times as it appears in the reference, and combines them
 with a geometric mean and a \emph{brevity penalty} BP that prevents very short candidates from
@@ -2633,8 +2622,7 @@ because one of the precisions is zero: at sentence level BLEU needs smoothing
 (only unigrams and bigrams) is $\sqrt{5/6\cdot3/5}=0.707$.
 
 Candidate B, ``\emph{the feline is on the rug}'', means exactly the same as the reference but
-uses synonyms: $p_1=4/6$, $p_2=2/5$ and BLEU-2 $=\sqrt{4/6\cdot2/5}=0.516$. BLEU does not
-understand synonyms. Its ROUGE\index{ROUGE}-1 recall is also $4/6=0.667$, and the longest common subsequence
+uses synonyms: $p_1=4/6$, $p_2=2/5$ and BLEU-2 $=\sqrt{4/6\cdot2/5}=0.516$. BLEU gives no credit for synonyms. Its ROUGE\index{ROUGE}-1 recall (the fraction of the reference words that the candidate contains, explained below) is also $4/6=0.667$, and the longest common subsequence
 with the reference, ``\emph{the is on the}'', has four words, so ROUGE-L recall and precision
 are $4/6$ as well.
 \end{example}
@@ -2645,7 +2633,7 @@ Several metrics address the limitations of BLEU:
         exact matches, stems (\emph{running} matches \emph{run}) and synonyms from WordNet,
         combines precision and recall (weighting recall more) and penalises differences in word
         order;
-  \item ROUGE \citep{lin2004rouge}, designed for summarisation, focuses on recall: ROUGE-N is
+  \item ROUGE (recall-oriented understudy for gisting evaluation) \citep{lin2004rouge}, designed for summarisation, focuses on recall: ROUGE-N is
         the fraction of the reference $n$-grams that appear in the candidate (how much of the
         reference summary the model captured), and ROUGE-L is based on the longest common
         subsequence;
@@ -2663,8 +2651,7 @@ with its most similar token in the other sentence; for instance, the recall is
   R_{\text{BERT}}=\frac{1}{|x|}\sum_{x_i\in x}\ \max_{\hat x_j\in\hat x}\ \mathbf x_i^{\top}\hat{\mathbf x}_j,
 \end{equation}
 with normalised embeddings, so that the inner product is the cosine\index{cosine similarity} similarity\index{similarity measure}. ``Cat'' and
-``feline'' obtain a high similarity. \emph{Learned} metrics such as COMET \citep{rei2020comet} go
-further and are trained to predict human quality judgements. These metrics correlate better with
+``feline'' obtain a high similarity. \emph{Learned} metrics such as COMET \citep{rei2020comet} are trained to predict human quality judgements. These metrics correlate better with
 human judgement than $n$-gram overlap, at the price of interpretability\index{interpretability} and of inheriting the
 biases of the underlying models.
 
@@ -2703,14 +2690,14 @@ look nothing like the reference. Common approaches are:
         \citep{chiang2024chatbot}.
 \end{itemize}
 Finally, benchmark questions may have leaked into the enormous pre-training corpora
-(\emph{data contamination\index{contamination of benchmarks|textbf}}), which inflates the scores: this is data leakage\index{data leakage}
-(\cref{sec:protocols}) at the scale of the Internet. Recent or private test sets are preferable.
+(\emph{data contamination\index{contamination of benchmarks|textbf}}), which inflates the scores. This is a form of data leakage\index{data leakage}
+(\cref{sec:protocols}) caused by training on large collections of text from the Internet. Recent or private test sets are preferable.
 
 \subsection{Retrieval-augmented generation}
 
 A retrieval-augmented generation\index{retrieval-augmented generation (RAG)} (RAG) system first retrieves documents relevant to a question
 and then generates an answer conditioned on them. Both components must be evaluated. The
-\emph{retrieval} step is evaluated with ranking metrics (recall@$k$, MRR\index{mean reciprocal rank}, NDCG\index{NDCG}) or with
+\emph{retrieval} step is evaluated with ranking metrics (recall@$k$, the mean reciprocal rank\index{mean reciprocal rank} or MRR, and the normalised discounted cumulative gain\index{NDCG} or NDCG; \cref{sec:other}) or with
 \emph{context precision\index{precision|textbf}} (are the retrieved passages relevant?) and \emph{context recall\index{recall|textbf}} (do
 they contain the information needed?). The \emph{generation} step is evaluated with
 \emph{faithfulness\index{faithfulness|textbf}} (is every claim of the answer supported by the retrieved documents, that is,
@@ -2719,14 +2706,106 @@ question?) and, when a reference answer exists, correctness. Frameworks such as 
 \citep{es2024ragas} compute these quantities with LLM\index{large language model (LLM)} judges; for instance, faithfulness is the
 fraction of the statements of the answer that can be inferred from the retrieved context.
 
+\subsection{Evaluating language model systems and agents}\label{sec:llmsystems}
+
+The metrics of this section score the outputs of a model. An application built on a language
+model\index{large language model (LLM)} is a system: a model with a version, a prompt (the instructions and context sent to the model), decoding parameters, often retrieval and
+tools, and a price per call. Evaluating it raises four questions that the metrics alone do not
+answer.
+
+\paragraph{The answers vary} With sampling (a temperature above zero), the same question can receive
+different answers, and providers do not always guarantee identical outputs even at temperature zero.
+Each question should be run several times, and the accuracy reported as a mean over runs with an
+interval. Two sources of uncertainty add up: the sample of questions, which a larger benchmark
+reduces, and the sampling of the answers, which more runs reduce \citep{miller2024adding}.
+
+\paragraph{Comparisons should be paired} Two systems evaluated on the same questions should be
+compared question by question: the difference of their scores on each question is the quantity to
+analyse, with a paired test or a bootstrap\index{bootstrap} over questions (\cref{sec:stats}). Pairing removes the
+variation in difficulty between questions, which is usually the largest part of the noise.
+
+\paragraph{Cost is part of the result} Tokens, latency\index{latency} and price per question must be reported
+with the accuracy, and systems compared on both: the systems worth considering are those for which
+no other system is both more accurate and cheaper \citep{kapoor2025agents}. The cost per right
+answer, and the cost of each additional right answer of a more expensive system, make the
+trade-off concrete.
+
+\paragraph{The configuration is the system} The version of the model, the prompt, the decoding
+parameters and the date of the evaluation must be recorded, because providers update their models
+(\cref{sec:llmmonitor}). Public benchmarks may also be part of the training data of the model, as
+discussed above, so private or recent test sets give more trustworthy estimates.
+
+\Cref{lst:llmsystems} simulates two systems that answer the same 400 questions five times each,
+with the item response model of \cref{sec:stats}: each question has a difficulty, and the
+probability of a right answer grows with the ability of the system.
+
+\begin{pylisting}[label={lst:llmsystems}]{Two language model systems: runs, paired comparison and cost}
+import numpy as np
+
+rng = np.random.default_rng(3)
+n_items, runs = 400, 5
+difficulty = rng.normal(0, 1.5, n_items)           # some questions are much harder
+systems = {"A (small model)": (0.8, 0.002),         # ability, cost per question in EUR
+           "B (large model)": (1.1, 0.010)}
+results = {}
+for name, (ability, cost) in systems.items():
+    p = 1 / (1 + np.exp(-(ability - difficulty)))   # chance of a right answer (IRT)
+    results[name] = rng.random((runs, n_items)) < p  # five runs with sampling: answers vary
+    acc = results[name].mean(axis=1)
+    print(f"{name}: accuracy in each run {np.round(acc, 3)}")
+    print(f"  mean {acc.mean():.3f}, cost per right answer {cost / acc.mean():.4f} EUR")
+
+a, b = (r.mean(axis=0) for r in results.values())   # mean score of each question over runs
+diff = b - a
+se_unpaired = np.sqrt(a.var(ddof=1) / n_items + b.var(ddof=1) / n_items)
+se_paired = diff.std(ddof=1) / np.sqrt(n_items)
+print(f"B - A = {diff.mean():+.3f}; 95% interval unpaired +/-{1.96 * se_unpaired:.3f}, "
+      f"paired by question +/-{1.96 * se_paired:.3f}")
+single = [results["B (large model)"][i].mean() - results["A (small model)"][j].mean()
+          for i in range(runs) for j in range(runs)]
+print(f"single-run comparisons: B - A between {min(single):+.3f} and {max(single):+.3f}")
+\end{pylisting}
+\begin{pyoutput}
+A (small model): accuracy in each run [0.672 0.595 0.632 0.625 0.638]
+  mean 0.632, cost per right answer 0.0032 EUR
+B (large model): accuracy in each run [0.68  0.67  0.682 0.652 0.678]
+  mean 0.672, cost per right answer 0.0149 EUR
+B - A = +0.040; 95% interval unpaired +/-0.043, paired by question +/-0.025
+single-run comparisons: B - A between -0.020 and +0.088
+\end{pyoutput}
+
+The accuracy of system A varies from 0.595 to 0.672 between runs, so a single run of each system
+can rank them either way: the differences between single runs of B and A range from $-0.020$ to
+$+0.088$. Averaged over the five runs, B is better by 0.040. Treating the two sets of answers as
+independent samples gives a 95\% interval\index{confidence interval} of $\pm0.043$, which includes zero; pairing the
+answers by question removes the variation in difficulty and gives $\pm0.025$, which does not. B
+costs five times as much per question, so its cost per right answer is 0.0149~EUR against
+0.0032~EUR, and each additional right answer of B costs $(0.010-0.002)/0.040=0.20$~EUR. Whether
+that is worth paying depends on what a right answer is worth in the application.
+
+\paragraph{Evaluating agents} An \emph{agent\index{agent|textbf}} (Unit~4) takes many steps, calls tools and
+changes the state of an environment. It is evaluated on tasks in an isolated copy of that
+environment, a \emph{sandbox}, by checking the final state: whether the tests of a code repository
+pass after its changes, as in SWE-bench \citep{jimenez2024swebench}, or whether a database contains
+the right booking. The final message of the agent is no evidence that the task was done. Since
+runs vary, two summaries are useful: pass@$k$, the probability that at least one of $k$ attempts
+succeeds, which suits tasks whose results can be checked automatically; and pass$^k$, the
+probability that all $k$ attempts succeed \citep{yao2024taubench}, which matters when users expect
+the agent to succeed every time. With a success rate of 0.8 per attempt and independent attempts,
+pass@4 is $1-0.2^4=0.998$ and pass$^4$ is $0.8^4=0.41$. The number of steps, the tokens, the time
+and the cost per task belong in the report, and so do the side effects: actions that the agent
+should not have taken, such as deleting files or sending messages, need checks of their own. The
+results depend on the scaffold (the prompts, the tools, the number of retries) as much as on the
+model, so the whole configuration is what is evaluated and reported \citep{kapoor2025agents}.
+
 % ---------------------------------------------------------------------
-\section{Evaluating unsupervised models}\label{sec:unsupervised}
+\section{Evaluating unsupervised models\extsec}\label{sec:unsupervised}
 
 \subsection{The absence of ground truth}
 
 Unsupervised models look for patterns in the data: groups of similar examples, associations
 between variables, low-dimensional structure. Evaluating them is harder than evaluating
-supervised models for two reasons. First, the patterns found may not genuinely exist: $k$-means
+supervised models for two reasons. First, the patterns found may not exist: $k$-means
 returns $k$ clusters even when applied to uniform noise. Second, there is no ``ground truth'',
 no set of reference answers on which to test hypotheses. Unsupervised models are therefore
 compared by how well they fit the data (\emph{internal} evaluation), by their agreement with
@@ -2734,10 +2813,9 @@ external information when it is available (\emph{external} evaluation), by their
 when the data are perturbed \citep{vonluxburg2010clustering}, and ultimately by their usefulness
 for the task that motivated the analysis.
 
-\subsection{Clustering: internal evaluation}
+\subsection{Internal evaluation of clusterings}
 
-Internal evaluation judges a clustering\index{clustering} using only the data that were clustered. The most
-popular indices reward compact and well-separated clusters.
+Internal evaluation judges a clustering\index{clustering} using only the data that were clustered. Common indices reward compact and well-separated clusters.
 
 The \emph{silhouette\index{silhouette coefficient|textbf} coefficient} \citep{rousseeuw1987silhouettes} is computed for each example
 $i$ from two quantities: $a(i)$, the mean distance between $i$ and the other points of its
@@ -2786,8 +2864,8 @@ better (the minimum is 0). It is simpler to compute than the silhouette, but it 
 centroids and therefore limited to Euclidean\index{Euclidean distance} distance.
 
 In \cref{fig:indices} and \cref{lst:clustering} the three indices agree on $k=4$. In general
-they do not always agree, and all of them favour convex, compact clusters: their values are generally
-more favourable (higher for silhouette and Calinski--Harabasz, lower for Davies--Bouldin) for
+they can disagree, and all of them favour convex, compact clusters. Their values are generally
+better (higher for silhouette and Calinski--Harabasz, lower for Davies--Bouldin) for
 $k$-means-like partitions than for other notions of cluster, such as the
 density-based clusters found by DBSCAN, and they can be misleading for elongated or nested
 shapes. The ``elbow'' of the within-cluster sum of squares is a common heuristic, and the
@@ -2826,7 +2904,7 @@ k=5  sil=0.648  CH=  4410  DB=0.646  ARI=0.918  NMI=0.944
 k=6  sil=0.531  CH=  3926  DB=0.857  ARI=0.824  NMI=0.891
 \end{pyoutput}
 
-\subsection{Clustering: external evaluation}
+\subsection{External evaluation of clusterings}
 
 When reference labels exist (for benchmarking, or for a labelled subset of the data), the
 clustering\index{clustering} can be compared with them. Since cluster identifiers are arbitrary, the measures
@@ -2963,7 +3041,7 @@ especially for small $n$ or accuracies close to 1:
 \end{equation}
 with $z=1.96$ for 95\% confidence. An accuracy of 170/200 has the interval $[0.794, 0.893]$. For
 metrics without a simple sampling distribution (AUC, $F_1$, MCC\index{Matthews correlation coefficient}\dots) the \emph{bootstrap\index{bootstrap|textbf}}
-\citep{efron1993introduction} is the general solution: resample the test set with replacement
+\citep{efron1993introduction} is a general solution: resample the test set with replacement
 many times, recompute the metric on each resample and take the percentiles of the results
 (\cref{lst:ci}).
 
@@ -3022,7 +3100,7 @@ where $\bar d$ and $\hat\sigma_d^2$ are the mean and the variance of the $J$ dif
 $n_{\text{test}}/n_{\text{train}}=1/(k-1)$ in $k$-fold CV. \Cref{lst:compare} compares logistic
 regression and naive Bayes\index{naive Bayes}. McNemar's test finds no significant difference ($p=0.58$). Over
 10$\times$10-fold CV the mean difference in accuracy is 0.015; the naive $t$-test declares it
-overwhelmingly significant ($p\approx10^{-7}$), whereas the corrected test does not ($p=0.11$).
+significant ($p\approx10^{-7}$), whereas the corrected test does not ($p=0.11$).
 
 \begin{pylisting}[label={lst:compare}]{McNemar's test and the corrected resampled t-test}
 import numpy as np
@@ -3061,13 +3139,13 @@ naive t = 5.69 (p = 1.3e-07)
 corrected t = 1.63 (p = 0.1055)
 \end{pyoutput}
 
-\subsection{Many models on many data sets}
+\subsection{Many models on many data sets\extsec}
 
-To compare learning algorithms rather than models, they must be evaluated on many data sets.
+Comparing learning algorithms requires evaluating them on many data sets.
 \citet{demsar2006statistical} recommends non-parametric tests, which do not assume normality and
 are not dominated by a few data sets:
 \begin{itemize}
-  \item for two algorithms, the \emph{Wilcoxon\index{Mann--Whitney--Wilcoxon statistic|textbf} signed-rank test} \citep{wilcoxon1945individual}
+  \item for two algorithms, the \emph{Wilcoxon\index{Wilcoxon signed-rank test|textbf} signed-rank test} \citep{wilcoxon1945individual}
         on the differences of performance across data sets;
   \item for $k$ algorithms on $N$ data sets, the \emph{Friedman test\index{Friedman test|textbf}} \citep{friedman1937use}:
         the algorithms are ranked on each data set (1 for the best), $R_j$ is the average rank
@@ -3107,23 +3185,39 @@ depends on which other algorithms take part in the comparison \citep{benavoli201
 reference (a new proposal, or the model in production), a safer analysis compares it with each of the others
 using the Wilcoxon signed-rank test on the per-data-set differences \citep{wilcoxon1945individual}, with Holm's
 step-down correction for the multiple comparisons \citep{holm1979simple}. Against random forest, the adjusted
-$p$-values are 0.002 for LR and DT, 0.005 for NB and 0.077 for $k$-NN: the same conclusions as above, reached
-without depending on the rest of the pool.
+$p$-values are 0.002 for LR and DT, 0.005 for NB and 0.077 for $k$-NN, which lead to the same conclusions as above without depending on the rest of the pool.
 
 \citet{benavoli2017time} argue for \emph{Bayesian} comparisons, which give the posterior
 probabilities that one algorithm is better, practically equivalent (within a \emph{region of
-practical equivalence}) or worse than another: this is the question practitioners actually
-want answered. With the Bayesian signed-rank test and a region of, say, $\pm0.01$ in AUC, the result is the
-posterior probability of each of the three outcomes rather than a $p$-value.
+practical equivalence}) or worse than another, which is usually the question practitioners want answered. With the Bayesian signed-rank test and a region of, say, $\pm0.01$ in AUC, the result is the
+posterior probability of each of the three outcomes.
 
 \subsection{Statistical versus practical significance}
 
-Statistical significance\index{statistical significance} is not practical significance. With a test set of a million examples a
+A statistically significant\index{statistical significance} difference is not necessarily important in practice. With a test set of a million examples a
 difference of 0.1\% in accuracy can be significant and irrelevant; with 100 examples a
 difference of 5\% may not be significant and yet be important. Report effect sizes with their
 intervals, correct for multiple comparisons when many models are compared, and decide with the
-costs and the context in mind. A model that wins on benchmark data sets may not win in your
+costs and the context in mind. A model that performs best on benchmark data sets may not perform best in your
 deployment context.
+
+\begin{further}
+The metrics of this unit average over the test examples as if they were equally hard. Some
+examples are solved by almost every model, others by almost none, and some are mislabelled.
+\emph{Item response theory\index{item response theory|textbf}} (IRT), developed in psychometrics to grade
+students with tests, models the probability that model $j$ gets example $i$ right from an
+\emph{ability} $\theta_j$ of the model and a \emph{difficulty} $b_i$ and a \emph{discrimination} $a_i$ of
+the example,
+\[
+P(\text{model $j$ right on example $i$})=\frac{1}{1+e^{-a_i(\theta_j-b_i)}} .
+\]
+Fitted to the results of many models on the same test set, it gives each model an ability that
+takes into account \emph{which} examples it gets right, and each example a difficulty; examples
+with negative discrimination, which better models get wrong more often, deserve a check of their
+labels. \citet{martinezplumed2019item} adapt IRT to classifiers and study what these parameters
+mean for them, and \citet{maiapolo2024tinybenchmarks} use it to estimate the accuracy of language
+models on large benchmarks from about a hundred well-chosen examples.
+\end{further}
 
 % ---------------------------------------------------------------------
 \section{Choosing the right metric}\label{sec:choosing}
@@ -3169,7 +3263,7 @@ Clustering & internal indices plus stability and domain validation; ARI/AMI with
 \section{Summary}\label{sec:summary}
 
 \begin{itemize}
-  \item The evaluation of learned models must be performed thoroughly, on data that played no
+  \item Learned models must be evaluated on data that played no
         role in building them; protocols must respect the structure of the data (groups,
         time) and keep every data-dependent step inside the evaluation loop.
   \item Training error is optimistic. The bias--variance\index{bias--variance trade-off} trade-off explains underfitting\index{underfitting} and
@@ -3183,25 +3277,30 @@ Clustering & internal indices plus stability and domain validation; ARI/AMI with
         threshold and can distort the probabilities for the original population; calibrated probabilities with a cost-based
         threshold are often the better solution.
   \item Regression metrics must match the costs of the errors; asymmetric losses, quantiles and
-        conformal\index{conformal prediction} intervals go beyond the mean prediction.
+        conformal\index{conformal prediction} intervals describe more of the distribution than the mean prediction.
   \item Specialised tasks (open set\index{open-set recognition}, computer vision, natural language, clustering\index{clustering}, association
         rules\index{association rules}) have specialised metrics, but the same principles apply.
   \item Estimates are uncertain: report confidence intervals\index{confidence interval} and use valid statistical tests.
   \item Finally, we need to know the learning algorithms, their strong and weak points, to select
         the best suited ones (or adapt them) to each context.
+\item Systems built on language models are evaluated over several runs, compared question by question,
+and reported with their cost; agents are evaluated on the final state of their environment, with
+pass@$k$ and pass$^k$, steps, cost and side effects.
 \end{itemize}
 
 \section*{Bibliographic notes}
 \phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
-\citet{japkowicz2011evaluating} is the most complete textbook on the evaluation of classifiers,
-and \citet{flach2012machine} offers an excellent treatment of ROC analysis\index{ROC analysis} and scoring
-classifiers\index{scoring classifier}. \citet{fawcett2006introduction} remains the best tutorial introduction to ROC
+\citet{japkowicz2011evaluating} covers the evaluation of classifiers in depth,
+and \citet{flach2012machine} treats ROC analysis\index{ROC analysis} and scoring
+classifiers\index{scoring classifier} in detail. \citet{fawcett2006introduction} is a tutorial introduction to ROC
 analysis, and \citet{hernandez2012unified} unify most classification metrics as expected losses
 under different threshold choice methods. \citet{ferri2009experimental} compare classification
 metrics experimentally. \citet{raschka2018model} reviews evaluation protocols\index{evaluation protocol} and statistical
-tests for machine learning, and \citet{demsar2006statistical} is the reference for comparisons
-over multiple data sets. \citet{silvafilho2023classifier} survey classifier calibration,
+tests for machine learning, and \citet{demsar2006statistical} is a standard reference for comparisons
+over multiple data sets. \citet{martinezplumed2019item} analyse classifiers at the instance level with item response
+theory\index{item response theory}. \citet{miller2024adding} explains how to compute error bars for evaluations of language models, and
+\citet{kapoor2025agents} how to evaluate agents together with their cost. \citet{silvafilho2023classifier} survey classifier calibration,
 \citet{branco2016survey} learning in imbalanced\index{class imbalance} domains, \citet{angelopoulos2023conformal}
 conformal prediction\index{conformal prediction}, and \citet{maierhein2024metrics} the metrics for image analysis.
 
@@ -3255,6 +3354,12 @@ conformal prediction\index{conformal prediction}, and \citet{maierhein2024metric
         500 stores using three years of monthly data, and to tune the hyperparameters of a
         gradient boosting\index{gradient boosting} model. Design an evaluation protocol\index{evaluation protocol} that gives an honest estimate of
         the error and avoids leakage\index{data leakage}.
+\item\label{exr:passk} An agent\index{agent} succeeds on a task with probability 0.8 in each attempt,
+independently. Compute pass@4 and pass$^4$. What does each tell a customer who will run the agent
+once a day on that task?
+\item\label{exr:llmcost} System A answers 70\% of the questions right at 0.002~EUR per question, and
+system B 74\% at 0.008~EUR. Compute the cost per right answer of each, and the cost of each
+additional right answer of B.
 \end{enumerate}
 
 \section*{Solutions to selected exercises}
@@ -3308,7 +3413,13 @@ conformal prediction\index{conformal prediction}, and \citet{maierhein2024metric
         use rolling-origin evaluation (train on months $1,\dots,t$, predict month $t+1$, for
         several $t$) for model selection, nested inside each outer split; compute every
         feature (lags, moving averages, store-level encodings) using only data available at
-        prediction time; split by time rather than at random, and also check performance on
+        prediction time; split the data by time, and also check performance on
         stores held out entirely if the model will be used for new stores.
+\item[\ref{exr:passk}] pass@4 $=1-0.2^4=0.9984$; pass$^4=0.8^4=0.4096$. The first is the chance that
+at least one of four attempts works, which helps only if the customer can try again and check the
+result; the second is the chance that four daily runs in a row succeed, so the customer sees at
+least one failure in four days with probability $1-0.41=0.59$.
+\item[\ref{exr:llmcost}] A: $0.002/0.70\approx0.0029$~EUR per right answer; B: $0.008/0.74\approx0.0108$~EUR.
+Each additional right answer of B costs $(0.008-0.002)/(0.74-0.70)=0.15$~EUR.
 \end{description}
 

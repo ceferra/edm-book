@@ -5,20 +5,16 @@
 \chapter{Hybrid Models}\label{ch:hybrid}
 
 In September 2009, after three years of competition, Netflix\index{Netflix Prize} awarded its prize of one million dollars to a team
-whose final predictions blended those of hundreds of models, combined by yet another model; combining had been the
-key to every stage of the competition. And yet Netflix never put the winning blend into production: its engineers
+whose final predictions blended those of hundreds of models, combined by yet another model; combining had been important at every stage of the competition. And yet Netflix never put the winning blend into production: its engineers
 explained that the additional accuracy\index{accuracy} did not justify the engineering effort it would have required, although they
 did adopt two of the individual methods found in an earlier stage of the competition \citep{amatriain2012netflix}.
-The story contains both the promise of this unit and its price.
+The story shows both what combining models can achieve and what it costs.
 
-Every learning algorithm makes assumptions, and every model makes mistakes. Instead of
-searching for the single best model, we can build several and combine them. This simple
-idea, often summarised as the \emph{wisdom of crowds\index{wisdom of crowds|textbf}}, is behind some of the most successful
-methods of machine learning: random forests\index{random forest} and gradient boosting\index{gradient boosting}\index{boosting} dominate tabular data,
-and combinations of models win most data science competitions. This unit studies how to
+Every learning algorithm makes assumptions, and every model makes mistakes. One way to reduce these mistakes is to build several models and combine them. This idea, often summarised as the \emph{wisdom of crowds\index{wisdom of crowds|textbf}}, is behind several widely used methods of machine learning: random forests\index{random forest} and gradient boosting\index{gradient boosting}\index{boosting} are among the strongest methods for tabular data,
+and combinations of models have won many data science competitions. This unit studies how to
 combine models: why combinations work, how to obtain models that are worth combining, how
-to fuse their predictions, how to combine models built with different techniques, and how
-to build models that know when \emph{not} to predict. We close with the price to pay:
+to fuse their predictions, how to combine models built with different techniques, how
+to build models that know when \emph{not} to predict, and how to combine learned models with the knowledge of experts. The unit ends with the drawbacks:
 combinations of models are harder to understand, more expensive to run, and need all the
 attributes of every example.
 
@@ -35,7 +31,10 @@ After studying this unit you should be able to:
   \item combine models built with different techniques (voting, stacking\index{stacking}, cascading\index{cascading},
         mixtures of experts\index{mixture of experts});
   \item decide when a model should abstain\index{abstention} or delegate\index{delegation}: derive optimal reject rules from costs,
-        evaluate cautious classifiers\index{cautious classifier}, and design delegating classifiers and cascades;
+        evaluate cautious classifiers\index{cautious classifier}, design delegating classifiers and cascades, and
+train assessors that predict where a model fails;
+\item combine learned models with domain knowledge\index{domain knowledge}: use manual models as baselines, features, guards or
+delegates, and impose and test monotonicity constraints;
   \item know the main drawbacks of ensembles and the techniques to mitigate them, such as
         pruning and mimetic\index{mimetic classifier} models.
 \end{itemize}
@@ -56,12 +55,12 @@ form them independently, and there must be a good way of aggregating them.
 
 The same principle underlies ensemble learning. Every model has limitations and makes errors;
 the aim of combining models is to manage their strengths and weaknesses so that the errors of
-some are compensated by the others. Theoretical and empirical results have shown that a
-combination can significantly exceed the performance of its best member.
+some are compensated by the others. The following sections show, with theoretical and experimental results, that a
+combination can be more accurate than its best member.
 
 \subsection{Condorcet's jury theorem}
 
-The oldest formal argument in favour of combining opinions is due to the Marquis de Condorcet\index{Condorcet's jury theorem}
+An early formal argument in favour of combining opinions is due to the Marquis de Condorcet\index{Condorcet's jury theorem}
 (1785). Suppose that $T$ voters (with $T$ odd) decide between two options by majority, that each
 voter is right with probability $p$, and that they vote \emph{independently}. The number of
 correct votes is then binomial, and the majority is right with probability
@@ -69,8 +68,8 @@ correct votes is then binomial, and the majority is right with probability
   P_{\text{maj}}(T,p)=\sum_{k=(T+1)/2}^{T}\binom{T}{k}p^k(1-p)^{T-k}.
 \end{equation}
 If $p>1/2$, $P_{\text{maj}}$ grows with $T$ and tends to 1; if $p<1/2$, it decreases and tends to 0
-(\cref{lst:condorcet}). A crowd of independent, better-than-random voters is almost
-infallible; a crowd of worse-than-random voters is reliably wrong.
+(\cref{lst:condorcet}). With many independent voters who are better than random, the majority is almost
+always right; with voters worse than random, it is almost always wrong.
 
 \begin{pylisting}[label={lst:condorcet}]{Accuracy of the majority vote of T independent voters}
 from scipy.stats import binom
@@ -105,9 +104,9 @@ with $p>1/2$ approach perfect accuracy; correlated voters saturate; voters worse
 \label{fig:condorcet}
 \end{figure}
 
-For classifiers the lesson is direct. Given three models $\{h_1,h_2,h_3\}$ and a new example
+The same applies to classifiers. Given three models $\{h_1,h_2,h_3\}$ and a new example
 $x$: if the classifiers are \emph{similar} and $h_1(x)$ is wrong, then $h_2(x)$ and $h_3(x)$ are
-probably wrong too, and combining them is useless. If they are \emph{diverse}, when $h_1(x)$ is
+probably wrong too, and combining them does not help. If they are \emph{diverse}, when $h_1(x)$ is
 wrong $h_2(x)$ and $h_3(x)$ may be correct, and so is the combined prediction. Combining
 requires members that are both \emph{accurate} (better than random) and \emph{diverse}.
 
@@ -119,7 +118,7 @@ its members:
   \item \emph{statistical}: with limited data, many hypotheses fit the training set\index{training set} equally
         well; averaging them reduces the risk of choosing a bad one (this is the variance
         reduction of \cref{sec:biasvariance});
-  \item \emph{computational}: learning algorithms perform local searches (greedy\index{multi-armed bandit!epsilon-greedy@$\varepsilon$-greedy} splits, gradient
+  \item \emph{computational}: learning algorithms perform local searches (greedy splits, gradient
         descent) that can get stuck in local optima; starting from different points and
         combining the results gives a better approximation;
   \item \emph{representational}: the true function may not be representable by any hypothesis of
@@ -129,7 +128,7 @@ its members:
 \Cref{fig:boundaries} illustrates the representational argument. A decision stump\index{decision stump} can only
 draw one axis-parallel line (test accuracy 0.794 on the two-moons problem), but a weighted vote
 of 100 stumps built by AdaBoost\index{AdaBoost} draws a complex frontier (0.902), better than a single unpruned
-tree (0.855). Bagging\index{bagging}, random forests and gradient boosting\index{gradient boosting} smooth the jagged frontier of a
+tree (0.855). Bagging\index{bagging}, random forests and gradient boosting\index{gradient boosting} (the ensembles of \cref{sec:ensembles}) smooth the jagged frontier of a
 single tree.
 
 \begin{figure}[htbp]
@@ -283,13 +282,13 @@ second case, diversity\index{diversity} can be induced by:
         the original classes, as in error-correcting output codes \citep{dietterich1995solving};
   \item \emph{injecting randomness} into the learning process: random initial weights of
         a neural network, random choices among the best splits of a tree (randomisation\index{randomisation}),
-        random thresholds\index{threshold} (extremely randomised trees\index{extra trees}, \citealp{geurts2006extremely}).
+        random thresholds (extremely randomised trees\index{extra trees}, \citealp{geurts2006extremely}).
 \end{itemize}
 \citet{brown2005diversity} distinguish \emph{implicit} diversity generation, which uses
 indirect means and hopes that diversity appears (random samples, random features), from
 \emph{explicit} diversity generation, which constructs each new member so that it is
 substantially different from the previous ones (boosting reweights the examples the
-ensemble gets wrong; Decorate\index{Decorate} adds examples that contradict it).
+ensemble gets wrong; Decorate\index{Decorate} (\cref{sec:hybrid}) adds examples that contradict it).
 
 \subsection{Fusion methods}
 
@@ -323,8 +322,7 @@ Again, the weights are difficult to determine. Both combiners are special cases 
 \end{equation}
 which, for weights summing to one, gives the linear combiner\index{linear combiner} for $\alpha=1$, the weighted geometric mean as
 $\alpha\to0$, the
-maximum as $\alpha\to\infty$ and the minimum as $\alpha\to-\infty$: a continuum of possible
-combining strategies.
+maximum as $\alpha\to\infty$ and the minimum as $\alpha\to-\infty$, so it covers a continuum of combining strategies.
 
 \paragraph{Voting} Each classifier votes for a class, and the class with the most votes is
 selected: the \emph{majority} vote if it needs more than half of the votes, the
@@ -337,8 +335,7 @@ Three models assign these probabilities to the classes A and B for an example:
 $h_1=(0.90,0.10)$, $h_2=(0.45,0.55)$ and $h_3=(0.40,0.60)$. Two of the three models prefer B,
 so the majority vote predicts B. The average is $(0.583,0.417)$, which predicts A: the
 confident opinion of $h_1$ outweighs the two lukewarm votes for B. The normalised product is
-$(0.831,0.169)$, which also predicts A (\cref{lst:fusion}). Voting counts heads; averaging
-weighs confidence.
+$(0.831,0.169)$, which also predicts A (\cref{lst:fusion}). Voting counts only the predicted classes. Averaging also takes into account how confident each model is.
 \end{example}
 
 \begin{pylisting}[label={lst:fusion}]{Majority vote, linear combiner and product combiner}
@@ -380,7 +377,7 @@ behaves more like model \emph{selection} than like an ensemble, even when a mixt
 \citep{domingos2000bayesian,yao2018using}. Cross-validated stacking\index{stacking} (\cref{sec:hybrid}) instead chooses
 the weights to optimise predictive performance: the two methods answer different questions.
 
-\paragraph{Metalearning} Instead of fixing the fusion\index{fusion of models} rule, we can \emph{learn} it: a second-level
+\paragraph{Metalearning} In this section, \emph{metalearning} means learning how to combine the base models. Unit~4 uses the same word for something else: learning from previous experiments which algorithm to apply. The fusion\index{fusion of models} rule can also be \emph{learned}: a second-level
 model is trained to combine the predictions of the members. This requires extra (validation)
 data, since the combiner must be trained on predictions made on examples that the members have
 not seen. Stacking and cascading\index{cascading} (\cref{sec:hybrid}) are the main examples.
@@ -462,7 +459,7 @@ Since the members are independent, bagging is trivially parallelised.
 \subsection{Boosting}
 
 Boosting builds the ensemble sequentially. AdaBoost\index{AdaBoost} \citep{freund1996experiments,freund1997decision},
-the most popular algorithm of the family, keeps a weight for each training example. In each
+a widely used algorithm of the family, keeps a weight for each training example. In each
 round a new model is trained with the current weights, the weights of the examples it
 misclassifies are increased, and those of the correct ones decreased, so that the next model
 focuses on the examples that the ensemble finds difficult. Each model also receives a weight
@@ -502,7 +499,7 @@ is forced to learn something different: boosting generates diversity\index{diver
 accuracy as scikit-learn's implementation: 100 decision stumps\index{decision stump} combine into a classifier with a test accuracy of 0.915. The first stump
 reaches 0.781, but the later ones fit differently weighted versions of the training data, and on the
 original test data\index{test set} their mean accuracy is only 0.557: a weak learner\index{weak learner} must be better than random on
-the weighted data of its round, not on the original distribution.
+the weighted data of its round. It need not be better than random on the original distribution.
 
 \begin{pylisting}[label={lst:adaboost}]{AdaBoost written from scratch and compared with scikit-learn}
 import numpy as np
@@ -551,13 +548,13 @@ the first stump:            test accuracy=0.781
 mean of the 100 stumps:      test accuracy=0.557
 \end{pyoutput}
 
-AdaBoost has an elegant theory. Its training error is bounded by
+Several theoretical results explain the behaviour of AdaBoost. Its training error is bounded by
 $\prod_t2\sqrt{\varepsilon_t(1-\varepsilon_t)}$, which decreases exponentially with $T$ when every
 member keeps a weighted error of at most $1/2-\gamma$ for a fixed $\gamma>0$ (a \emph{weak learner}): the
 bound is then at most $e^{-2\gamma^2T}$. That is a statement about the training error; the good generalisation\index{generalisation}
 of AdaBoost
 has been explained in terms of the \emph{margins} of the training examples
-\citep{schapire1998boosting}. AdaBoost can also be seen as a greedy\index{multi-armed bandit!epsilon-greedy@$\varepsilon$-greedy} minimisation of the
+\citep{schapire1998boosting}. AdaBoost can also be seen as a greedy minimisation of the
 exponential loss $\sum_i e^{-y_iF(x_i)}$, with $F(x)=\sum_t\alpha_th_t(x)$
 \citep{friedman2000additive}. This last view explains its main weakness: the exponential loss
 grows very fast for examples with large negative margins, so mislabelled\index{label noise} examples receive
@@ -573,7 +570,7 @@ gradient} of the loss with respect to the current predictions,
 \begin{equation}
   r_{it}=-\frac{\partial\,\ell\bigl(y_i,F(x_i)\bigr)}{\partial F(x_i)}\Big|_{F=F_{t-1}},
 \end{equation}
-which for the squared loss is simply the residual\index{residual analysis} $y_i-F_{t-1}(x_i)$: each new tree predicts the
+which for the squared loss is the residual $y_i-F_{t-1}(x_i)$: each new tree predicts the
 errors of the previous ones, and its predictions are added to the ensemble. The \emph{learning
 rate\index{learning rate|textbf}} (shrinkage) $\nu\in(0,1]$ slows down the learning, which improves generalisation\index{generalisation} at the
 cost of more trees; the number of trees is usually chosen by \emph{early stopping\index{early stopping|textbf}} on a
@@ -581,8 +578,8 @@ validation set\index{validation set}.
 
 Efficient implementations of gradient boosting with regularisation, histogram-based splits and
 careful engineering, such as XGBoost\index{XGBoost} \citep{chen2016xgboost}, LightGBM \citep{ke2017lightgbm} and
-CatBoost \citep{prokhorenkova2018catboost}, have dominated applied machine learning on
-\emph{tabular} data and data science competitions for a decade. scikit-learn's
+CatBoost \citep{prokhorenkova2018catboost}, have been widely used on
+\emph{tabular} data and in data science competitions for a decade. scikit-learn's
 \code{HistGradientBoostingClassifier} follows the same design (\cref{lst:gb}).
 
 \begin{pylisting}[label={lst:gb}]{Random forest, gradient boosting and histogram gradient boosting with early stopping}
@@ -641,19 +638,18 @@ Label noise & robust in many problems & sensitive (exponential loss)\\
 
 \subsection{Randomisation}
 
-\citet{dietterich2000experimental} proposed a very simple way of generating diverse decision
+\citet{dietterich2000experimental} proposed another way of generating diverse decision
 trees: \emph{randomisation\index{randomisation|textbf}} injects randomness into the internal decisions of the learning
-algorithm. When choosing the split of a node, instead of always taking the best one, the
-algorithm chooses uniformly at random among the 20 best splits. Each run generates a different
+algorithm. When choosing the split of a node, the algorithm chooses uniformly at random among the 20 best splits. Each run generates a different
 tree, and the trees are combined by uniform voting\index{voting}. Unlike bagging\index{bagging}, every tree is learned from
 all the training data.
 
-\subsection{Multi-trees}
+\subsection{Multi-trees\extsec}
 
 Ensembles of trees store many trees that share much of their structure: many members split on
 the same attribute at the root. A \emph{multi-tree\index{multi-tree|textbf}} \citep{estruch2002shared} stores all of them
 in a single structure. During the induction of a decision tree, the splits that are not chosen
-at a node are not discarded but stored as \emph{suspended} nodes, which turns the tree into an
+at a node are stored as \emph{suspended} nodes, which turns the tree into an
 AND/OR tree (\cref{fig:multitree}): OR-nodes represent alternative splits, and AND-nodes the
 branches of a split. Activating different combinations of suspended OR-nodes generates
 different trees, and the number of trees grows exponentially with the number of exploited
@@ -712,15 +708,14 @@ classification but, by default, all the attributes for regression. The trees are
 bootstrap sample, and they are combined by unweighted voting\index{voting} (or by averaging their
 probabilities). Restricting the candidate attributes decorrelates the trees, which reduces the
 first term of \cref{eq:avgvar}: a random forest is bagging with more diversity\index{diversity}.
-\emph{Extremely randomised trees\index{extra trees|textbf}} \citep{geurts2006extremely} go one step further and choose the
-thresholds of the splits at random as well. \Cref{lst:bagging} compares a single tree, bagging,
+\emph{Extremely randomised trees\index{extra trees|textbf}} \citep{geurts2006extremely} also choose the
+thresholds of the splits at random. \Cref{lst:bagging} compares a single tree, bagging,
 random forests and extra trees: each additional source of randomness improves the ensemble, and
 the OOB\index{out-of-bag estimate} estimates are close to the test accuracies.
 
 \begin{pitfall}
-\textbf{A random forest that is not one.} In \textsf{scikit-learn}, \code{RandomForestRegressor()} with its default
-parameters considers every attribute at every split (\code{max\_features=1.0}): it is bagging of regression trees,
-not a random forest. Set \code{max\_features}, for instance to $1/3$ or \code{"sqrt"}, to decorrelate the trees.
+\textbf{A default random forest regressor is bagging.} In \textsf{scikit-learn}, \code{RandomForestRegressor()} with its default
+parameters considers every attribute at every split (\code{max\_features=1.0}), which makes it bagging of regression trees. Set \code{max\_features}, for instance to $1/3$ or \code{"sqrt"}, to decorrelate the trees.
 \end{pitfall}
 
 \begin{pylisting}[label={lst:bagging}]{A single tree versus three bagging-type ensembles, with out-of-bag estimates}
@@ -789,7 +784,7 @@ decision tree make different kinds of mistakes.
 
 \subsection{Voting}
 
-The most basic combination of heterogeneous models is voting\index{voting}: each model votes and the class
+A basic way to combine heterogeneous models is voting\index{voting}: each model votes and the class
 with most votes wins (\emph{hard} voting), or the probabilities are averaged (\emph{soft}
 voting). Diversity\index{diversity} is generated implicitly, by the differences between the techniques. The
 drawback of uniform voting is that bad models have the same importance as good ones, so voting
@@ -800,20 +795,19 @@ a little better (0.871).
 
 \subsection{Stacking}
 
-\emph{Stacking\index{stacking|textbf}} (stacked generalisation\index{generalisation}, \citealp{wolpert1992stacked}) learns how to combine
+\emph{Stacking\index{stacking|textbf}} (stacked generalisation, \citealp{wolpert1992stacked}) learns how to combine
 the models. It uses two levels of models (\cref{fig:stacking}): the \emph{base models}
 (level~0), usually learned with different techniques, and a \emph{metamodel} (level~1),
 trained to optimise the fusion\index{fusion of models} of the base models' outputs. The inputs of the metamodel are the
 predictions of the base models.
 
-The key to stacking is to avoid overfitting: if the metamodel were trained on predictions that
+The main difficulty in stacking is overfitting: if the metamodel were trained on predictions that
 the base models make on their own training data, it would learn to trust the models that overfit
 most. The metamodel must be trained with \emph{fresh} data, that is, with predictions on
 examples the base models have not seen. With enough data a separate validation set can be used;
 more efficiently, the base models produce \emph{out-of-fold} predictions by cross-validation\index{cross-validation},
 and are finally refitted on all the data (\cref{alg:stacking}). \citet{ting1999issues} showed
-that stacking works best when the base models provide class probabilities (rather than crisp
-labels) and the metamodel is a simple model such as a linear or logistic regression\index{logistic regression}. A
+that stacking works best when the base models provide class probabilities and the metamodel is a simple model such as a linear or logistic regression\index{logistic regression}. A
 theoretical justification of cross-validated stacking, under the name of \emph{super learner},
 was given by \citet{vanderlaan2007super}.
 
@@ -907,7 +901,7 @@ data that it has not seen (\cref{sec:protocols}).
 
 \subsection{Cascading}
 
-In \emph{cascade generalisation\index{cascading|textbf}\index{generalisation|textbf}} \citep{gama2000cascade} the classifiers are applied
+In \emph{cascade generalisation\index{cascading|textbf}} \citep{gama2000cascade} the classifiers are applied
 sequentially, and each one extends the representation of the data for the next: the class
 probability distribution predicted by a base classifier is added to the original attributes as
 new attributes, and the next classifier learns from the extended representation. In the
@@ -932,20 +926,19 @@ on the input: a \emph{gating} model $g$ decides how much to trust each expert fo
   \bar f(y\mid x)=\sum_{t=1}^{T}g_t(x)\,f_t(y\mid x),\qquad
   g_t(x)=\frac{e^{v_t^{\top}x}}{\sum_{s}e^{v_s^{\top}x}}.
 \end{equation}
-Experts and gate are trained together, classically with the expectation--maximisation\index{expectation maximisation (EM)} (EM)
+Here $T$ is the number of experts and $f_t(y\mid x)$ is the prediction of expert $t$; the gate turns the linear scores $v_t^{\top}x$, with one parameter vector $v_t$ per expert, into weights that add up to one (a softmax). Experts and gate are trained together, classically with the expectation--maximisation\index{expectation maximisation (EM)} (EM)
 algorithm, and both use the input examples, so each expert specialises in a region of the input
 space. Several mixtures can be combined in a tree, giving a \emph{hierarchical} mixture of
 experts \citep{jordan1994hierarchical}. Mixtures of experts are useful when the experts are
-diverse, and the idea has had a spectacular revival in deep learning: \emph{sparse} mixtures of
+diverse, and the idea has returned in deep learning: \emph{sparse} mixtures of
 experts, in which the gate activates only a few experts for each input, allow enormous neural
 networks, including several large language models\index{large language model (LLM)}\index{language model}, to be trained and run at a fraction of the
 cost of a dense network of the same size \citep{shazeer2017outrageously,fedus2022switch}.
 
 % ---------------------------------------------------------------------
-\section{Knowing when not to predict: abstention and delegation}\label{sec:cautious}
+\section{Abstention and delegation}\label{sec:cautious}
 
-Combining models is one way of dealing with their limitations. Another is to let a model admit
-them. Deployed systems rarely face only the choice ``predict class $a$ or class $b$'': there is
+Besides combining models, we can deal with their limitations by letting a model refuse to predict when it is unsure. Deployed systems rarely face only the choice ``predict class $a$ or class $b$'': there is
 almost always a third option, \emph{do not decide here and pass the case on}. A fraud detector
 sends doubtful transactions to a team of analysts; a triage system refers unclear cases to a
 doctor; a content moderation pipeline escalates borderline posts to human reviewers; a cheap
@@ -981,7 +974,7 @@ The classifier abstains on a band of probabilities that contains the cost thresh
 $t^\star=c_{\mathrm{FP}}/(c_{\mathrm{FP}}+c_{\mathrm{FN}})$ of \cref{eq:tstar}; the band is empty, and
 abstaining is never worthwhile, when
 $c_r\geq c_{\mathrm{FP}}c_{\mathrm{FN}}/(c_{\mathrm{FP}}+c_{\mathrm{FN}})$. With more classes, the cost
-matrix\index{cost matrix} simply gets an extra row for $\perp$.
+matrix\index{cost matrix} gets an extra row for $\perp$.
 
 \begin{example}{When abstaining is the best decision}{costcautious}
 A three-class problem has the following costs (rows: decision; columns: actual class; negative
@@ -1010,7 +1003,7 @@ probability of 0.5 (part (a) of \cref{lst:costcautious}).
 A \emph{cautious classifier\index{cautious classifier|textbf}} \citep{ferri2004cautious} adds the class $\perp$ to the set of
 original classes $C$. It must find a compromise between reducing the number of misclassified
 examples (\emph{error}) and reducing the number of unclassified examples (\emph{abstention\index{abstention|textbf}}):
-abstaining always is never wrong and never useful. Its confusion matrix\index{confusion matrix} has an extra row for
+a classifier that always abstains makes no errors but is of no use. Its confusion matrix\index{confusion matrix} has an extra row for
 $\perp$. If $M(i,j)$ counts the examples predicted as $i\in C\cup\{\perp\}$ whose actual class is
 $j\in C$, and $\mathit{Card}$ is the total number of examples:
 \begin{align}
@@ -1043,7 +1036,7 @@ classified examples, 87 are correct: accuracy $87/91=0.956$. The four mistakes g
 $4/100=0.04$, and indeed $0.956\times0.91=0.87=0.91-0.04$ (\cref{lst:cautious}).
 \end{example}
 
-A single matrix describes one operating point\index{operating point}. The quality of a cautious classifier is the whole
+A single matrix describes one operating point\index{operating point}. To judge a cautious classifier we need the whole
 trade-off, which is shown in an \emph{accuracy\index{accuracy|textbf} response graph}: the accuracy on the covered
 examples against the abstention, obtained by abstaining on increasingly large fractions of the
 least confident examples (\cref{fig:cautious}a). The literature on \emph{selective
@@ -1053,7 +1046,7 @@ summaries are useful: the accuracy at the level of abstention that the applicati
 (say, 20\%), and the \emph{area under the risk--coverage curve} (AURC\index{AURC}), the average error of the
 $k$ most confident predictions over all values of $k$ \citep{geifman2019bias}; lower is better.
 
-What makes a good cautious classifier is not its accuracy but whether its confidence
+For a cautious classifier, what matters is whether its confidence
 \emph{ranks its own mistakes}: the examples it is least sure about must be the ones it would get
 wrong. This can be measured directly as the AUC of the confidence for separating correct from
 incorrect predictions (\cref{sec:roc}), and it depends on the quality of the probabilities
@@ -1066,10 +1059,10 @@ produces only a few distinct confidences, so the order of the examples within ti
 and its AURC: a tie policy must be stated, for instance averaging over random orders. Which
 model is best depends on how much abstention the application can tolerate.
 
-Naive Bayes deserves a second look, because \cref{sec:calibration} showed that its probabilities are badly
-calibrated. There is no contradiction: abstaining on a fixed share of the least confident cases, as AURC and
-delegation\index{delegation} do, only needs a confidence that \emph{ranks} the errors well (any strictly increasing transformation of
-it gives the same curve), whereas abstaining with cost-based thresholds, as the window rule\index{window rule} below does, needs
+Naive Bayes needs a comment here, because \cref{sec:calibration} showed that its probabilities are badly
+calibrated. There is no contradiction. Abstaining on a fixed share of the least confident cases, as AURC and
+delegation\index{delegation} do, only needs a confidence that \emph{ranks} the errors well; any strictly increasing transformation of
+it gives the same curve. Abstaining with cost-based thresholds, as the window rule\index{window rule} below does, needs
 probabilities that are \emph{calibrated\index{calibration|textbf}}. Part~(c) of \cref{lst:costcautious} applies the cost-matched window rule
 to naive Bayes on the same data: uncalibrated, it abstains on 22.8\% of the test cases at a mean cost of 0.326;
 after isotonic\index{calibration!isotonic regression} calibration it abstains on 36.3\% at a mean cost of 0.312.
@@ -1120,7 +1113,7 @@ $p_i$, can be turned into a cautious classifier\index{cautious classifier}. Foll
 $w\in[0,1]$:
 \begin{center}
 \fbox{\begin{minipage}{0.86\textwidth}
-\textbf{Decision rule\index{decision rules|textbf}} (given $K$ and $w$). For each class $i$, compute the threshold
+\textbf{Decision rule\index{window rule|textbf}} (given $K$ and $w$). For each class $i$, compute the threshold
 $\tau_i=(1-k_i)\,w+k_i$. If some $p_i\geq\tau_i$, predict $\argmax_i\,(p_i/\tau_i)$ among those
 classes; otherwise predict $\perp$.
 \end{minipage}}
@@ -1138,7 +1131,7 @@ between,
   k\,(1-w)<p<k+(1-k)\,w,
 \end{equation}
 a \emph{window} around $k$ whose width grows with $w$. Comparing it with the optimal band of
-\cref{eq:rejectband} gives a remarkable result. Take $k=t^\star$ and
+\cref{eq:rejectband} shows that the two can coincide. Take $k=t^\star$ and
 \begin{equation}\label{eq:wstar}
   w^\star=1-\frac{c_r\,(c_{\mathrm{FP}}+c_{\mathrm{FN}})}{c_{\mathrm{FP}}\,c_{\mathrm{FN}}}.
 \end{equation}
@@ -1159,7 +1152,7 @@ cost of abstaining.
 For instance, with $c_{\mathrm{FP}}=1$, $c_{\mathrm{FN}}=4$ and $c_r=0.5$, the cost threshold is
 $t^\star=0.2$, the window is $w^\star=1-0.5\cdot5/4=0.375$, and both rules abstain exactly when
 $0.125<p<0.5$; part (b) of \cref{lst:costcautious} checks that they take the same decision for
-every probability. \Cref{fig:cautious}b shows what is at stake on a problem with 20\% of positives.
+every probability. \Cref{fig:cautious}b shows the effect on the cost for a problem with 20\% of positives.
 With a uniform $K$ and $w=0$ the logistic regression uses the threshold 0.5, ignores the costs,
 and costs 0.537 per example; with the cost-matched $K$ it costs 0.386 without abstaining at all.
 As $w$ grows both curves fall, because abstaining (0.5) is cheaper than many risky predictions;
@@ -1235,13 +1228,12 @@ naive Bayes + isotonic  abstains 0.363  mean cost 0.312
 \end{pyoutput}
 
 Conformal prediction\index{conformal prediction} (\cref{sec:other}) offers another way of deciding when to abstain, with a
-different guarantee: compute prediction sets with coverage\index{coverage} $1-\alpha$ and abstain whenever the
-set does not contain exactly one label: two or more labels signal ambiguity\index{ambiguity decomposition}, and an empty set signals that
+different guarantee. It computes prediction sets with coverage\index{coverage} $1-\alpha$, and the classifier abstains whenever the
+set does not contain exactly one label. Two or more labels signal ambiguity, and an empty set signals that
 no label is plausible, as for an input unlike the calibration data. In \cref{lst:conformalabst}, 90\% prediction sets cover 90.1\%
 of the test examples; 67.0\% of them contain a single label, with an accuracy of 0.853; the other
 33.0\% contain both labels, and no set is empty with this $\alpha$, although empty sets become possible as $\alpha$
-grows. The guarantee concerns the coverage of the sets,
-not the accuracy of the single-label predictions.
+grows. The guarantee concerns the coverage of the sets. It says nothing about the accuracy of the single-label predictions.
 
 \begin{pylisting}[label={lst:conformalabst}]{Abstaining when a conformal prediction set is not a single label}
 import numpy as np
@@ -1337,14 +1329,14 @@ Delegation serves two different purposes, depending on the second level:
 16 leaves as first level. The delegation thresholds are taken from \emph{out-of-fold} confidences
 (\cref{sec:protocols}): on its own training data a model is overconfident, so a quantile of those confidences would
 delegate fewer new examples than intended. Delegating to a random forest raises the accuracy from 0.803 (the tree
-alone) to 0.882, closing three quarters of the gap with the forest (0.908) while calling it for only 717 of the 3000
-test examples (24\%, not the nominal 30\%: the tree produces only 16 distinct confidences, so the quantile is
-coarse), and every prediction that is not delegated can be explained by the small tree. A specialist tree trained on
+alone) to 0.882, which closes three quarters of the gap with the forest (0.908). The forest is called for only 717 of the 3000
+test examples, 24\% and not the nominal 30\%, because the tree produces only 16 distinct confidences and the quantile is
+therefore coarse. Every prediction that is not delegated can be explained by the small tree. A specialist tree trained on
 the delegated examples reaches 0.842 (and 0.850 at best); its curve is irregular because each delegation threshold
 produces a different training set for the specialist. Round rebound returns 227 of the 717 delegated cases to the
 first tree and leaves the accuracy unchanged here (0.842): the cases that bounce back are, by construction, those the
-first tree had already found difficult, so it is no better than the specialist on them. Rebound pays off only when
-the first level remains competent on part of the region it delegates. As with every design choice in this book, the
+first tree had already found difficult, so it is no better than the specialist on them. Rebound helps only when
+the first level remains competent on part of the region it delegates. As with other design choices, the
 variant must be validated on data (Exercise~\ref{exr2:rebound}). The delegation rate is measured on the test data,
 because no quantile estimated during training guarantees the same rate in deployment\index{deployment}, and the time actually saved
 must be measured as well, since the cost of the second level depends on the hardware and on batching.
@@ -1432,23 +1424,270 @@ random forest alone            accuracy=0.908
 \subsection{Delegating to humans and to large models}
 
 When the second level is a person, delegation\index{delegation} becomes \emph{learning to defer}
-\citep{madras2018predict,mozannar2020consistent}. The decision to defer should depend not only
-on the confidence of the model but also on how good the human is on each kind of case: a model
-should defer the cases that the human is likely to get right and it is likely to get wrong, so
+\citep{madras2018predict,mozannar2020consistent}. The decision to defer should depend on the confidence of the model and also on how good the human is on each kind of case. A model
+should defer the cases that the human is likely to get right and that it is likely to get wrong, so
 the classifier and the deferral rule are trained together to minimise the error of the
-human--machine team rather than that of the model alone. Deferring well can also make the whole
+human--machine team. Deferring well can also make the whole
 system fairer, if the model is less reliable for some groups of people
 \citep{madras2018predict}. The same structure appears with large language models\index{large language model (LLM)}: a model
 \emph{cascade\index{cascading|textbf}} sends each query to a cheap model first and uses a scoring function to decide
 whether to accept its answer or escalate to a more expensive model, which can match the accuracy
 of the most expensive model at a much lower cost \citep{chen2023frugalgpt}. The gating network of
-a mixture of experts\index{mixture of experts} (\cref{sec:hybrid}) is yet another form of routing.
+a mixture of experts\index{mixture of experts} (\cref{sec:hybrid}) is another form of routing.
 
 Evaluating these systems requires the quantities of this section: the accuracy or the cost as a
 function of the fraction of delegated cases, and the workload sent to the human team or to the
 expensive model. Once the system is deployed, the delegation rate itself is worth monitoring\index{monitoring}
 (Unit~6): if a model starts to abstain\index{abstention} or delegate much more often than during validation, the
 data have probably changed.
+
+\subsection{Assessors\extsec}\label{sec:assessors}
+
+The cautious and delegating classifiers of this section rely on the confidence of the model
+itself. An \emph{assessor\index{assessor|textbf}} is a separate model trained to predict whether the first
+model will be right on an example, or more generally its loss \citep{hernandezorallo2022training}.
+It is trained on examples that the first model has not seen, with the correctness of its
+predictions as the target, as the metamodel of stacking\index{stacking} is trained on out-of-fold predictions
+(\cref{sec:hybrid}). Because it learns from the results of the model, it can find where the model
+fails even when the model is confident there: a model whose family cannot represent the true
+relationship is often confidently wrong in whole regions of the input space, and its confidence
+cannot reveal it. Assessors serve the purposes of this section: rejecting or delegating the
+examples on which the model is likely to fail, before running it if the assessor does not need
+its output, which matters when the model is expensive \citep{zhou2022reject}; choosing among
+several models for each example; and, after deployment, estimating the accuracy of a model on new
+data without labels (\cref{sec:diagnose}).
+
+\Cref{lst:assessor} deploys a logistic regression\index{logistic regression} on a problem whose target depends
+on the square of a feature, which a linear model cannot represent. The assessor is a gradient
+boosting\index{gradient boosting} model trained on a separate sample, with the correctness of the logistic
+regression as its target.
+
+\begin{pylisting}[label={lst:assessor}]{An assessor that predicts where a model fails}
+import numpy as np
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import roc_auc_score
+
+rng = np.random.default_rng(0)
+
+def sample(n, spread=1.0):
+    """Five features; the target depends on x1 squared, which a linear model misses."""
+    X = rng.normal(size=(n, 5))
+    X[:, 1] *= spread                            # spread > 1: more extreme values of x1
+    logit = 2 * X[:, 0] + 1.5 * (X[:, 1] ** 2 - 1) + 0.5 * X[:, 2]
+    return X, (rng.random(n) < 1 / (1 + np.exp(-logit))).astype(int)
+
+X_tr, y_tr = sample(3000)                        # trains the model
+X_as, y_as = sample(3000)                        # trains the assessor (unseen by the model)
+X_te, y_te = sample(3000)                        # tests both
+X_new, y_new = sample(3000, spread=1.6)          # deployment data after a covariate shift
+
+model = LogisticRegression().fit(X_tr, y_tr)
+right = lambda X, y: (model.predict(X) == y).astype(int)
+confidence = lambda X: model.predict_proba(X).max(axis=1)
+assessor = HistGradientBoostingClassifier(learning_rate=0.05, max_iter=200, random_state=0)
+assessor.fit(X_as, right(X_as, y_as))            # learns where the model is right
+p_right = lambda X: assessor.predict_proba(X)[:, 1]
+
+r_te = right(X_te, y_te)
+print(f"accuracy of the model on the test data: {r_te.mean():.3f}")
+for name, score in [("the model's confidence", confidence(X_te)),
+                    ("the assessor", p_right(X_te))]:
+    keep = score >= np.quantile(score, 0.2)      # reject the 20% least likely to be right
+    print(f"ranking by {name:22s} AUC {roc_auc_score(r_te, score):.3f}, "
+          f"accuracy on the 80% kept {r_te[keep].mean():.3f}")
+print(f"after the shift, true accuracy {right(X_new, y_new).mean():.3f}; "
+      "estimated without labels:")
+print(f"  test accuracy {r_te.mean():.3f}, "
+      f"mean confidence {confidence(X_new).mean():.3f}, assessor {p_right(X_new).mean():.3f}")
+\end{pylisting}
+\begin{pyoutput}
+accuracy of the model on the test data: 0.749
+ranking by the model's confidence AUC 0.683, accuracy on the 80% kept 0.788
+ranking by the assessor           AUC 0.808, accuracy on the 80% kept 0.830
+after the shift, true accuracy 0.677; estimated without labels:
+  test accuracy 0.749, mean confidence 0.731, assessor 0.692
+\end{pyoutput}
+
+The model is right on 74.9\% of the test examples. Its own confidence ranks its errors with an
+AUC\index{area under the ROC curve (AUC)} of 0.683, and the assessor with 0.808; rejecting the 20\% of the
+examples that each score finds least likely to be right raises the accuracy on the rest to 0.788
+with the confidence and to 0.830 with the assessor. The last two lines anticipate
+\cref{ch:monitoring}. After a covariate shift\index{covariate shift} that makes extreme values of the
+feature, where the linear model fails, more frequent, its accuracy falls to 0.677. The accuracy
+measured on the test data (0.749) and the mean confidence of the model (0.731) both overestimate
+it, and the average prediction of the assessor (0.692) comes close, without a single label. This
+estimate holds when the probability that the model is right at each input stays the same, as
+under covariate shift; under concept drift\index{concept drift} the assessor is as outdated as the model.
+
+% ---------------------------------------------------------------------
+\section{Combining models with domain knowledge}\label{sec:knowledge}
+
+The models of this unit learn everything they know from data. People who work in a domain can
+often say a good deal before seeing any data: a credit analyst knows that a longer loan is
+riskier, a physician follows clinical guidelines, and a company has business rules that its
+decisions must respect. This \emph{domain knowledge\index{domain knowledge|textbf}} takes three main forms: costs,
+which \cref{sec:costs} turned into thresholds and expected losses; \emph{manual models}, such as
+expert rules or scorecards; and constraints on how the model may behave, such as the direction
+in which a feature may move the prediction. \Citet{vonrueden2023informed} survey the ways of
+integrating prior knowledge into machine learning. This section covers the two that fit the
+hybrid models of this unit, manual models and monotonicity constraints, and shows how to test
+that a model respects the knowledge.
+
+\subsection{Manual models}
+
+A \emph{manual model\index{manual model|textbf}} is written by people: a set of rules, a decision table or a
+\emph{scorecard\index{scorecard|textbf}}, which adds points for each risk factor and compares the total with a
+cut-off \citep{siddiqi2006credit}. Manual models are easy to explain and to audit, and they are
+often already in use when a data science project starts. A learned model can be combined with a
+manual model in several ways:
+\begin{itemize}
+\item \emph{as a baseline}: the learned model replaces the manual model only if it is clearly
+better on the same data and with the same metric (\cref{sec:stats}), since the manual model is
+easier to explain and to maintain;
+\item \emph{as a feature}: the output of the manual model is added to the inputs, and the
+learned model uses it where it helps and corrects it where it is wrong, as the metamodel of
+stacking\index{stacking} does with its base models (\cref{sec:hybrid});
+\item \emph{as a starting point}: several boosting libraries accept the score of the manual
+model as the initial prediction of the ensemble, so the trees learn only what the experts
+missed (\cref{sec:ensembles});
+\item \emph{as a guard}: rules that come from the law or from the policy of the organisation
+are applied before or after the model; an applicant under the legal age is rejected whatever
+the model says, and a decision that breaks a business rule goes to a person;
+\item \emph{as a delegate}: the cases on which the learned model is least confident go to the
+manual model or to an expert, as in the delegating\index{delegation} classifiers of \cref{sec:cautious}.
+\end{itemize}
+
+\subsection{Monotonicity constraints}
+
+Experts often know the direction of an effect better than its size. Other things being equal, a
+longer loan or a higher instalment relative to income should not lower the predicted risk of
+default. A model $f$ is \emph{monotone\index{monotonicity constraint|textbf}} (increasing) in the feature $x_j$ of an input $x=(x_1,\dots,x_M)$ if raising $x_j$
+while the other features stay fixed never lowers its output,
+\begin{equation}\label{eq:monotone}
+x_j\le x_j' \;\Rightarrow\; f(x_1,\dots,x_j,\dots,x_M)\le f(x_1,\dots,x_j',\dots,x_M),
+\end{equation}
+and decreasing if the inequality between the outputs is reversed. A flexible model does not
+respect such knowledge by itself: where it has few examples it fits noise, and its predictions
+can go down where they should go up. The constraint can be imposed during learning.
+\citet{potharst2002classification} review classification trees that satisfy monotonicity
+constraints, and current libraries accept a direction for each feature: in scikit-learn the
+decision trees, random forests and histogram gradient boosting models take it through the
+\code{monotonic_cst} parameter, and XGBoost \citep{chen2016xgboost} and LightGBM
+\citep{ke2017lightgbm} offer the same option. Linear and logistic models are monotone in each
+feature by construction, and the knowledge only fixes the sign of each weight.
+
+Constraints make the model consistent with the explanations given to a rejected applicant
+(\cref{sec:interpretability}), reduce the variance of the model where data are scarce, and keep
+its predictions sensible when it extrapolates beyond the range of the training data. A
+constraint is also a decision, and it has to be checked against the data and against the law.
+In the German credit\index{German credit data} data the default rate is 32\% for loans below 1000~DM, 23\% between
+2000 and 4000~DM and 54\% above 8000~DM, so an increasing constraint on the amount would
+contradict the data. Imposing that the risk decreases with age would write into the model a
+policy about a protected attribute\index{protected attribute} (a characteristic, such as age or sex, that anti-discrimination law protects), which \cref{sec:fairness} asks us to examine before
+accepting it.
+
+\Cref{lst:knowledge} applies both ideas to the German credit data of \cref{lst:firstlook}. The
+scorecard has six rules of the kind that a credit analyst might write. Gradient
+boosting\index{gradient boosting} is trained with and without the score as an extra feature, and with and without
+increasing constraints on the duration of the loan and on the instalment rate. Each system is
+evaluated on ten random splits with the AUC\index{area under the ROC curve (AUC)} and with a \emph{directional test\index{directional test|textbf}}, like the
+one in \cref{lst:tests}: the share of test applicants whose predicted risk falls when their
+loan is made a year longer.
+
+\begin{pylisting}[label={lst:knowledge}]{A scorecard and monotonicity constraints on the German credit data}
+import hashlib
+import io
+from urllib.request import urlopen
+
+import numpy as np
+import pandas as pd
+from sklearn.ensemble import HistGradientBoostingClassifier
+from sklearn.metrics import roc_auc_score
+from sklearn.model_selection import train_test_split
+
+# The German credit data of the introduction, from the same pinned mirror
+URL = ("https://raw.githubusercontent.com/jbrownlee/Datasets/"
+       "d20fcb6402ae34e653d4513b00f39257bb37ed7f/german.csv")
+SHA256 = "ec12a88b9fc14d74ba646ea0410cf7ff4533bec2eb61652f8ad76796bbfec017"
+raw = urlopen(URL).read()
+assert hashlib.sha256(raw).hexdigest() == SHA256, "the data file has changed"
+data = pd.read_csv(io.BytesIO(raw), header=None)
+y = (data[20] == 2).astype(int)                       # 1 = the applicant turned out bad
+X = data.drop(columns=20).rename(columns={0: "checking", 1: "duration", 5: "savings",
+                                          6: "employment", 7: "rate"})
+X.columns = X.columns.astype(str)
+X = X.astype({c: "category" for c in X.select_dtypes(exclude="number").columns})
+
+def scorecard(X):
+    """A manual model: risk points for rules that a credit analyst might write."""
+    return (2 * (X.checking == "A11") + (X.checking == "A12")   # negative or low balance
+            + X.duration / 12                                   # one point per year of loan
+            + (X.savings == "A61") + (X.rate == 4)              # low savings, high instalment
+            + X.employment.isin(["A71", "A72"])).astype(float)  # unemployed or new in the job
+
+def with_card(X):
+    return X.assign(card=scorecard(X))
+
+def falls(risk, X):
+    """Directional test: share of applicants whose risk falls if the loan is a year longer."""
+    return np.mean(risk(X.assign(duration=X.duration + 12)) < risk(X))
+
+def boosting(constraints=None):
+    return HistGradientBoostingClassifier(learning_rate=0.05, max_iter=200, max_leaf_nodes=8,
+                                          min_samples_leaf=20, monotonic_cst=constraints,
+                                          random_state=0)
+
+rising = {"duration": 1, "rate": 1}         # the risk may only grow with these features
+systems = {"gradient boosting": (None, False), "  + scorecard as a feature": (None, True),
+           "  + monotonic constraints": (rising, False),
+           "  + both": (rising | {"card": 1}, True)}
+results = {name: [] for name in ["scorecard alone", *systems]}
+for seed in range(10):                                          # ten random splits
+    X_tr, X_te, y_tr, y_te = train_test_split(X, y, test_size=0.4, stratify=y,
+                                              random_state=seed)
+    results["scorecard alone"].append((roc_auc_score(y_te, scorecard(X_te)),
+                                       falls(scorecard, X_te)))
+    for name, (constraints, card) in systems.items():
+        prep = with_card if card else (lambda Z: Z)
+        model = boosting(constraints).fit(prep(X_tr), y_tr)
+        risk = lambda Z: model.predict_proba(prep(Z))[:, 1]
+        results[name].append((roc_auc_score(y_te, risk(X_te)), falls(risk, X_te)))
+
+print(f"{'':28s} AUC    risk falls with a longer loan")
+for name, r in results.items():
+    auc, fall = np.mean(r, axis=0)
+    print(f"{name:28s} {auc:.3f}  {fall:6.1%}")
+\end{pylisting}
+\begin{pyoutput}
+                             AUC    risk falls with a longer loan
+scorecard alone              0.754    0.0%
+gradient boosting            0.771   11.5%
+  + scorecard as a feature   0.776   18.7%
+  + monotonic constraints    0.771    0.0%
+  + both                     0.776    0.0%
+\end{pyoutput}
+
+The scorecard alone reaches an AUC of 0.754 and gradient boosting 0.771, so six simple rules
+come close to a model learned from 600 applicants. Gradient boosting, however, lowers the
+predicted risk of 11.5\% of the applicants when their loan is a year longer, which a credit
+analyst would not accept. Adding the score as a feature raises the AUC to 0.776 and the share
+of such applicants to 18.7\%: the score already adds a point for each year of the loan, and the
+trees can learn splits on the duration that partly offset it. With the constraints the share
+drops to zero and the AUC does not change, and the last system keeps the AUC of the score
+feature with no violations. That system constrains the score too, because a longer loan raises
+the score as well as the duration. Differences of 0.005 in AUC are smaller than the variation
+between splits (\cref{sec:stats}); the differences in the directional test are large.
+
+The directional test should also run whenever the model is retrained, as part of the tests of
+\cref{sec:infrastructure}, so that a model that loses the property is stopped before it reaches
+production.
+
+\begin{keyidea}
+Domain knowledge can enter a learned model as a baseline, a feature, a starting point, a guard,
+a delegate or a constraint. Only a constraint guarantees that the model follows the knowledge,
+and a directional test should check it whenever the model is retrained.
+\end{keyidea}
 
 % ---------------------------------------------------------------------
 \section{How good are combinations in practice?}\label{sec:performance}
@@ -1462,7 +1701,7 @@ data sets, however, bagging was the best method, followed by randomisation, and 
 the worst. \citet{bauer1999empirical} obtained similar results in a large comparison of voting\index{voting}
 methods.
 
-\Cref{fig:noise} reproduces the experiment on synthetic data, flipping\index{attribute flipping} a fraction of the training
+\Cref{fig:noise} reproduces the experiment on synthetic data, flipping a fraction of the training
 labels while testing on clean data. Without noise, AdaBoost\index{AdaBoost} is the most accurate method (0.898,
 against 0.893 for the random forest and 0.885 for bagging). With 10\% of noise it has already
 fallen behind both (0.848, against 0.888 and 0.870), and with 30\% the gap is large (0.686,
@@ -1498,27 +1737,26 @@ Several large studies have compared learning algorithms across many problems:
         (92.3\%). A few models were clearly better than the rest (random forests, Gaussian SVMs,
         extreme learning machines with Gaussian kernel, C5.0 and averaged neural networks), and
         the random forest family was the best, followed by SVMs, neural networks and boosting
-        ensembles. A later re-analysis pointed out problems in the experimental protocol and found that,
+        ensembles. \citet{wainberg2016random} re-analysed the results, pointed out problems in the experimental protocol and found that,
         once they were corrected, the differences between the top methods were not
-        statistically significant\index{statistical significance} \citep{wainberg2016random}, a good reminder of the lessons of
+        statistically significant\index{statistical significance}, which illustrates the lessons of
         Unit~1.
-  \item In data science competitions, analyses of the winning solutions show that gradient
-        boosting\index{gradient boosting} libraries dominate problems with tabular data, while deep neural networks
-        dominate images, audio and text. Recent benchmarks confirm that tree-based ensembles still
-        outperform deep learning on typical medium-sized tabular data
-        \citep{grinsztajn2022why,shwartzziv2022tabular}.
+  \item In data science competitions, gradient
+        boosting\index{gradient boosting} libraries appear in most winning solutions for tabular data, and deep neural networks
+        in most winning solutions for images, audio and text. \citet{grinsztajn2022why} and \citet{shwartzziv2022tabular} found that tree-based ensembles still
+        outperform deep learning on typical medium-sized tabular data.
 \end{itemize}
 
 \subsection{A small benchmark}
 
 To close the section, \cref{fig:cdens} compares seven methods on the twelve synthetic data sets
 used in \cref{sec:stats}, with the AUC estimated by 5-fold cross-validation and the Friedman and
-Nemenyi\index{Nemenyi test} tests. Every ensemble improves dramatically on a single tree (mean AUC 0.856): bagging\index{bagging}
+Nemenyi\index{Nemenyi test} tests. Every ensemble clearly improves on a single tree (mean AUC 0.856): bagging\index{bagging}
 0.922, random forests 0.923, extremely randomised trees\index{extra trees} 0.928, AdaBoost\index{AdaBoost} 0.911, histogram gradient
 boosting\index{gradient boosting} 0.923 and stacking\index{stacking} 0.921. The Friedman test\index{Friedman test} rejects the equality of the methods
 ($\chi^2_F=38.8$, $p<10^{-6}$), but with seven methods and twelve data sets the critical difference\index{critical difference diagram}
-is large ($\mathrm{CD}=2.60$): the single tree is significantly worse than all the ensembles except
-AdaBoost, and AdaBoost is significantly worse than extra trees, while the differences among the
+is large ($\mathrm{CD}=2.60$). The single tree is significantly worse than all the ensembles except
+AdaBoost, and AdaBoost is significantly worse than extra trees; the differences among the
 rest are not significant. With default hyperparameters and small data sets, the main lesson is
 that \emph{any} reasonable ensemble is much better than a single tree.
 
@@ -1533,7 +1771,7 @@ Nemenyi test, $\alpha=0.05$). Methods joined by a bar are not significantly diff
 % ---------------------------------------------------------------------
 \section{Drawbacks}\label{sec:drawbacks}
 
-Ensemble methods classify new examples by a combination of predictions, and this has a price:
+Ensemble methods classify new examples by a combination of predictions, and this has drawbacks:
 \begin{itemize}
   \item \emph{loss of comprehensibility\index{comprehensibility|textbf}}: a single decision tree can be read and checked by an
         expert, but a vote of five hundred trees cannot. The combination can result in a
@@ -1546,7 +1784,7 @@ Ensemble methods classify new examples by a combination of predictions, and this
         their tests (\cref{sec:costs}).
 \end{itemize}
 
-\subsection{Pruning ensembles}
+\subsection{Pruning ensembles\extsec}
 
 Not all the members of an ensemble are necessary. \emph{Ensemble\index{ensemble|textbf} pruning\index{ensemble pruning|textbf}} selects a subset of the
 members that is as good as, or better than, the whole ensemble \citep{margineantu1997pruning}.
@@ -1555,7 +1793,7 @@ greedily (adding at each step the member that most improves the subensemble on v
 and keeping only the first part of the ordering often matches or even improves the full ensemble
 with a fraction of the cost \citep{martinezmunoz2009analysis}.
 
-\subsection{Mimetic classifiers and model distillation}
+\subsection{Mimetic classifiers and model distillation\extsec}
 
 Since ensembles are like black boxes, a natural idea is to use them as \emph{oracles} to train a
 single comprehensible\index{comprehensibility} model that copies their behaviour. A \emph{mimetic\index{mimetic classifier|textbf} classifier}
@@ -1620,13 +1858,13 @@ accuracy of 0.830; the same kind of tree learned from 20,000 examples labelled b
 reaches 0.859, closer to the forest itself (0.889), and agrees with it on 92\% of the test
 examples. \Cref{fig:mimetic} shows that the mimetic tree beats the directly learned tree for
 every number of synthetic examples; its accuracy oscillates between 0.83 and 0.86 because the
-size of the tree, not the amount of data, becomes the limit.
+size of the tree becomes the limit.
 
 The last line of \cref{lst:mimetic} learns the same kind of tree from the oracle's \emph{probabilities} instead
 of its labels, with a regression tree whose prediction is thresholded at 0.5. These \emph{soft targets} do slightly
 worse here (accuracy 0.833, fidelity 0.908), and the result holds for other seeds and for trees of 64 leaves: a small
-tree spends its leaves modelling degrees of confidence inside each class rather than the boundary between them. Soft
-targets pay off when the student can represent the whole distribution, as in the knowledge distillation\index{model distillation} of neural
+tree spends its leaves modelling degrees of confidence inside each class, and has fewer left for the boundary between the classes. Soft
+targets help when the student can represent the whole distribution, as in the knowledge distillation\index{model distillation} of neural
 networks described below.
 
 \begin{figure}[htbp]
@@ -1647,7 +1885,7 @@ deploying large models, including language models, at a lower cost.
 \subsection{Explanations, Clever Hans and security}
 
 Imitating a model is also the basis of many \emph{explanation} methods, studied in Unit~3. LIME\index{LIME}
-\citep{ribeiro2016should} explains the decision of any classifier $f$ on an example $x$ locally:
+\citep{ribeiro2016should}, short for local interpretable model-agnostic explanations, explains the decision of any classifier $f$ on an example $x$ locally:
 it samples perturbed examples around $x$, labels them with $f$, weights them by their proximity
 to $x$ with a kernel $\pi_x$, and learns a simple (for example, sparse linear) model $g$ that
 approximates $f$ well in the vicinity of $x$,
@@ -1664,17 +1902,17 @@ machine learning to Clever Hans: a model learns how to obtain its reward (for in
 accuracy at labelling images), but not necessarily using the right cues. \citet{lapuschkin2019unmasking}
 showed real examples: a classifier recognised horses in the PASCAL VOC images by detecting a
 copyright tag present in many horse pictures, and added the label ``horse'' to a car when the tag
-was pasted on its picture. In natural language processing, a model that seemed to reason about
-arguments was found to exploit spurious lexical cues of the data set \citep{niven2019probing}.
+was pasted on its picture. In natural language processing, \citet{niven2019probing} found that a model that seemed to reason about
+arguments exploited spurious lexical cues of the data set.
 
-This connects ensembles with security. We need to be sure that the model really learns the right
+This connects ensembles with security. We need to be sure that the model learns the intended
 concept, which is difficult with black-box models. In software, using open-source libraries
 allows anyone to inspect the code and to find and correct bugs; in machine learning this is not
-always possible, since the behaviour of a model is in its parameters, not in its code. Using
+always possible, because the behaviour of a model is encoded in its parameters, and reading its code does not reveal it. Using
 comprehensible\index{comprehensibility} models where possible, studying the vulnerabilities of the most used frameworks,
 and checking what models have learned are part of building reliable systems (Unit~3). Mimetic
 models are also used by attackers: querying a deployed model and training a copy of it allows
-its parameters to be stolen \citep{tramer2016stealing} and adversarial examples\index{adversarial example} that fool the
+its parameters to be stolen \citep{tramer2016stealing} and adversarial examples\index{adversarial example} (inputs changed slightly on purpose so that the model errs, \cref{sec:security}) that fool the
 original to be crafted \citep{papernot2017practical}.
 
 % ---------------------------------------------------------------------
@@ -1693,7 +1931,9 @@ unit. Some general recommendations:
         calibrate them if probabilities matter (\cref{sec:calibration});
   \item impurity-based\index{feature importance} feature importances of tree ensembles are biased towards attributes with
         many values; prefer permutation importance\index{feature importance!permutation} on held-out data \citep{strobl2007bias};
-  \item if comprehensibility\index{comprehensibility}, latency\index{latency} or test costs\index{test costs} matter, consider pruning, delegation\index{delegation} or
+  \item if experts know the direction in which a feature moves the prediction, impose it with a
+monotonicity constraint\index{monotonicity constraint} and check it with a directional test\index{directional test} (\cref{sec:knowledge});
+\item if comprehensibility\index{comprehensibility}, latency\index{latency} or test costs\index{test costs} matter, consider pruning, delegation\index{delegation} or
         mimetic\index{mimetic classifier} models before deploying a large ensemble.
 \end{itemize}
 
@@ -1741,27 +1981,38 @@ Stacking & diverse, reasonably good base models; simple metamodel; cross-validat
         cost-matched class bias is exactly the optimal reject rule. Cautious classifiers are
         evaluated by their accuracy--abstention\index{abstention} trade-off, which depends on how well their
         confidence ranks their own mistakes. Delegating\index{delegation} classifiers pass uncertain cases to a
-        specialist, to a stronger but costlier model (a cascade) or to a person.
-  \item The main drawbacks of combinations are comprehensibility\index{comprehensibility}, resources, test costs\index{test costs} and slower
+        specialist, to a stronger but costlier model (a cascade) or to a person. An assessor\index{assessor}, a separate model trained to predict where another model fails, can rank
+its errors better than the model's own confidence.
+  \item Domain knowledge\index{domain knowledge} can be combined with learned models. Manual models (rules,
+scorecards\index{scorecard}) serve as baselines, features, starting points, guards or delegates;
+monotonicity constraints\index{monotonicity constraint} make the model follow the direction of the effects that
+experts know, and a directional test\index{directional test} checks that it does.
+\item The main drawbacks of combinations are comprehensibility\index{comprehensibility}, resources, test costs\index{test costs} and slower
         predictions; pruning, delegation and mimetic\index{mimetic classifier} models (distillation\index{model distillation}) mitigate them.
 \end{itemize}
 
 \section*{Bibliographic notes}
 \phantomsection\addcontentsline{toc}{section}{Bibliographic notes}
 
-\citet{kuncheva2014combining} is the reference textbook on combining classifiers, and
-\citet{zhou2012ensemble} gives a concise and modern treatment of ensemble methods with their theory;
+\citet{kuncheva2014combining} is a textbook on combining classifiers, and
+\citet{zhou2012ensemble} presents ensemble methods and their theory in a short book;
 \citet{kyriakides2019hands} is a practical introduction in Python. \citet{dietterich2000ensemble}
-remains an excellent short overview of why ensembles work, and \citet{brown2005diversity} survey the
+is a short overview of why ensembles work, and \citet{brown2005diversity} survey the
 methods for creating diversity\index{diversity}. Chapters~8, 10, 15 and~16 of \citet{hastie2009elements} cover
 bagging\index{bagging}, boosting, random forests and ensemble learning from the statistical point of view. The
 original papers on bagging \citep{breiman1996bagging}, boosting \citep{freund1997decision}, random
-forests \citep{breiman2001random}, stacking\index{stacking} \citep{wolpert1992stacked}, cascade generalisation\index{cascading}\index{generalisation}
-\citep{gama2000cascade} and mixtures of experts\index{mixture of experts} \citep{jacobs1991adaptive} are all very readable.
+forests \citep{breiman2001random}, stacking\index{stacking} \citep{wolpert1992stacked}, cascade generalisation\index{cascading}
+\citep{gama2000cascade} and mixtures of experts\index{mixture of experts} \citep{jacobs1991adaptive} are all accessible after this unit.
 Cautious\index{cautious classifier} and delegating\index{delegation} classifiers are introduced in \citet{ferri2004cautious} and
 \citet{ferri2004delegating}, and \citet{hendrickx2024machine} survey learning with a reject option\index{abstention};
-\citet{mozannar2020consistent} and \citet{chen2023frugalgpt} are good entry points to learning to defer
-and to model cascades.
+\citet{mozannar2020consistent} and \citet{chen2023frugalgpt} introduce learning to defer
+and model cascades.
+\Citet{vonrueden2023informed} survey the integration of prior knowledge into learning systems,
+\citet{siddiqi2006credit} describes how credit scorecards\index{scorecard} are built, and
+\citet{potharst2002classification} review methods that build classification trees with
+monotonicity constraints\index{monotonicity constraint}.
+\Citet{hernandezorallo2022training} introduce assessors\index{assessor}, and \citet{zhou2022reject} use
+small assessors to anticipate the errors of large language models before running them.
 
 \section*{Exercises}
 \phantomsection\addcontentsline{toc}{section}{Exercises}
@@ -1787,7 +2038,7 @@ and to model cascades.
         (rows: predicted $+$, $-$, $\perp$; columns: actual $+$, $-$): $(70,5)$, $(8,90)$,
         $(12,15)$. Compute coverage\index{coverage}, abstention\index{abstention}, accuracy and error, and check the relation between
         them.
-  \item\label{exr2:rule} Apply the decision rule\index{decision rules} of \cref{sec:cautious} with $K=(0.6,0.4)$ and
+  \item\label{exr2:rule} Apply the decision rule\index{window rule} of \cref{sec:cautious} with $K=(0.6,0.4)$ and
         $w=0.5$ to the probability vectors $(0.9,0.1)$, $(0.7,0.3)$, $(0.55,0.45)$ and $(0.2,0.8)$.
   \item\label{exr2:chow} Abstaining costs 0.2 and an error costs 1. Should a calibrated classifier
         that predicts $(0.75,0.25)$ abstain? From which maximum probability is predicting better?
@@ -1814,6 +2065,15 @@ and to model cascades.
   \item\label{exr2:design} A fraud detection system must answer in less than 5 milliseconds, but the
         best model is a stacking of three large ensembles. Propose three ways of deploying something
         close to it within the time budget.
+\item\label{exr2:monotone} A bank predicts the probability that a loan will not be repaid from the
+duration of the loan, the instalment as a share of income, the amount, the age of the
+applicant and the balance of the current account. For which features would you impose a
+monotonicity constraint\index{monotonicity constraint}, and in which direction? Which would you leave free, and why?
+\item\label{exr2:knowledge} In \cref{lst:knowledge}, why does the last system constrain the score of
+the scorecard\index{scorecard} as well as the duration? What could happen with a constraint on the
+duration alone?
+\item\label{exr2:assessor} Why must an assessor\index{assessor} be trained on examples that the model did not
+see during its training? What would happen otherwise?
 \end{enumerate}
 
 \section*{Solutions to selected exercises}
@@ -1862,5 +2122,19 @@ and to model cascades.
         model or distillation); prune the ensembles\index{ensemble pruning}; or use a delegating\index{delegation} cascade\index{cascading} in which a fast
         model answers the easy cases and only the uncertain ones (within the budget) go to the
         expensive model.
+\item[\ref{exr2:monotone}] Increasing in the duration and in the instalment share, and decreasing
+in the balance of the current account, if the experts agree and the data do not contradict
+them. The amount should stay free: in the German credit\index{German credit data} data, small and large loans are
+riskier than medium ones. Age should stay free too: its effect is not clearly monotone in the
+data, and a constraint on a protected attribute\index{protected attribute} encodes a policy that needs a legal
+and ethical justification (\cref{sec:fairness}).
+\item[\ref{exr2:knowledge}] A longer loan raises both the duration and the score. With a constraint
+on the duration alone, the model could lower the risk as the score grows, and the total
+effect of a longer loan could still be a lower risk. Constraining both features keeps the
+risk from falling along the whole change.
+\item[\ref{exr2:assessor}] On its own training examples a model is right more often than on new
+ones, especially if it overfits, so an assessor trained there would learn an optimistic picture and
+miss the regions where the model fails on new data. It is the reason why the metamodel of
+stacking\index{stacking} is trained on out-of-fold predictions.
 \end{description}
 

@@ -84,7 +84,7 @@
 \else
 \usepackage[colorlinks=true,linkcolor=edmnavy,citecolor=edmteal,urlcolor=edmcoral,
             pdftitle={Evaluation, Deployment and Monitoring of Models},
-            pdfauthor={Cèsar Ferri, Carlos Monserrat, Yael Moros, Félix Martí and Fernando Martínez-Plumed}]{hyperref}
+            pdfauthor={Cèsar Ferri, Carlos Monserrat, Yael Moros, Félix Martí, Daniel Romero-Alvarado and Fernando Martínez-Plumed}]{hyperref}
 \fi
 \usepackage[nameinlink,capitalise,noabbrev]{cleveref}
 
@@ -119,6 +119,8 @@
 \titleformat{\paragraph}[runin]{\normalfont\normalsize\bfseries\color{edmnavy}}{}{0pt}{}[.]
 \setcounter{secnumdepth}{2}
 \setcounter{tocdepth}{1}
+% a star marks the extension sections of the reading routes in the preface
+\newcommand{\extsec}{\texorpdfstring{\textsuperscript{\,\textcolor{edmbronze}{$\star$}}}{}}
 
 % ------------------------------------------------------- running headers
 \pagestyle{fancy}
@@ -165,6 +167,30 @@
   arc=2pt,left=5pt,right=5pt,top=1pt,bottom=1pt,fonttitle=\sffamily\footnotesize,
   coltitle=black!75,colbacktitle=black!8,title={Output},before skip=2pt,after skip=10pt}
 
+% Keep floats out of listings and their outputs. While a listing or an output box is typeset, no
+% float can be placed (top or bottom of a page, or float page), so a box that breaks across pages
+% is never interrupted by a figure or a table: pending floats wait until the box has ended. If the
+% box did break, no later float can go above its last part either.
+\makeatletter
+\newcount\edm@boxstartpage
+\newcommand{\edm@holdfloats}{%
+  \global\edm@boxstartpage\c@page
+  \xdef\edm@floatsettings{%
+    \global\c@topnumber\the\c@topnumber\relax
+    \global\c@bottomnumber\the\c@bottomnumber\relax
+    \global\c@totalnumber\the\c@totalnumber\relax
+    \gdef\noexpand\floatpagefraction{\floatpagefraction}}%
+  \global\c@topnumber\z@ \global\c@bottomnumber\z@ \global\c@totalnumber\z@
+  \gdef\floatpagefraction{2}}
+\newcommand{\edm@releasefloats}{%
+  \edm@floatsettings
+  \ifnum\c@page>\edm@boxstartpage\relax \suppressfloats[t]\fi}
+\AddToHook{env/pylisting/before}{\edm@holdfloats}
+\AddToHook{env/pylisting/after}{\edm@releasefloats}
+\AddToHook{env/pyoutput/before}{\edm@holdfloats}
+\AddToHook{env/pyoutput/after}{\edm@releasefloats}
+\makeatother
+
 % ------------------------------------------------------------- macros
 \newcommand{\E}{\mathbb{E}}
 \newcommand{\Ind}{\mathbb{I}}
@@ -194,7 +220,7 @@
 \null\vfill
 {\small
 \textbf{Evaluation, Deployment and Monitoring of Models}\par\smallskip
-C\`esar Ferri, Carlos Monserrat, Yael Moros, F\'elix Mart\'i and Fernando Mart\'inez-Plumed\par\medskip
+C\`esar Ferri, Carlos Monserrat, Yael Moros, F\'elix Mart\'i, Daniel Romero-Alvarado and Fernando Mart\'inez-Plumed\par\medskip
 Copyright \textcopyright\ 2026 by the authors. All rights reserved. No part of this book may be reproduced in any
 form without the written permission of the authors, except for brief quotations with attribution.\par\medskip
 First edition, 2026.\par
@@ -225,7 +251,7 @@ vector field.\par}
 \begin{center}
 {\fontsize{30}{37}\selectfont\bfseries\color{edmnavy} Evaluation, Deployment\\[4pt] and Monitoring of Models\par}
 \vspace{2.2cm}
-{\Large C\`esar Ferri\\[5pt] Carlos Monserrat\\[5pt] Yael Moros\\[5pt] F\'elix Mart\'i\\[5pt] Fernando Mart\'inez-Plumed\par}
+{\Large C\`esar Ferri\\[5pt] Carlos Monserrat\\[5pt] Yael Moros\\[5pt] F\'elix Mart\'i\\[5pt] Daniel Romero-Alvarado\\[5pt] Fernando Mart\'inez-Plumed\par}
 \end{center}
 \clearpage
 \edmcopyrightpage
@@ -258,6 +284,10 @@ vector field.\par}
 \include{chapters/ch07-applications}
 
 \backmatter
+\cleardoublepage
+\input{chapters/status}
+\cleardoublepage
+\input{chapters/glossary}
 \cleardoublepage
 \phantomsection
 \addcontentsline{toc}{chapter}{Bibliography}

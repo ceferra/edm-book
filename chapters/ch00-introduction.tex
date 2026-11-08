@@ -7,19 +7,19 @@
 \addcontentsline{toc}{chapter}{Introduction}
 
 In the spring of 2020, as COVID-19 spread around the world, hundreds of research groups turned to machine
-learning. Within months they had published models that diagnosed the disease from chest radiographs and CT
+learning. Within months they had published models that diagnosed the disease from chest radiographs and computed tomography (CT)
 scans, predicted which patients would deteriorate, and forecast the course of the pandemic. Two systematic
-reviews examined them afterwards. One of them screened more than two thousand studies on imaging and kept
-the 62 of highest quality; it concluded that none of them was of potential clinical use, because of
-methodological flaws and biases \citep{roberts2021common}. In some of the data sets, for instance, the
+reviews examined them afterwards. \citet{roberts2021common} screened more than two thousand studies on imaging, kept
+the 62 of highest quality and concluded that none of them was of potential clinical use, because of
+methodological flaws and biases. In some of the data sets, for instance, the
 examples without COVID-19 were radiographs of children, so a model could look accurate by recognising
-children. The other review found that almost all the published prediction models were at high risk\index{AI Act!high-risk systems} of bias:
-small or unrepresentative data, and evaluations that could not be trusted \citep{wynants2020prediction}.
+children. \citet{wynants2020prediction} found that almost all the published prediction models were at high risk of bias, with
+small or unrepresentative data and evaluations that could not be trusted.
 
 The reviews highlighted serious problems in data selection, study design and evaluation, even when
-established learning algorithms were used. The weaknesses lay in everything around the algorithms: how the models were evaluated, on which data they were
+established learning algorithms were used. The weaknesses lay in the work around the algorithms: how the models were evaluated, on which data they were
 tested, whether they treated all patients alike, and whether anyone checked that they would work where
-they were going to be used. This book is about everything around the algorithm.
+they were going to be used. This book is about that work.
 
 \section*{The life of a model}
 
@@ -58,9 +58,9 @@ relationship management\index{customer relationship management (CRM)} and intera
 \label{fig:lifecycle}
 \end{figure}
 
-\section*{A first look}
+\section*{A first example with credit data}
 
-\Cref{lst:firstlook} gives a taste of what is to come with a real data set: the German credit\index{German credit data} data, 1000
+\Cref{lst:firstlook} tries out some of the questions of this book on a real data set: the German credit\index{German credit data} data, 1000
 applicants for loans at a German bank, 30\% of whom turned out to be bad credit risks
 \citep{hofmann1994statlog}. It trains a logistic regression\index{logistic regression}, the kind of model that takes two lines of code,
 and asks it four questions that its accuracy\index{accuracy} cannot answer.
@@ -147,17 +147,17 @@ if 50% of the applicants are bad, 20.1% of the approved loans default
         when the loans failed to be repaid. Other forms of economic change can alter these rates too. Detecting such changes early is the subject of
         Unit~\ref{ch:monitoring}.
 \end{itemize}
-None of the four answers is visible in the accuracy, and none of them depends on the learning algorithm.
+The accuracy does not reveal any of these four answers, and the same four questions arise whatever learning algorithm we use.
 
-\section*{Why now}
+\section*{Why these questions matter today}
 
-Three trends make these questions more pressing than ever. First, models now take or prepare decisions about
+Three trends make these questions more pressing today. First, models now take or prepare decisions about
 credit, jobs, health, prices and what we read, watch and buy, often for millions of people at once, so their
-mistakes are multiplied. Second, large language models\index{large language model (LLM)}\index{language model} have made it possible for almost anyone to build a
-model or an application in an afternoon, and they are themselves models that must be evaluated, deployed and
+mistakes are multiplied. Second, large language models\index{large language model (LLM)}\index{language model} have made it quick and easy for many people to build a
+model or an application, and they are themselves models that must be evaluated, deployed and
 monitored; we discuss them as tools for automating data science\index{automated data science} (\cref{sec:llmds}), as components to deploy
-(\cref{sec:llmapps}) and as systems to monitor (\cref{sec:llmmonitor}). Third, what used to be good practice is
-becoming law: the European Union's AI Act\index{AI Act} requires those who build high-risk\index{AI Act!high-risk systems} systems to manage their risks,
+(\cref{sec:llmapps}) and as systems to monitor (\cref{sec:llmmonitor}). Third, several good practices are
+becoming legal requirements: the European Union's AI Act\index{AI Act} requires those who build high-risk\index{AI Act!high-risk systems} systems to manage their risks,
 govern their data, document them, log their operation, keep a human in charge, ensure their accuracy and
 robustness, and monitor them once they are on the market (\cref{sec:aiact}). Almost every one of those
 obligations corresponds to a unit of this book.
@@ -173,8 +173,7 @@ point that synthetic data cannot, as in the listing above. The figures are gener
 same code, so the numbers in the text, in the listings and in the figures agree. All of it is available in the
 companion release of the book (see the Preface).
 
-The units can be read in order, as a course, or separately; Unit~\ref{ch:evaluation} is the foundation of the
-others, and cross-references point to the sections each unit builds on. The reader is expected to know basic
+The units can be read in order, as a course, or separately; the other units use the tools of Unit~\ref{ch:evaluation}, and cross-references point to the sections each unit builds on. The reader is expected to know basic
 Python, the elementary concepts of machine learning (training and test data\index{test set}, classification and regression)
 and introductory statistics.
 

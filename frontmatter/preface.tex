@@ -15,8 +15,8 @@ production, and how to keep it working once the world starts changing.
 
 \section*{What the course is about}
 
-The course addresses the evaluation, deployment and maintenance of predictive models and
-recommender systems, exploiting jointly the knowledge induced from data and the prior
+The course covers the evaluation, deployment and maintenance of predictive models and
+recommender systems, using both the knowledge induced from data and the prior
 knowledge of the domain (constraints, costs, manual models). Its main topics are:
 \begin{itemize}
   \item evaluation procedures and metrics, and the calibration of probabilistic models;
@@ -39,7 +39,7 @@ introduced in \cref{ch:evaluation}.
 & Unit & Main contents\\
 \midrule
 1 & Model evaluation & Generalisation and bias--variance; evaluation protocols and data leakage;
-metrics for crisp, scoring and probabilistic classifiers; ROC and precision--recall analysis; calibration;
+metrics for crisp, scoring and probabilistic classifiers; ROC (receiver operating characteristic) and precision--recall analysis; calibration;
 imbalanced problems; costs; regression; conformal prediction, open-set, vision and language models;
 unsupervised learning; statistical comparison.\\
 2 & Hybrid models & Wisdom of crowds and diversity; fusion rules; bagging, boosting, gradient boosting and
@@ -62,39 +62,35 @@ design and uplift modelling; interactive applications with Shiny for Python.\\
 \end{tabularx}
 \end{table}
 
-The units combine material that every project needs with topics that matter only for some tasks.
-\Cref{tab:routes} suggests a core path and its extensions; the syllabus and the hours available decide which
-parts are assessed.
+The units combine material that most projects need with topics that matter only for some tasks.
+\Cref{tab:routes} suggests a core path and its extensions. In the units, the headings of the extensions carry a star\extsec. The words that the book uses with more than one meaning are listed at the end, in
+\nameref{ch:glossary}, and the software versions, data sources and dates of the AI Act that this edition relies on, in \nameref{ch:status}.
 
 \begin{table}[htbp]
 \centering\small
-\caption{Reading routes: a core path through each unit, and its extensions.}\label{tab:routes}
+\caption{Reading routes, with a core path through each unit and its extensions.}\label{tab:routes}
 \begin{tabularx}{\textwidth}{@{}l>{\raggedright\arraybackslash}X>{\raggedright\arraybackslash}X@{}}
 \toprule
 & Core path & Extensions\\
 \midrule
 1 & Protocols and leakage, metrics, ROC and precision--recall, probabilities, calibration, costs and
 uncertainty & Task-specific metrics, comparisons of many algorithms, details of conformal prediction and
-of generative models\\
-2 & Diversity, bagging and boosting, stacking, abstention and delegation & Multi-trees, Bayesian model
-averaging, details of pruning and distillation\\
+of generative models, language model systems and agents\\
+2 & Diversity, bagging and boosting, stacking, abstention and delegation, domain knowledge & Multi-trees, Bayesian model
+averaging, assessors, details of pruning and distillation\\
 3 & Fairness, observing versus intervening, faithful interpretation, threat models & Mediation and
 path-specific effects, MMD-critic, influence functions\\
 4 & AutoML with external evaluation, assistants and data checks & Inductive programming, genetic
 programming and Petri nets in detail\\
-5 & Serving, the complete pipeline, tests, versioning and formats & PMML with Java, CI infrastructure,
-distribution alternatives\\
-6 & What to monitor, types of shift, retraining, rollout and A/B testing & Quantification, adaptation,
+5 & Serving, the complete pipeline, tests, versioning, formats and model cards & PMML with Java, client-side and federated deployment, the ModelOps case study\\
+6 & What to monitor, types of shift, diagnosing alarms, retraining, rollout and A/B testing & Quantification, adaptation,
 sequential tests and bandits\\
-7 & Evaluation of recommenders, a profitable campaign, uplift and the application & Latent factors, and
-the full design of a policy with its uncertainty\\
+7 & Evaluation of recommenders, a profitable campaign, uplift, the application and the life cycle & Latent factors, churn and customer lifetime value\\
 \bottomrule
 \end{tabularx}
 \end{table}
 
-The practical part of the course consists of ten laboratory sessions: model evaluation
-(three sessions), hybrid models (one), reliable models (three), learning to learn (one),
-deployment of models (one) and applications (one).
+%The practical part of the course consists of ten laboratory sessions: model evaluation (three sessions), hybrid models (one), reliable models (three), learning to learn (one), deployment of models (one) and applications (one).
 
 \section*{How to use this book}
 
@@ -126,7 +122,7 @@ with solutions to most of them.
 \section*{Recommended reading}
 
 The following books cover, between them, the whole course. For the foundations of
-statistical learning, \citet{hastie2009elements} is the standard reference, and
+statistical learning, \citet{hastie2009elements} is a standard reference, and
 \citet{flach2012machine} offers a modern view of machine learning with special emphasis on
 evaluation and ROC analysis; \citet{sammut2010encyclopedia} provides short, authoritative
 entries on most topics. \citet{japkowicz2011evaluating} is entirely devoted to the evaluation
@@ -139,5 +135,4 @@ Reliable models are covered by \citet{molnar2022interpretable} (interpretability
 with building, deploying and maintaining machine learning systems.
 
 \bigskip
-\noindent\emph{This is a draft of the complete book: all seven units, with their code, figures, exercises and
-solutions. Comments and corrections are welcome.}
+%\noindent\emph{This is a draft of the complete book: all seven units, with their code, figures, exercises and solutions. Comments and corrections are welcome.}
