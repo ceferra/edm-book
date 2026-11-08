@@ -18,6 +18,12 @@ latexmk main.tex      # digital edition
 latexmk kdp.tex       # print edition
 ```
 
+The PDF of the digital edition is attached to each
+[release](https://github.com/ceferra/edm-book/releases). The workflow
+`.github/workflows/book-pdf.yml` compiles it with TeX Live 2025 when a tag `v*` is pushed
+(`git tag v1.1 && git push origin v1.1`), and also on demand from the Actions tab, where it
+leaves the PDF as an artifact of the run.
+
 ## Structure
 
 - `chapters/`: the text of the book. **These files are the source**: edit them directly.

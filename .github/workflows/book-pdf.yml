@@ -1,0 +1,62 @@
+# Builds the digital edition (main.tex, A4) with XeLaTeX, using the settings in latexmkrc.
+#
+# - Pushing a tag v* (for example v1.0): the PDF is attached to the release of that tag,
+#   which is created if it does not exist yet.
+# - Running it by hand (Actions > Book PDF > Run workflow): the PDF is kept as an artifact
+#   of the run, without touching any release.
+name: Book PDF
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    container: texlive/texlive:TL2025-historic   # TeX Live 2025, full scheme, frozen
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Compile main.tex
+        run: latexmk -interaction=nonstopmode -file-line-error main.tex
+
+      - name: Name the PDF after the tag or branch
+        run: cp main.pdf "edm-book-${GITHUB_REF_NAME}.pdf"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: edm-book-pdf
+          path: edm-book-*.pdf
+          if-no-files-found: error
+
+      - name: Keep the log if the build fails
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: latex-log
+          path: main.log
+
+  release:
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: edm-book-pdf
+
+      - name: Attach the PDF to the release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          gh release view "$GITHUB_REF_NAME" > /dev/null 2>&1 ||
+            gh release create "$GITHUB_REF_NAME" --verify-tag --title "$GITHUB_REF_NAME" \
+              --notes "Digital edition (A4), compiled from tag $GITHUB_REF_NAME."
+          gh release upload "$GITHUB_REF_NAME" edm-book-*.pdf --clobber
