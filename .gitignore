@@ -19,3 +19,24 @@
 !figures/cover/kdp-cover.pdf
 !figures/cover/back-art.png
 !slides/**/*.pdf
+
+# web edition (html/build.sh), if it is run in a working copy
+/_site/
+/edm.css
+/index.css
+/*.html
+/*.svg
+/*.4ct
+/*.4tc
+/*.dvi
+/*.idv
+/*.lg
+/*.tmp
+/*.xref
+/*.idx
+/*.ind
+/*.ilg
+figures/ch*/*.svg
+figures/ch*/*.png
+figures/ch*/*.xbb
+figures/cover/webcover.*

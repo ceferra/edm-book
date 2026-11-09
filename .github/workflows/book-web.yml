@@ -1,0 +1,49 @@
+# Builds the web edition (HTML, with TeX4ht: html/build.sh) and publishes it on GitHub Pages.
+#
+# - Pushing a tag v* (for example v1.1) publishes the web edition of that version, together
+#   with the PDF of the "Book PDF" workflow.
+# - Running it by hand (Actions > Book web > Run workflow) publishes the branch it runs on.
+name: Book web
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # TeX Live 2026: the TeX4ht of TeX Live 2025 loses the MathML markup after the first TikZ picture
+    container: texlive/texlive:latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install pdftocairo (PDF figures to SVG)
+        run: apt-get update -qq && apt-get install -y -qq --no-install-recommends poppler-utils
+
+      - name: Build the web edition
+        run: sh html/build.sh
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions:
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

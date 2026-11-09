@@ -1,0 +1,131 @@
+/* Web edition of "Evaluation, Deployment and Monitoring of Models".
+   Loaded after the stylesheet that TeX4ht generates (index.css). Colours of the book (main.tex). */
+
+@font-face { font-family: "Libertinus Serif"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("fonts/LibertinusSerif-Regular.otf") format("opentype"); }
+@font-face { font-family: "Libertinus Serif"; font-style: italic; font-weight: 400; font-display: swap;
+  src: url("fonts/LibertinusSerif-Italic.otf") format("opentype"); }
+@font-face { font-family: "Libertinus Serif"; font-style: normal; font-weight: 600; font-display: swap;
+  src: url("fonts/LibertinusSerif-Semibold.otf") format("opentype"); }
+@font-face { font-family: "Libertinus Serif"; font-style: italic; font-weight: 600; font-display: swap;
+  src: url("fonts/LibertinusSerif-SemiboldItalic.otf") format("opentype"); }
+@font-face { font-family: "Libertinus Sans"; font-style: normal; font-weight: 400; font-display: swap;
+  src: url("fonts/LibertinusSans-Regular.otf") format("opentype"); }
+@font-face { font-family: "Libertinus Sans"; font-style: normal; font-weight: 700; font-display: swap;
+  src: url("fonts/LibertinusSans-Bold.otf") format("opentype"); }
+
+:root {
+  --navy: #233a44; --bronze: #af7b51; --teal: #00796b; --coral: #d9563f; --indigo: #3d4594;
+  --ink: #1f2a30; --muted: #5b6a72; --paper: #fdfcf9; --rule: #dde2e5;
+  --code-bg: #f3f5f6; --code-border: #cfd6da;
+  --serif: "Libertinus Serif", Georgia, "Times New Roman", serif;
+  --sans: "Libertinus Sans", "Helvetica Neue", Arial, sans-serif;
+  --mono: ui-monospace, "SFMono-Regular", Menlo, Consolas, "DejaVu Sans Mono", monospace;
+}
+
+html { background: var(--paper); }
+body {
+  max-width: 46rem; margin: 0 auto; padding: 0.75rem 1.25rem 4rem;
+  font-family: var(--serif); font-size: 1.15rem; line-height: 1.6;
+  color: var(--ink); background: var(--paper);
+  -webkit-text-size-adjust: 100%; text-size-adjust: 100%;
+}
+p.indent, p.noindent, p.nopar { margin: 0 0 0.8em; text-indent: 0; }
+a { color: var(--teal); text-decoration: none; }
+a:hover, a:focus { text-decoration: underline; }
+strong { font-weight: 600; }
+code { font-family: var(--mono); font-size: 0.85em; }
+
+/* ----------------------------------------------------------- headings */
+h1, h2, h3, h4, h5 { font-family: var(--sans); color: var(--navy); line-height: 1.25; }
+h2.chapterHead, h2.likechapterHead { font-size: 2rem; margin: 2rem 0 1.5rem; }
+h2.chapterHead .titlemark { display: block; margin-bottom: 0.35rem; font-size: 0.95rem;
+  font-weight: 400; letter-spacing: 0.1em; text-transform: uppercase; color: var(--bronze); }
+h3.sectionHead, h3.likesectionHead { font-size: 1.45rem; margin: 2.2rem 0 0.8rem; }
+h4.subsectionHead, h4.likesubsectionHead { font-size: 1.2rem; margin: 1.8rem 0 0.6rem; }
+.titlemark { color: var(--bronze); margin-right: 0.35em; }
+
+/* --------------------------------------------------------- navigation */
+nav.crosslinks { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; padding: 0.5rem 0;
+  margin-bottom: 1.5rem; border-bottom: 1px solid var(--rule); font-family: var(--sans); font-size: 0.95rem; }
+nav.crosslinks.bottom { margin: 3rem 0 0; border-bottom: 0; border-top: 1px solid var(--rule); }
+nav.crosslinks p { margin: 0; }
+nav.crosslinks a { white-space: nowrap; }
+
+/* ------------------------------------------------- contents and cover */
+.cover { text-align: center; margin: 1rem 0 2rem; }
+.cover img { width: min(22rem, 85%); height: auto; border-radius: 2px;
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.25); }
+.copyright { margin: 2rem 0; padding-top: 1rem; border-top: 1px solid var(--rule);
+  font-size: 0.85rem; line-height: 1.5; color: var(--muted); }
+.tableofcontents { font-family: var(--sans); line-height: 1.5; }
+.tableofcontents br { display: none; }
+.tableofcontents span { display: block; }
+.tableofcontents .chapterToc, .tableofcontents .likechapterToc { margin-top: 0.7rem; font-weight: 700; }
+.tableofcontents .sectionToc, .tableofcontents .likesectionToc, .tableofcontents .subsectionToc {
+  margin-left: 1.6rem; font-size: 0.95rem; font-weight: 400; }
+.tableofcontents .subsectionToc { margin-left: 3.2rem; }
+/* an unnumbered chapter is listed twice by TeX4ht (\chapter* and \addcontentsline): keep the
+   entry of \chapter*, which also points to the right page for the bibliography */
+.tableofcontents span.chapterToc:has(> a:not([id])) { display: none; }
+
+/* -------------------------------------------------------------- boxes */
+aside.box { margin: 1.5rem 0; padding: 0.75rem 1rem; border-left: 4px solid var(--navy);
+  border-radius: 0 6px 6px 0; background: rgba(35, 58, 68, 0.045); }
+aside.box p.box-title { margin: 0 0 0.4rem; font-family: var(--sans); font-size: 0.85rem;
+  font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--navy); }
+aside.box > :last-child { margin-bottom: 0; }
+aside.pitfall { border-color: var(--coral); background: rgba(217, 86, 63, 0.06); }
+aside.pitfall p.box-title { color: var(--coral); }
+aside.further { border-color: var(--teal); background: rgba(0, 121, 107, 0.06); }
+aside.further p.box-title { color: var(--teal); }
+aside.objectives, aside.example { border-color: var(--bronze); background: rgba(175, 123, 81, 0.07); }
+aside.objectives p.box-title, aside.example p.box-title { color: #8a5d39; }
+aside.definition { border-color: var(--navy); background: #fff; box-shadow: 0 0 0 1px var(--rule); }
+aside.example p.box-title, aside.definition p.box-title { font-size: 1rem; letter-spacing: 0;
+  text-transform: none; }
+
+/* ----------------------------------------------------------- listings */
+figure.listing, figure.output { margin: 1.25rem 0; border: 1px solid var(--code-border);
+  border-radius: 6px; background: var(--code-bg); overflow: hidden; }
+figure.output { margin-top: -0.6rem; background: #fafafa; }
+figure.listing > figcaption, figure.output > figcaption { padding: 0.35rem 0.75rem;
+  font-family: var(--sans); font-size: 0.85rem; color: var(--navy);
+  background: #e5eaed; border-bottom: 1px solid var(--code-border); }
+figure.output > figcaption { color: #555; background: #eeeeee; }
+.listing-number { font-weight: 700; margin-right: 0.4em; }
+figure.listing pre, figure.output pre, figure.listing .lstlisting, figure.output .lstlisting {
+  margin: 0; padding: 0.6rem 0.8rem; overflow-x: auto; white-space: pre !important;
+  font-family: var(--mono); font-size: 0.82rem; line-height: 1.45; background: transparent; }
+figure.listing pre *, figure.output pre *, .lstlisting * { font-family: var(--mono) !important;
+  font-size: inherit !important; }
+
+/* ------------------------------------------------- figures and tables */
+img { max-width: 100%; height: auto; }
+figure.figure, div.figure { margin: 1.75rem 0; text-align: center; }
+figcaption.caption, .caption { font-family: var(--sans); font-size: 0.92rem; line-height: 1.45;
+  text-align: left; color: var(--muted); margin-top: 0.5rem; }
+.caption .id { font-weight: 700; color: var(--navy); }
+div.table, figure.float { margin: 1.75rem 0; }
+div.tabular { overflow-x: auto; max-width: 100%; }
+table.tabular { margin: 0 auto; border-collapse: collapse; font-size: 0.95rem; }
+table.tabular td { padding: 0.25rem 0.6rem; }
+
+/* --------------------------------------------------------- mathematics */
+mjx-container[display="true"], math[display="block"] { overflow-x: auto; overflow-y: hidden;
+  max-width: 100%; }
+
+/* ---------------------------------------------- bibliography and index */
+dl.thebibliography dt { font-weight: 600; }
+dl.thebibliography dd { margin: 0 0 0.7rem 1.5rem; font-size: 0.95rem; }
+.theindex { font-size: 0.95rem; line-height: 1.45; }
+@media (min-width: 52rem) { .theindex { column-count: 2; column-gap: 2.5rem; } }
+
+/* ---------------------------------------------------------- footnotes */
+.footnotes { margin-top: 2rem; padding-top: 0.5rem; border-top: 1px solid var(--rule);
+  font-size: 0.9rem; }
+
+@media (max-width: 40rem) {
+  body { font-size: 1.05rem; padding: 0.5rem 1rem 3rem; }
+  h2.chapterHead, h2.likechapterHead { font-size: 1.6rem; }
+}

@@ -1,0 +1,34 @@
+-- make4ht build file of the web edition (see html/build.sh).
+-- The two fixes below change generated files only (.bbl and .ind), never the sources.
+
+local function rewrite(file, fn)
+  local f = io.open(file, "r")
+  if not f then return end
+  local text = f:read("*a")
+  f:close()
+  f = io.open(file, "w")
+  f:write(fn(text))
+  f:close()
+end
+
+-- TeX4ht stumbles on the dotless i of {\'\i} in citations; {\'i} prints the same í
+Make:add("fixbbl", function(par)
+  rewrite(par.input .. ".bbl", function(s) return (s:gsub("{\\'\\i}", "{\\'i}")) end)
+  return 0
+end)
+
+-- make4ht turns the 2 of $R^2$ in the index into a link, as if it were a page number: undo it
+Make:add("fixind", function(par)
+  rewrite(par.input .. ".ind", function(s)
+    return (s:gsub("([%^_])\\Link%[%]{[^}]*}{}(%d+)\\EndLink{}", "%1%2"))
+  end)
+  return 0
+end)
+
+Make:htlatex {}
+Make:bibtex {}
+Make:fixbbl {}
+Make:makeindex {options = "-s index.ist"}
+Make:fixind {}
+Make:htlatex {}
+Make:htlatex {}
