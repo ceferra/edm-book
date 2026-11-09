@@ -65,9 +65,6 @@ nav.crosslinks a { white-space: nowrap; }
 .tableofcontents .sectionToc, .tableofcontents .likesectionToc, .tableofcontents .subsectionToc {
   margin-left: 1.6rem; font-size: 0.95rem; font-weight: 400; }
 .tableofcontents .subsectionToc { margin-left: 3.2rem; }
-/* an unnumbered chapter is listed twice by TeX4ht (\chapter* and \addcontentsline): keep the
-   entry of \chapter*, which also points to the right page for the bibliography */
-.tableofcontents span.chapterToc:has(> a:not([id])) { display: none; }
 
 /* -------------------------------------------------------------- boxes */
 aside.box { margin: 1.5rem 0; padding: 0.75rem 1rem; border-left: 4px solid var(--navy);

@@ -31,8 +31,8 @@ The web edition is published with GitHub Pages by `.github/workflows/book-web.ym
 tags and also on demand. It is built from the same sources by `html/build.sh` (TeX Live 2026,
 make4ht): the figures are converted from PDF to SVG, the formulas go as MathML rendered by
 MathJax, and `html/edm.cfg` (TeX4ht configuration), `html/edm.css` (style),
-`html/build.mk4` and `html/fix_index.py` adapt the boxes, listings, cover, bibliography and
-subject index. To build it locally, in a scratch copy of the repository:
+`html/build.mk4`, `html/fix_toc.py` and `html/fix_index.py` adapt the boxes, listings, cover,
+contents, bibliography and subject index. To build it locally, in a scratch copy of the repository:
 
 ```
 docker run --rm -v "$PWD":/w -w /w texlive/texlive:latest sh -c \

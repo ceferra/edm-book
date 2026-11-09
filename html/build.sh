@@ -45,6 +45,8 @@ done
 # the "Up" links point to an anchor that TeX4ht does not create (#Page.html): keep the page only
 sed -i "s/\(href='[^'#]*\.html\)#[^'#]*\.html'/\1'/g" ./*.html
 cd - > /dev/null
+# contents: TeX4ht lists \chapter* and \section* by itself, so their \addcontentsline repeats them
+python3 html/fix_toc.py "$out"
 # index entries: links to the right page, with section numbers instead of running numbers
 python3 html/fix_index.py "$out"
 
